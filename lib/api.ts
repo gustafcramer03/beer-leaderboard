@@ -1,0 +1,218 @@
+"use client";
+
+import { supabase, PHOTO_BUCKET } from "@/lib/supabase";
+import { compressImage } from "@/lib/image";
+import type { Holiday, AuditItem, StandingsResult, Beer, LedgerEntry } from "@/lib/types";
+
+export async function myHolidays(): Promise<Holiday[]> {
+  // RLS limits holidays to ones the user is a member of.
+  const { data, error } = await supabase
+    .from("holidays")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createHoliday(
+  name: string,
+  start: string,
+  end: string,
+  darkDays: number,
+  timezone: string,
+): Promise<Holiday> {
+  const { data, error } = await supabase.rpc("create_holiday", {
+    p_name: name,
+    p_start: start,
+    p_end: end,
+    p_dark_days: darkDays,
+    p_timezone: timezone,
+  });
+  if (error) throw error;
+  return data as Holiday;
+}
+
+export async function joinHoliday(code: string): Promise<Holiday> {
+  const { data, error } = await supabase.rpc("join_holiday", {
+    p_code: code.toUpperCase().trim(),
+  });
+  if (error) throw error;
+  return data as Holiday;
+}
+
+export async function getStandings(
+  holidayId: string,
+  adminPeek = false,
+): Promise<StandingsResult> {
+  const { data, error } = await supabase.rpc("get_latest_standings", {
+    p_holiday: holidayId,
+    p_admin_peek: adminPeek,
+  });
+  if (error) throw error;
+  return data as StandingsResult;
+}
+
+export async function getUserLedger(
+  holidayId: string,
+  userId: string,
+): Promise<LedgerEntry[]> {
+  const { data, error } = await supabase.rpc("user_ledger", {
+    p_holiday: holidayId,
+    p_user: userId,
+  });
+  if (error) throw error;
+  return (data as LedgerEntry[]) ?? [];
+}
+
+export async function refreshSnapshot(holidayId: string): Promise<void> {
+  const { error } = await supabase.rpc("refresh_snapshot", { p_holiday: holidayId });
+  if (error) throw error;
+}
+
+export async function getAuditQueue(holidayId: string): Promise<AuditItem[]> {
+  const { data, error } = await supabase.rpc("audit_queue", { p_holiday: holidayId });
+  if (error) throw error;
+  return (data as AuditItem[]) ?? [];
+}
+
+export async function submitReview(
+  beerId: string,
+  verdict: "confirm" | "challenge",
+): Promise<void> {
+  const { error } = await supabase.rpc("submit_review", {
+    p_beer: beerId,
+    p_verdict: verdict,
+  });
+  if (error) throw error;
+}
+
+export async function adminRuleBeer(
+  beerId: string,
+  decision: "confirm" | "reject",
+): Promise<void> {
+  const { error } = await supabase.rpc("admin_rule_beer", {
+    p_beer: beerId,
+    p_decision: decision,
+  });
+  if (error) throw error;
+}
+
+// Challenged beers in this holiday (admin queue).
+export async function challengedBeers(holidayId: string): Promise<Beer[]> {
+  const { data, error } = await supabase
+    .from("beers")
+    .select("*")
+    .eq("holiday_id", holidayId)
+    .eq("status", "challenged")
+    .order("empty_taken_at", { ascending: true });
+  if (error) throw error;
+  return (data as Beer[]) ?? [];
+}
+
+// --- Logging a beer (two-step, server timestamps via DB triggers) ---
+
+// Step 1: create the open beer row, upload the full photo, attach its path.
+export async function startBeer(holidayId: string, fullPhoto: File): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) throw new Error("not signed in");
+
+  const { data: inserted, error: insErr } = await supabase
+    .from("beers")
+    .insert({ holiday_id: holidayId, user_id: uid })
+    .select("id")
+    .single();
+  if (insErr) throw insErr;
+  const beerId = inserted.id as string;
+
+  const upload = await compressImage(fullPhoto);
+  const path = `${holidayId}/${beerId}/full.jpg`;
+  const { error: upErr } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .upload(path, upload, { upsert: true, contentType: upload.type || "image/jpeg" });
+  if (upErr) throw upErr;
+
+  const { error: updErr } = await supabase
+    .from("beers")
+    .update({ full_photo_path: path })
+    .eq("id", beerId);
+  if (updErr) throw updErr;
+
+  return beerId;
+}
+
+// Step 2: upload the empty photo and finish the beer (trigger stamps empty_taken_at).
+export async function finishBeer(
+  holidayId: string,
+  beerId: string,
+  emptyPhoto: File,
+  claimedChug: boolean,
+): Promise<void> {
+  const upload = await compressImage(emptyPhoto);
+  const path = `${holidayId}/${beerId}/empty.jpg`;
+  const { error: upErr } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .upload(path, upload, { upsert: true, contentType: upload.type || "image/jpeg" });
+  if (upErr) throw upErr;
+
+  const { error: updErr } = await supabase
+    .from("beers")
+    .update({ empty_photo_path: path, claimed_chug: claimedChug })
+    .eq("id", beerId);
+  if (updErr) throw updErr;
+}
+
+// Log a beer that was drunk offline, from two existing camera-roll photos.
+// We generate the id client-side so we can name the storage paths, upload both
+// (compressed) photos, then record the row with the EXIF capture times. The DB
+// flags it is_offline so reviewers and ledgers can mark it.
+export async function logOfflineBeer(
+  holidayId: string,
+  fullPhoto: File,
+  emptyPhoto: File,
+  fullTaken: string, // ISO
+  emptyTaken: string, // ISO
+  claimedChug: boolean,
+): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) throw new Error("not signed in");
+
+  const beerId = crypto.randomUUID();
+  const fullPath = `${holidayId}/${beerId}/full.jpg`;
+  const emptyPath = `${holidayId}/${beerId}/empty.jpg`;
+
+  const fullUp = await compressImage(fullPhoto);
+  const emptyUp = await compressImage(emptyPhoto);
+
+  const up1 = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .upload(fullPath, fullUp, { upsert: true, contentType: fullUp.type || "image/jpeg" });
+  if (up1.error) throw up1.error;
+  const up2 = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .upload(emptyPath, emptyUp, { upsert: true, contentType: emptyUp.type || "image/jpeg" });
+  if (up2.error) throw up2.error;
+
+  const { error } = await supabase.rpc("log_offline_beer", {
+    p_id: beerId,
+    p_holiday: holidayId,
+    p_full_path: fullPath,
+    p_empty_path: emptyPath,
+    p_full_taken: fullTaken,
+    p_empty_taken: emptyTaken,
+    p_claimed_chug: claimedChug,
+  });
+  if (error) throw error;
+  return beerId;
+}
+
+// Abandon an open beer that never got an empty photo.
+export async function discardBeer(beerId: string): Promise<void> {
+  await supabase.from("beers").delete().eq("id", beerId);
+}
+
+export async function signedUrl(path: string): Promise<string | null> {
+  const { data } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, 120);
+  return data?.signedUrl ?? null;
+}

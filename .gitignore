@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
+
+# dev-only test scripts that embed the live DB connection string (secrets)
+/scripts/test-*.mjs
+
+# supabase CLI local cache/state
+/supabase/.temp
