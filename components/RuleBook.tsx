@@ -129,9 +129,12 @@ export function RuleBook({ onClose }: { onClose: () => void }) {
               </li>
               <li>
                 <Badge label="Chain ×N" cls="bg-purple-100 text-purple-700" /> Beers in quick
-                succession build a <span className="font-semibold">chain</span>: each beer started
-                within 5 minutes of the last one climbs the chain — the 2nd is worth 2, the 3rd is
-                worth 3, and so on. Leave more than 5 minutes and the chain resets.
+                succession build a <span className="font-semibold">chain</span>: each beer{" "}
+                <span className="font-semibold">finished</span> within 5 minutes of finishing the
+                last one climbs the chain — the 2nd is worth 2, the 3rd is worth 3, and so on. It&apos;s
+                the gap between <span className="font-semibold">empty</span> photos that counts, so
+                you have to keep actually downing them. Go more than 5 minutes without finishing the
+                next and the chain resets.
               </li>
               <li>
                 <Badge label="Morning +1" cls="bg-sky-100 text-sky-700" /> A beer started between{" "}
