@@ -97,6 +97,19 @@ export async function adminRuleBeer(
   if (error) throw error;
 }
 
+// Admin accepts a beer as legit but sets its points by hand (overrides the
+// computed chug/chain/morning score). Confirms the beer.
+export async function adminSetBeerScore(
+  beerId: string,
+  points: number,
+): Promise<void> {
+  const { error } = await supabase.rpc("admin_set_beer_score", {
+    p_beer: beerId,
+    p_points: points,
+  });
+  if (error) throw error;
+}
+
 // Challenged beers in this holiday (admin queue).
 export async function challengedBeers(holidayId: string): Promise<Beer[]> {
   const { data, error } = await supabase

@@ -17,6 +17,11 @@ function badges(e: LedgerEntry): { label: string; cls: string }[] {
   if (e.status === "rejected") {
     return [{ label: "Rejected", cls: "bg-red-100 text-red-700" }];
   }
+  // Admin set the points by hand — that wins over the computed bonuses, so show
+  // a single "Adjusted" badge instead of chug/chain/morning.
+  if (e.score_override !== null) {
+    return [{ label: "Adjusted ✎", cls: "bg-indigo-100 text-indigo-700" }];
+  }
   const out: { label: string; cls: string }[] = [];
   const chugVal = e.is_chug ? 2 : 1;
   if (e.streak_position >= 3 && e.streak_position > chugVal) {

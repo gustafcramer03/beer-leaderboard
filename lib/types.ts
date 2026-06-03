@@ -21,6 +21,7 @@ export type Beer = {
   claimed_chug: boolean;
   status: "open" | "pending" | "challenged" | "confirmed" | "rejected";
   is_offline: boolean;
+  score_override: number | null;
   created_at: string;
 };
 
@@ -51,6 +52,7 @@ export type LedgerEntry = {
   streak_position: number;
   is_morning: boolean;
   is_offline: boolean;
+  score_override: number | null;
   points: number;
   reviews_total: number;
   reviews_challenged: number;
