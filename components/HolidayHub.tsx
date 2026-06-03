@@ -8,8 +8,9 @@ import { AuditDeck } from "./AuditDeck";
 import { Leaderboard } from "./Leaderboard";
 import { AdminQueue } from "./AdminQueue";
 import { LogBeer } from "./LogBeer";
+import { TripStats } from "./TripStats";
 
-type Tab = "board" | "log" | "admin";
+type Tab = "board" | "stats" | "log" | "admin";
 
 export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: () => void }) {
   const { userId } = useSession();
@@ -60,6 +61,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
 
       <div className="flex-1 overflow-y-auto pb-20">
         {tab === "board" && <Leaderboard holidayId={holiday.id} />}
+        {tab === "stats" && <TripStats holidayId={holiday.id} />}
         {tab === "log" && (
           <LogBeer
             holidayId={holiday.id}
@@ -72,6 +74,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
 
       <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-center justify-around border-t border-neutral-200 bg-white py-2 dark:border-neutral-700 dark:bg-neutral-900">
         <TabButton active={tab === "board"} onClick={() => setTab("board")} icon="🏆" label="Board" />
+        <TabButton active={tab === "stats"} onClick={() => setTab("stats")} icon="📊" label="Stats" />
         <button
           onClick={() => setTab("log")}
           className="flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full bg-amber-500 text-2xl text-white shadow-lg"

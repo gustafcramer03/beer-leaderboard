@@ -2,7 +2,7 @@
 
 import { supabase, PHOTO_BUCKET } from "@/lib/supabase";
 import { compressImage } from "@/lib/image";
-import type { Holiday, AuditItem, StandingsResult, Beer, LedgerEntry } from "@/lib/types";
+import type { Holiday, AuditItem, StandingsResult, Beer, LedgerEntry, TripStats } from "@/lib/types";
 
 export async function myHolidays(): Promise<Holiday[]> {
   // RLS limits holidays to ones the user is a member of.
@@ -62,6 +62,12 @@ export async function getUserLedger(
   });
   if (error) throw error;
   return (data as LedgerEntry[]) ?? [];
+}
+
+export async function tripStats(holidayId: string): Promise<TripStats> {
+  const { data, error } = await supabase.rpc("trip_stats", { p_holiday: holidayId });
+  if (error) throw error;
+  return data as TripStats;
 }
 
 export async function refreshSnapshot(holidayId: string): Promise<void> {

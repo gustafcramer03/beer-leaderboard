@@ -67,3 +67,24 @@ export type StandingsResult = {
   generated_at: string | null;
   standings: Standing[] | null;
 };
+
+export type TripStats = {
+  state: "live" | "dark" | "reveal";
+  is_admin: boolean;
+  members: number;
+  total_beers: number;
+  total_points: number;
+  chugs: number;
+  morning_beers: number;
+  offline_beers: number;
+  active_days: number;
+  first_beer_at: string | null;
+  last_beer_at: string | null;
+  challenges_raised: number;
+  beers_rejected: number;
+  happiest_hour: { hour: number; count: number } | null;
+  happiest_day: { date: string; count: number } | null;
+  fastest_chug: { seconds: number; name: string | null } | null;
+  longest_chain: { length: number; name: string | null } | null;
+  top_drinker: { name: string; count: number } | null;
+};
