@@ -77,8 +77,8 @@ export function AuditDeck({
   function onDragEnd(_: unknown, info: PanInfo) {
     const offset = info.offset.x;
     const velocity = info.velocity.x;
-    if (offset > 80 || velocity > 600) flyOut(550, () => decide("confirm"));
-    else if (offset < -80 || velocity < -600) flyOut(-550, () => decide("challenge"));
+    if (offset > 100 || velocity > 750) flyOut(550, () => decide("confirm"));
+    else if (offset < -100 || velocity < -750) flyOut(-550, () => decide("challenge"));
     else animate(x, 0, { type: "spring", stiffness: 600, damping: 38 });
   }
 
