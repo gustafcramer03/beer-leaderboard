@@ -131,7 +131,7 @@ export function AuditDeck({
             🛜 Logged offline — time is from the photo&apos;s metadata
           </p>
         )}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           <Photo url={urls.full} label="FULL" time={stamp(current.full_taken_at)} />
           <Photo url={urls.empty} label="EMPTY" time={stamp(current.empty_taken_at)} />
         </div>
@@ -171,7 +171,7 @@ export function AuditDeck({
 
 function Photo({ url, label, time }: { url: string | null; label: string; time: string }) {
   return (
-    <div className="relative aspect-square overflow-hidden rounded-xl bg-neutral-200 dark:bg-neutral-700">
+    <div className="relative mx-auto h-[36vh] w-[36vh] max-w-full overflow-hidden rounded-xl bg-neutral-200 dark:bg-neutral-700">
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt={label} className="h-full w-full object-cover" />
