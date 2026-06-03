@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import type { AuditItem } from "@/lib/types";
 import { signedUrl, submitReview } from "@/lib/api";
 
@@ -34,9 +34,9 @@ export function AuditDeck({
   const [busy, setBusy] = useState(false);
 
   const x = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-12, 12]);
-  const confirmOpacity = useTransform(x, [-150, -40], [1, 0]); // swipe LEFT = confirm
-  const challengeOpacity = useTransform(x, [40, 150], [0, 1]); // swipe RIGHT = challenge
+  const rotate = useTransform(x, [-200, 200], [-15, 15]);
+  const confirmOpacity = useTransform(x, [40, 130], [0, 1]); // swipe RIGHT = legit (Tinder yes)
+  const challengeOpacity = useTransform(x, [-130, -40], [1, 0]); // swipe LEFT = challenge (Tinder nope)
 
   const current = items[index];
 
@@ -74,15 +74,16 @@ export function AuditDeck({
     }
   }
 
-  function onDragEnd() {
-    const v = x.get();
-    if (v < -110) flyOut(-500, () => decide("confirm"));
-    else if (v > 110) flyOut(500, () => decide("challenge"));
-    else animate(x, 0, { type: "spring", stiffness: 300, damping: 30 });
+  function onDragEnd(_: unknown, info: PanInfo) {
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+    if (offset > 80 || velocity > 600) flyOut(550, () => decide("confirm"));
+    else if (offset < -80 || velocity < -600) flyOut(-550, () => decide("challenge"));
+    else animate(x, 0, { type: "spring", stiffness: 600, damping: 38 });
   }
 
   function flyOut(to: number, then: () => void) {
-    animate(x, to, { duration: 0.25, onComplete: then });
+    animate(x, to, { duration: 0.18, ease: "easeOut", onComplete: then });
   }
 
   if (!current) return null;
@@ -97,8 +98,8 @@ export function AuditDeck({
           {items.length - index} beer{items.length - index === 1 ? "" : "s"} left to audit
         </p>
         <p className="text-xs text-neutral-400">
-          Swipe <span className="font-semibold text-green-600">left = legit</span> ·{" "}
-          <span className="font-semibold text-red-600">right = challenge</span>
+          Swipe <span className="font-semibold text-green-600">right = legit</span> ·{" "}
+          <span className="font-semibold text-red-600">left = challenge</span>
         </p>
       </div>
 
@@ -106,18 +107,20 @@ export function AuditDeck({
         style={{ x, rotate }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={1}
+        dragMomentum={false}
         onDragEnd={onDragEnd}
         className="relative w-full max-w-sm cursor-grab touch-none rounded-3xl bg-white p-4 shadow-xl active:cursor-grabbing dark:bg-neutral-800"
       >
         <motion.div
           style={{ opacity: confirmOpacity }}
-          className="absolute left-4 top-4 z-10 rotate-[-12deg] rounded-lg border-4 border-green-500 px-3 py-1 text-xl font-black text-green-500"
+          className="absolute right-4 top-4 z-10 rotate-[12deg] rounded-lg border-4 border-green-500 px-3 py-1 text-xl font-black text-green-500"
         >
           LEGIT
         </motion.div>
         <motion.div
           style={{ opacity: challengeOpacity }}
-          className="absolute right-4 top-4 z-10 rotate-[12deg] rounded-lg border-4 border-red-500 px-3 py-1 text-xl font-black text-red-500"
+          className="absolute left-4 top-4 z-10 rotate-[-12deg] rounded-lg border-4 border-red-500 px-3 py-1 text-xl font-black text-red-500"
         >
           CHALLENGE
         </motion.div>
@@ -146,20 +149,20 @@ export function AuditDeck({
 
       <div className="flex gap-6">
         <button
-          onClick={() => flyOut(-500, () => decide("confirm"))}
-          disabled={busy}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-2xl text-white shadow disabled:opacity-40"
-          aria-label="Confirm legit"
-        >
-          ✓
-        </button>
-        <button
-          onClick={() => flyOut(500, () => decide("challenge"))}
+          onClick={() => flyOut(-550, () => decide("challenge"))}
           disabled={busy}
           className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500 text-2xl text-white shadow disabled:opacity-40"
           aria-label="Challenge"
         >
           ✕
+        </button>
+        <button
+          onClick={() => flyOut(550, () => decide("confirm"))}
+          disabled={busy}
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-2xl text-white shadow disabled:opacity-40"
+          aria-label="Confirm legit"
+        >
+          ✓
         </button>
       </div>
     </div>
