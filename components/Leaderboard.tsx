@@ -5,6 +5,7 @@ import type { StandingsResult } from "@/lib/types";
 import { getStandings, refreshSnapshot } from "@/lib/api";
 import { useSession } from "./SessionProvider";
 import { PlayerLedger } from "./PlayerLedger";
+import { RuleBook } from "./RuleBook";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -16,6 +17,7 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
 
   const [peeking, setPeeking] = useState(false);
   const [ledgerFor, setLedgerFor] = useState<{ id: string; name: string } | null>(null);
+  const [showRules, setShowRules] = useState(false);
 
   const load = useCallback(
     async (adminPeek = false) => {
@@ -72,6 +74,13 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
             {peeking ? "Peeking…" : "👁️ Peek at standings (admin)"}
           </button>
         )}
+        <button
+          onClick={() => setShowRules(true)}
+          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+        >
+          📖 Rules
+        </button>
+        {showRules && <RuleBook onClose={() => setShowRules(false)} />}
       </div>
     );
   }
@@ -99,11 +108,20 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
 
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">League table</h2>
-        {result.generated_at && (
-          <span className="text-xs text-neutral-400">
-            updated {new Date(result.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {result.generated_at && (
+            <span className="text-xs text-neutral-400">
+              updated {new Date(result.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+          <button
+            onClick={() => setShowRules(true)}
+            aria-label="How the game works"
+            className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium dark:bg-neutral-700"
+          >
+            📖 Rules
+          </button>
+        </div>
       </div>
 
       <ul className="flex flex-col gap-2">
@@ -160,6 +178,8 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
           onClose={() => setLedgerFor(null)}
         />
       )}
+
+      {showRules && <RuleBook onClose={() => setShowRules(false)} />}
     </div>
   );
 }
