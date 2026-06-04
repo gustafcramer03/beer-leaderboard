@@ -11,6 +11,7 @@ import { AdminQueue } from "./AdminQueue";
 import { LogBeer } from "./LogBeer";
 import { HappyHourBanner } from "./HappyHourBanner";
 import { AchievementsCabinet } from "./AchievementsCabinet";
+import { LegendOfTheDay } from "./LegendOfTheDay";
 import { RuleBook } from "./RuleBook";
 import { TripStats } from "./TripStats";
 import { PaceBoard } from "./PaceBoard";
@@ -122,6 +123,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
 
   return (
     <div className="flex flex-1 flex-col">
+      <LegendOfTheDay holidayId={holiday.id} />
       <HappyHourBanner holidayId={holiday.id} />
       <Header holiday={holiday} onLeave={onLeave} />
 

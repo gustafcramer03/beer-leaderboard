@@ -15,6 +15,7 @@ import type {
   HappyHourStatus,
   Achievements,
   PaceSeries,
+  LegendOfTheDay,
 } from "@/lib/types";
 
 export async function myHolidays(): Promise<Holiday[]> {
@@ -319,6 +320,12 @@ export async function uploadAvatar(file: File): Promise<string> {
 export async function avatarUrl(path: string): Promise<string | null> {
   const { data } = await supabase.storage.from(AVATAR_BUCKET).createSignedUrl(path, 3600);
   return data?.signedUrl ?? null;
+}
+
+export async function getLegendOfTheDay(holidayId: string): Promise<LegendOfTheDay> {
+  const { data, error } = await supabase.rpc("legend_of_the_day", { p_holiday: holidayId });
+  if (error) throw error;
+  return data as LegendOfTheDay;
 }
 
 // --- DB Management (password-gated owner tooling) ---

@@ -96,6 +96,21 @@ export type PaceSeries = {
   }[];
 };
 
+// Legend of the Day: yesterday's top drinker (most beers finished that day in
+// the trip's timezone). `legend` is null when nobody drank or the board is dark.
+// `today` is the current day in the trip tz — the client gates the once-per-day
+// popup on it. `date` is the celebrated (yesterday) day.
+export type LegendOfTheDay = {
+  today: string;
+  date: string;
+  legend: {
+    user_id: string;
+    display_name: string;
+    avatar_path: string | null;
+    beer_count: number;
+  } | null;
+};
+
 export type StandingsResult = {
   state: "live" | "dark" | "reveal";
   is_admin: boolean;

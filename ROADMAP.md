@@ -59,8 +59,14 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 - [ ] **Push notifications** — "Happy hour starts now ⏰", "You've got beers to audit", "Someone
   challenged your beer", "Grand reveal is live". Biggest retention lever, heaviest lift.
   _Needs web-push keys, a subscription table, and a sender._
+- [x] **Legend of the Day** 👑 — _SHIPPED_ (migration 0022). Once-a-day popup on first open
+  crowning whoever sank the most beers yesterday — profile photo, name and beer count. Day is
+  resolved in the trip timezone; the `legend_of_the_day` RPC returns the celebrated day plus the
+  current day, and the client gates the popup once-per-day in localStorage on the server's `today`.
+  Withheld during the dark finale so it doesn't leak the leader. (Distinct from the trophy of the
+  same name in the cabinet.) `LegendOfTheDay.tsx`.
 - [ ] **Daily recap** 🌅 — once-a-day summary card on first open (yesterday's winner, total sunk,
-  Early Bird/Night Owl winners). _Reuses stats-style data._
+  Early Bird/Night Owl winners). _Reuses stats-style data; Legend of the Day is the first slice._
 - [x] **Audit + rulings nudge badges** — _SHIPPED_. Red count bubbles on the 🔄 Audit beers tile
   (mates' beers waiting to swipe) and, for the admin, the ⚖️ Rulings tile (beers awaiting a
   ruling); the ☰ Menu bottom-nav tab shows the combined total. Polls every 60s and on window
