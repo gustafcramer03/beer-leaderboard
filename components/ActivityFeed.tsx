@@ -8,7 +8,15 @@ import { Avatar } from "./Avatar";
 // Live "what's happening" ticker — only the bigger moments (never every beer).
 // Reverse-chron, polls every 45s and on window focus so the trip feels alive
 // between board refreshes. Hidden while the board is dark for non-admins.
-export function ActivityFeed({ holidayId, onClose }: { holidayId: string; onClose: () => void }) {
+export function ActivityFeed({
+  holidayId,
+  timezone,
+  onClose,
+}: {
+  holidayId: string;
+  timezone: string;
+  onClose: () => void;
+}) {
   const [events, setEvents] = useState<ActivityEvent[] | null>(null);
   const [dark, setDark] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -79,15 +87,17 @@ export function ActivityFeed({ holidayId, onClose }: { holidayId: string; onClos
 
           {!dark &&
             events &&
-            events.map((e, i) => <FeedRow key={`${e.type}-${e.user_id}-${e.at}-${i}`} e={e} />)}
+            events.map((e, i) => (
+              <FeedRow key={`${e.type}-${e.user_id}-${e.at}-${i}`} e={e} tz={timezone} />
+            ))}
         </div>
       </div>
     </div>
   );
 }
 
-function FeedRow({ e }: { e: ActivityEvent }) {
-  const { emoji, text } = describe(e);
+function FeedRow({ e, tz }: { e: ActivityEvent; tz: string }) {
+  const { emoji, text } = describe(e, tz);
   const isAnnouncement = e.type === "happy_hour_start" || e.type === "happy_hour_end";
 
   // Player-less happy-hour window banners get their own punchy styling.
@@ -130,8 +140,9 @@ function FeedRow({ e }: { e: ActivityEvent }) {
   );
 }
 
-// Per-type emoji + phrasing. `n` carries the type-specific number.
-function describe(e: ActivityEvent): { emoji: string; text: string } {
+// Per-type emoji + phrasing. `n` carries the type-specific number. `tz` is the
+// trip timezone, used to print happy-hour window times in trip-local time.
+function describe(e: ActivityEvent, tz: string): { emoji: string; text: string } {
   switch (e.type) {
     case "chug":
       return { emoji: "⚡", text: "chugged a beer!" };
@@ -139,8 +150,14 @@ function describe(e: ActivityEvent): { emoji: string; text: string } {
       return { emoji: "🐦", text: "grabbed Early Bird — first of the day." };
     case "night_owl":
       return { emoji: "🌙", text: "took Night Owl — last one standing." };
-    case "happy_hour_start":
-      return { emoji: "🍻", text: "Happy hour is ON — GO QUENCH YOUR THIRST! 🍻" };
+    case "happy_hour_start": {
+      const start = new Date(e.at);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+      return {
+        emoji: "🍻",
+        text: `Happy hour is ON, ${hour(start, tz)}–${hour(end, tz)} — GO QUENCH YOUR THIRST! 🍻`,
+      };
+    }
     case "happy_hour_end":
       return {
         emoji: "🍻",
@@ -160,6 +177,21 @@ function describe(e: ActivityEvent): { emoji: string; text: string } {
       return { emoji: "🩸", text: "drew first blood — the trip's very first beer!" };
     default:
       return { emoji: "🍺", text: "did something noteworthy." };
+  }
+}
+
+// A whole-hour clock label in the trip's timezone, e.g. "5pm", "10pm", "9am".
+function hour(d: Date, tz: string): string {
+  try {
+    return new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: true, timeZone: tz })
+      .format(d)
+      .replace(/\s/g, "")
+      .toLowerCase();
+  } catch {
+    return new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: true })
+      .format(d)
+      .replace(/\s/g, "")
+      .toLowerCase();
   }
 }
 

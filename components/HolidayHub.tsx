@@ -183,7 +183,9 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
       {view === "stats" && <StatsView holidayId={holiday.id} onClose={() => setView(null)} />}
       {view === "pace" && <PaceBoard holidayId={holiday.id} onClose={() => setView(null)} />}
       {view === "rivalry" && <RivalryCard holidayId={holiday.id} onClose={() => setView(null)} />}
-      {view === "activity" && <ActivityFeed holidayId={holiday.id} onClose={() => setView(null)} />}
+      {view === "activity" && (
+        <ActivityFeed holidayId={holiday.id} timezone={holiday.timezone} onClose={() => setView(null)} />
+      )}
       {view === "rules" && <RuleBook onClose={() => setView(null)} />}
       {view === "rulings" && isAdmin && (
         <RulingsView
