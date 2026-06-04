@@ -7,6 +7,17 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ## 🎯 Engagement & fun
 
+- [x] **Emoji reactions on beers** 🔥 — _SHIPPED_ (migration 0030). WhatsApp-style one-tap emoji
+  (🍺🔥💪😂😮🤮) on a mate's beer in the player ledger — exactly one reaction per person per beer
+  (tap a new one to replace, tap the same to remove); existing reactions show as counted pills with
+  your own ringed, and a "🙂+" trigger pops the picker. Stored in an RLS-locked `beer_reactions`
+  table reached only via the `react_to_beer` RPC (returns the fresh `{counts, mine}` aggregate) and
+  read back through `user_ledger`. `PlayerLedger.tsx` + `lib/reactions.ts`.
+- [x] **Captions on beer submissions** 💬 — _SHIPPED_ (migration 0030). An optional ≤140-char note
+  attached when logging (online via `finishBeer`, offline via the `log_offline_beer` RPC), shown
+  italicised in the player ledger and on the audit-deck card so reviewers see it. `beers.caption`
+  column; surfaced by `user_ledger` + `audit_queue`. `LogBeer.tsx`, `OfflineLogBeer.tsx`,
+  `AuditDeck.tsx`, `PlayerLedger.tsx`.
 - [x] **Achievements / trophy cabinet** 🏆 — _SHIPPED_. Snapchat-trophies-style 3×N grid
   of trophies a player has won, each with an emoji, a one-line "how it's won", and a count
   (e.g. `2× Centurion` = 200 beers). Includes **Legend of the Day** (most beers in a single
