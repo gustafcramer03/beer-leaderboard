@@ -88,6 +88,32 @@ export function ActivityFeed({ holidayId, onClose }: { holidayId: string; onClos
 
 function FeedRow({ e }: { e: ActivityEvent }) {
   const { emoji, text } = describe(e);
+  const isAnnouncement = e.type === "happy_hour_start" || e.type === "happy_hour_end";
+
+  // Player-less happy-hour window banners get their own punchy styling.
+  if (isAnnouncement) {
+    const live = e.type === "happy_hour_start";
+    return (
+      <div
+        className={`flex items-center gap-3 rounded-2xl p-3 shadow-sm ${
+          live
+            ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-white"
+            : "bg-amber-50 dark:bg-amber-950/40"
+        }`}
+      >
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/25 text-2xl">
+          {emoji}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold leading-snug">{text}</p>
+          <p className={`text-[11px] ${live ? "text-amber-50/80" : "text-neutral-400"}`}>
+            {relativeTime(e.at)}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm dark:bg-neutral-800">
       <div className="relative shrink-0">
@@ -113,8 +139,13 @@ function describe(e: ActivityEvent): { emoji: string; text: string } {
       return { emoji: "🐦", text: "grabbed Early Bird — first of the day." };
     case "night_owl":
       return { emoji: "🌙", text: "took Night Owl — last one standing." };
-    case "happy_hour":
-      return { emoji: "🍻", text: "landed a beer in happy hour." };
+    case "happy_hour_start":
+      return { emoji: "🍻", text: "Happy hour is ON — GO QUENCH YOUR THIRST! 🍻" };
+    case "happy_hour_end":
+      return {
+        emoji: "🍻",
+        text: `Happy hour's over — ${e.n ?? 0} ${e.n === 1 ? "beer" : "beers"} sunk! 🍻`,
+      };
     case "chain":
       return { emoji: "🔥", text: `finished a ${e.n}-beer chain!` };
     case "day_milestone":

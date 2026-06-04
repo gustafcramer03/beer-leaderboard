@@ -6,7 +6,8 @@
 --   chug          - someone chugged a beer
 --   early_bird    - first finisher of the day
 --   night_owl     - last finisher of a completed day, after midnight
---   happy_hour    - a beer that landed in the happy hour
+--   happy_hour_start - a day's happy hour just began (no user; a call to arms)
+--   happy_hour_end   - that happy hour ended (no user; n = beers landed in it)
 --   chain         - a completed chain of 3+ (n = final length)
 --   day_milestone - a player's 10th beer of the day, then every 5th (n = count)
 --   trip_milestone- a player's 10th beer of the trip, then 25th & every 25 (n)
@@ -97,7 +98,7 @@ begin
     from flagged f
   )
   select s.id, s.user_id, s.empty_taken_at, s.is_chug, s.is_first, s.is_last,
-         s.is_happy, s.grp, s.fin_day, s.points,
+         s.is_happy, s.hh_day, s.grp, s.fin_day, s.points,
          row_number() over (partition by s.user_id, s.fin_day order by s.empty_taken_at asc, s.id asc) as day_rn,
          row_number() over (partition by s.user_id order by s.empty_taken_at asc, s.id asc) as trip_rn
   from scored s;
@@ -129,13 +130,37 @@ begin
       and (((b.fin_day + 1)::timestamp + interval '7 hours') at time zone v_tz) <= now()
   ), '[]'::jsonb);
 
-  -- happy hour
+  -- happy hour windows: announce the start (a call to arms), then on completion
+  -- summarise how many beers landed. One window per beer-day; the hour comes from
+  -- happy_hour_for(day). These events have no user. The window sits on calendar
+  -- date d when the hour >= 7, else it rolls into d+1 (beer-day = 07:00->07:00).
   v_events := v_events || coalesce((
-    select jsonb_agg(jsonb_build_object(
-             'type','happy_hour','at',b.empty_taken_at,'user_id',b.user_id,
-             'display_name',pr.display_name,'avatar_path',pr.avatar_path,'n',null::int))
-    from _feed_beers b join public.profiles pr on pr.id = b.user_id
-    where b.is_happy), '[]'::jsonb);
+    with days as (
+      select generate_series(h.start_date, h.end_date, interval '1 day')::date as d
+    ),
+    windows as (
+      select d, public.happy_hour_for(p_holiday, d) as hh from days
+    ),
+    enriched as (
+      select w.d, w.hh,
+             (((case when w.hh >= 7 then w.d else w.d + 1 end)::timestamp
+               + (w.hh || ' hours')::interval) at time zone v_tz) as starts,
+             (select count(*)::int from _feed_beers b
+              where b.is_happy and b.hh_day = w.d) as n
+      from windows w
+      where w.hh is not null
+    )
+    select jsonb_agg(ev) from (
+      select jsonb_build_object(
+               'type','happy_hour_start','at',e.starts,'user_id',null,
+               'display_name',null,'avatar_path',null,'n',null::int) as ev
+      from enriched e where e.starts <= now()
+      union all
+      select jsonb_build_object(
+               'type','happy_hour_end','at',e.starts + interval '1 hour','user_id',null,
+               'display_name',null,'avatar_path',null,'n',e.n) as ev
+      from enriched e where e.starts + interval '1 hour' <= now()
+    ) s), '[]'::jsonb);
 
   -- completed chains of 3+
   v_events := v_events || coalesce((

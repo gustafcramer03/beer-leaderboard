@@ -151,7 +151,8 @@ export type ActivityEventType =
   | "chug"
   | "early_bird"
   | "night_owl"
-  | "happy_hour"
+  | "happy_hour_start"
+  | "happy_hour_end"
   | "chain"
   | "day_milestone"
   | "trip_milestone"
@@ -159,11 +160,13 @@ export type ActivityEventType =
   | "legend"
   | "first_blood";
 
+// user_id / display_name / avatar_path are null for player-less events
+// (the happy-hour window announcements).
 export type ActivityEvent = {
   type: ActivityEventType;
   at: string;
-  user_id: string;
-  display_name: string;
+  user_id: string | null;
+  display_name: string | null;
   avatar_path: string | null;
   n: number | null;
 };

@@ -14,7 +14,8 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   `AchievementsCabinet.tsx`.
 - [x] **Live activity feed / "what's happening"** 📰 — _SHIPPED_ (migration 0025). Menu → "What's
   happening": reverse-chron ticker of only the *bigger* moments — chugs ⚡, Early Bird 🐦, Night Owl
-  🌙, happy-hour landings 🍻, completed 3+ chains 🔥 (with final length), per-day milestones (10th
+  🌙, happy-hour window banners 🍻 ("GO QUENCH YOUR THIRST" at the start, then a beers-sunk tally at
+  the end), completed 3+ chains 🔥 (with final length), per-day milestones (10th
   then every 5th) 🍺, per-trip milestones (10th, 25th & every 25th) 🏅, lead changes 👑, Legend of
   the Day 🏆, and first blood 🩸 (the trip's very first beer). `activity_feed(holiday, limit)` RPC
   derives events on the fly from `beers`, reusing the exact `compute_standings` scoring so "took the
