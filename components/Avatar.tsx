@@ -47,7 +47,7 @@ export function Avatar({
     );
   }
 
-  const src = url ?? "/default-avatar.png";
+  const src = url ?? "/default-avatar.jpg";
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
