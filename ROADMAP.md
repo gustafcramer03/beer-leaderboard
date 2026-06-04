@@ -22,9 +22,12 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   storage; `public/default-avatar.jpg`). Reusable `Avatar.tsx`; editable from the Menu profile
   card (covers existing accounts).
   Foundation for the rivalry cards below.
-- [ ] **Head-to-head / rivalry card** ⚔️ — tap two players to compare totals, chugs, fastest
-  chug, bonus tallies side by side. _Mostly frontend if it reuses ledger/stats data; now that
-  profile photos exist, show each player's avatar on the card._
+- [x] **Head-to-head / rivalry card** ⚔️ — _SHIPPED_ (migration 0024). Menu → "Head to head":
+  pick any two players and see their stats side by side — points, beers, chugs, fastest chug,
+  longest chain, morning/happy-hour/early-bird/night-owl tallies, active days — the stronger
+  value in green and the weaker in red, with each player's avatar and an overall "leads N–M"
+  crown. `head_to_head` RPC reuses the exact `compute_standings` scoring so points match the
+  board; `holiday_members` feeds the picker. Withheld while the board is dark. `RivalryCard.tsx`.
 - [x] **Pace projection board** 📈 — _SHIPPED_. Full-page line charts: cumulative beers/points
   drawn solid up to today, dashed projection to trip end at current daily pace. Group chart
   (red Beers + blue Points) and a per-player chart (one colour each, 🍺/🎯 toggle, tap a line

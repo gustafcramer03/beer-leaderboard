@@ -16,6 +16,8 @@ import type {
   Achievements,
   PaceSeries,
   LegendOfTheDay,
+  HolidayMember,
+  HeadToHead,
 } from "@/lib/types";
 
 export async function myHolidays(): Promise<Holiday[]> {
@@ -363,6 +365,28 @@ export async function getLegendOfTheDay(holidayId: string): Promise<LegendOfTheD
   const { data, error } = await supabase.rpc("legend_of_the_day", { p_holiday: holidayId });
   if (error) throw error;
   return data as LegendOfTheDay;
+}
+
+// Roster for the head-to-head player picker (id, name, avatar).
+export async function holidayMembers(holidayId: string): Promise<HolidayMember[]> {
+  const { data, error } = await supabase.rpc("holiday_members", { p_holiday: holidayId });
+  if (error) throw error;
+  return (data as HolidayMember[]) ?? [];
+}
+
+// Side-by-side stats for two players. `players` is null while the board is dark.
+export async function getHeadToHead(
+  holidayId: string,
+  userA: string,
+  userB: string,
+): Promise<HeadToHead> {
+  const { data, error } = await supabase.rpc("head_to_head", {
+    p_holiday: holidayId,
+    p_a: userA,
+    p_b: userB,
+  });
+  if (error) throw error;
+  return data as HeadToHead;
 }
 
 // --- DB Management (password-gated owner tooling) ---

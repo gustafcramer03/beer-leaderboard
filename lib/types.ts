@@ -112,6 +112,38 @@ export type LegendOfTheDay = {
   } | null;
 };
 
+// A trip member as shown in the head-to-head player picker.
+export type HolidayMember = {
+  user_id: string;
+  display_name: string;
+  avatar_path: string | null;
+};
+
+// One side of a head-to-head rivalry card. fastest_chug is seconds (lower is
+// better) or null if they've never chugged.
+export type RivalryPlayer = {
+  user_id: string;
+  display_name: string;
+  avatar_path: string | null;
+  beers: number;
+  points: number;
+  chugs: number;
+  fastest_chug: number | null;
+  longest_chain: number;
+  morning_beers: number;
+  happy_hours: number;
+  early_birds: number;
+  night_owls: number;
+  active_days: number;
+};
+
+// head_to_head RPC result. `players` is null while the board is dark (a
+// comparison would leak who's ahead); otherwise a [a, b] pair in pick order.
+export type HeadToHead = {
+  state: "live" | "dark" | "reveal";
+  players: [RivalryPlayer, RivalryPlayer] | null;
+};
+
 export type StandingsResult = {
   state: "live" | "dark" | "reveal";
   is_admin: boolean;
