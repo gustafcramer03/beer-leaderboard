@@ -88,8 +88,8 @@ export function PushToggle() {
             aria-label={subscribed ? "Disable notifications" : "Enable notifications"}
           >
             <span
-              className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
-                subscribed ? "translate-x-[22px]" : "translate-x-0.5"
+              className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+                subscribed ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
