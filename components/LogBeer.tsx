@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CameraCapture } from "./CameraCapture";
 import { OfflineLogBeer } from "./OfflineLogBeer";
 import { startBeer, finishBeer, discardBeer, getOpenBeer, signedUrl } from "@/lib/api";
+import { celebrateBeer, celebrateChug } from "@/lib/celebrate";
 
 type Step = "full" | "empty" | "done";
 
@@ -76,6 +77,8 @@ export function LogBeer({
     setError(null);
     try {
       await finishBeer(holidayId, beerId, emptyFile, chug);
+      if (chug) celebrateChug();
+      else celebrateBeer();
       setStep("done");
     } catch (e) {
       setError(msg(e));

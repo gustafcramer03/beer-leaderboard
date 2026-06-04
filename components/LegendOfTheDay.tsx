@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getLegendOfTheDay } from "@/lib/api";
 import type { LegendOfTheDay as LegendData } from "@/lib/types";
 import { Avatar } from "./Avatar";
+import { celebrateBig } from "@/lib/celebrate";
 
 // Once-a-day celebratory card crowning yesterday's top drinker. Fetches on
 // mount; shows only if there's a legend and we haven't already shown today's
@@ -21,6 +22,7 @@ export function LegendOfTheDay({ holidayId }: { holidayId: string }) {
         if (localStorage.getItem(`legend-seen-${holidayId}`) === d.today) return;
         setData(d);
         setShow(true);
+        celebrateBig();
       })
       .catch(() => {
         /* best-effort; never block the app on the legend card */

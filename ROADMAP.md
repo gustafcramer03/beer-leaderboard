@@ -36,8 +36,12 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ## ✨ UX polish (cheap, high "easier to use")
 
-- [ ] **Haptics + confetti on key moments** 🎉 — confetti on logging a beer, bagging Early
-  Bird/Night Owl, or overtaking someone; `navigator.vibrate()` on log/swipe. _Frontend-only._
+- [x] **Haptics + confetti on key moments** 🎉 — _SHIPPED_. `canvas-confetti` + Web Vibration API
+  via `lib/celebrate.ts`. Confetti on every beer logged (online + offline), with a **bigger golden
+  burst** (centre blast + two side cannons) when a chug is claimed; a sustained 1s shower on the
+  **grand reveal** (champion unveiled) and the **Legend of the Day** popup. Haptics fire only on
+  those two big moments (`vibrate([60,40,120])`); silently no-ops on iOS Safari. _Future picks left
+  on the table: confetti/haptics on audit swipes and on overtaking someone (needs rank tracking)._
 - [ ] **Pull-to-refresh + optimistic board** — manual refresh gesture so people don't wait for
   the hourly cron, plus an optimistic "+1" the moment a beer is logged. _Frontend-only._
 - [x] **"Your position" sticky chip** — _SHIPPED_. A clone of your own row styled like the amber

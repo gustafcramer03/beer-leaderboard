@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CameraCapture } from "./CameraCapture";
 import { logOfflineBeer } from "@/lib/api";
 import { readPhotoTime } from "@/lib/exif";
+import { celebrateBeer, celebrateChug } from "@/lib/celebrate";
 
 // Logging a beer that was drunk with no signal (plane, ferry). You pick the two
 // shots you already took from your camera roll; we read each photo's capture time
@@ -62,6 +63,8 @@ export function OfflineLogBeer({
     setError(null);
     try {
       await logOfflineBeer(holidayId, full.file, empty.file, fullISO, emptyISO, chug);
+      if (chug) celebrateChug();
+      else celebrateBeer();
       setDone(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");

@@ -4,9 +4,10 @@
 // champion, one player at a time. Built for the moment the trip ends and the
 // dark board is finally lifted.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Standing } from "@/lib/types";
+import { celebrateBig } from "@/lib/celebrate";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -29,6 +30,11 @@ export function RevealShow({
   const current = shown > 0 ? order[shown - 1] : null;
   const place = current ? standings.findIndex((s) => s.user_id === current.user_id) : -1;
   const isChampion = place === 0;
+
+  // Big confetti + haptic the moment the champion is unveiled.
+  useEffect(() => {
+    if (isChampion) celebrateBig();
+  }, [isChampion]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-neutral-950 text-white">
