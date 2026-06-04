@@ -97,8 +97,6 @@ export function TripStats({ holidayId }: { holidayId: string }) {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <h2 className="text-lg font-bold">📊 Trip stats</h2>
-
       <div className="rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 p-5 text-center text-white shadow">
         <div className="text-5xl font-black">{stats.total_beers}</div>
         <div className="mt-1 text-sm font-semibold">beers sunk by the group 🍺</div>
@@ -169,9 +167,13 @@ export function TripStats({ holidayId }: { holidayId: string }) {
           label="Challenges raised"
           sub={`${stats.beers_rejected} beer${stats.beers_rejected === 1 ? "" : "s"} rejected`}
         />
-        {stats.offline_beers > 0 && (
-          <StatCard icon="🛜" value={stats.offline_beers} label="Logged offline" />
-        )}
+        <StatCard
+          icon="🎯"
+          value={stats.total_points}
+          label="Points scored"
+          sub="by the whole group"
+        />
+        <StatCard icon="🛜" value={stats.offline_beers} label="Logged offline" sub="no-signal beers" />
       </div>
 
       {dark && (

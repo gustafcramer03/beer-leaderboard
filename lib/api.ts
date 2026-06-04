@@ -2,7 +2,20 @@
 
 import { supabase, PHOTO_BUCKET } from "@/lib/supabase";
 import { compressImage } from "@/lib/image";
-import type { Holiday, AuditItem, StandingsResult, Beer, LedgerEntry, TripStats } from "@/lib/types";
+import type {
+  Holiday,
+  AuditItem,
+  StandingsResult,
+  Beer,
+  LedgerEntry,
+  TripStats,
+  AdminTrip,
+  AdminMember,
+  AdminStorageSummary,
+  HappyHourStatus,
+  Achievements,
+  PaceSeries,
+} from "@/lib/types";
 
 export async function myHolidays(): Promise<Holiday[]> {
   // RLS limits holidays to ones the user is a member of.
@@ -70,9 +83,51 @@ export async function tripStats(holidayId: string): Promise<TripStats> {
   return data as TripStats;
 }
 
+// A player's trophy cabinet — counts of each achievement won. Your own is
+// always visible; others' are hidden while the board is dark.
+export async function getAchievements(
+  holidayId: string,
+  userId: string,
+): Promise<Achievements> {
+  const { data, error } = await supabase.rpc("user_achievements", {
+    p_holiday: holidayId,
+    p_user: userId,
+  });
+  if (error) throw error;
+  return (data as Achievements) ?? {};
+}
+
+// Cumulative beer-count / points time series for the pace projection board.
+// Throws "board is dark" for non-admins during the dark window.
+export async function getPaceSeries(holidayId: string): Promise<PaceSeries> {
+  const { data, error } = await supabase.rpc("pace_series", { p_holiday: holidayId });
+  if (error) throw error;
+  return data as PaceSeries;
+}
+
 export async function refreshSnapshot(holidayId: string): Promise<void> {
   const { error } = await supabase.rpc("refresh_snapshot", { p_holiday: holidayId });
   if (error) throw error;
+}
+
+// Admin override of the board state. 'auto' clears the override back to
+// date-based; 'live' / 'dark' / 'reveal' force that state.
+export async function setHolidayState(
+  holidayId: string,
+  state: "live" | "dark" | "reveal" | "auto",
+): Promise<void> {
+  const { error } = await supabase.rpc("set_holiday_state", {
+    p_holiday: holidayId,
+    p_state: state,
+  });
+  if (error) throw error;
+}
+
+// Is it happy hour right now for this holiday? Drives the load-time banner.
+export async function happyHourNow(holidayId: string): Promise<HappyHourStatus> {
+  const { data, error } = await supabase.rpc("happy_hour_now", { p_holiday: holidayId });
+  if (error) throw error;
+  return data as HappyHourStatus;
 }
 
 export async function getAuditQueue(holidayId: string): Promise<AuditItem[]> {
@@ -234,4 +289,78 @@ export async function discardBeer(beerId: string): Promise<void> {
 export async function signedUrl(path: string): Promise<string | null> {
   const { data } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, 120);
   return data?.signedUrl ?? null;
+}
+
+// --- DB Management (password-gated owner tooling) ---
+
+export async function adminListTrips(password: string): Promise<AdminTrip[]> {
+  const { data, error } = await supabase.rpc("admin_list_trips", { p_password: password });
+  if (error) throw error;
+  return (data as AdminTrip[]) ?? [];
+}
+
+export async function adminTripMembers(
+  password: string,
+  holidayId: string,
+): Promise<AdminMember[]> {
+  const { data, error } = await supabase.rpc("admin_trip_members", {
+    p_password: password,
+    p_holiday: holidayId,
+  });
+  if (error) throw error;
+  return (data as AdminMember[]) ?? [];
+}
+
+export async function adminStorageSummary(password: string): Promise<AdminStorageSummary> {
+  const { data, error } = await supabase.rpc("admin_storage_summary", { p_password: password });
+  if (error) throw error;
+  return data as AdminStorageSummary;
+}
+
+async function adminPhotoPaths(
+  password: string,
+  holidayId: string,
+  userId?: string,
+): Promise<string[]> {
+  const { data, error } = await supabase.rpc("admin_trip_photo_paths", {
+    p_password: password,
+    p_holiday: holidayId,
+    p_user: userId ?? null,
+  });
+  if (error) throw error;
+  return (data as string[]) ?? [];
+}
+
+// Purge a whole trip: remove its photo blobs from storage first (frees the
+// actual files), then delete the trip rows (cascades members/beers/reviews).
+export async function adminDeleteTrip(password: string, holidayId: string): Promise<void> {
+  const paths = await adminPhotoPaths(password, holidayId);
+  if (paths.length > 0) {
+    const { error: rmErr } = await supabase.storage.from(PHOTO_BUCKET).remove(paths);
+    if (rmErr) throw rmErr;
+  }
+  const { error } = await supabase.rpc("admin_delete_holiday", {
+    p_password: password,
+    p_holiday: holidayId,
+  });
+  if (error) throw error;
+}
+
+// Remove one member from a trip and free their photos.
+export async function adminDeleteMember(
+  password: string,
+  holidayId: string,
+  userId: string,
+): Promise<void> {
+  const paths = await adminPhotoPaths(password, holidayId, userId);
+  if (paths.length > 0) {
+    const { error: rmErr } = await supabase.storage.from(PHOTO_BUCKET).remove(paths);
+    if (rmErr) throw rmErr;
+  }
+  const { error } = await supabase.rpc("admin_delete_member", {
+    p_password: password,
+    p_holiday: holidayId,
+    p_user: userId,
+  });
+  if (error) throw error;
 }

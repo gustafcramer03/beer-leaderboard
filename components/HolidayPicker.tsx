@@ -4,12 +4,14 @@ import { useEffect, useState, useCallback } from "react";
 import type { Holiday } from "@/lib/types";
 import { myHolidays, createHoliday, joinHoliday } from "@/lib/api";
 import { useSession } from "./SessionProvider";
+import { DbManagement } from "./DbManagement";
 
 export function HolidayPicker({ onPick }: { onPick: (h: Holiday) => void }) {
   const { profile, signOut } = useSession();
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<"list" | "create" | "join">("list");
+  const [showDbAdmin, setShowDbAdmin] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -82,6 +84,17 @@ export function HolidayPicker({ onPick }: { onPick: (h: Holiday) => void }) {
           </button>
         </p>
       )}
+
+      {mode === "list" && (
+        <button
+          onClick={() => setShowDbAdmin(true)}
+          className="mx-auto text-xs text-neutral-400 underline"
+        >
+          🗄️ DB Management
+        </button>
+      )}
+
+      {showDbAdmin && <DbManagement onClose={() => setShowDbAdmin(false)} />}
     </div>
   );
 }

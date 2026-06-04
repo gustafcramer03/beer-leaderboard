@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import type { AuditItem } from "@/lib/types";
 import { signedUrl, submitReview } from "@/lib/api";
+import { PhotoPreview } from "./PhotoPreview";
 
 function secondsBetween(a: string, b: string) {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 1000);
@@ -32,6 +33,7 @@ export function AuditDeck({
     empty: null,
   });
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<{ url: string; label: string } | null>(null);
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -92,7 +94,7 @@ export function AuditDeck({
   const looksChugged = gap <= 60;
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-3">
       <div className="text-center">
         <p className="text-sm text-neutral-500">
           {items.length - index} beer{items.length - index === 1 ? "" : "s"} left to audit
@@ -110,7 +112,7 @@ export function AuditDeck({
         dragElastic={1}
         dragMomentum={false}
         onDragEnd={onDragEnd}
-        className="relative w-full max-w-sm cursor-grab touch-none rounded-3xl bg-white p-4 shadow-xl active:cursor-grabbing dark:bg-neutral-800"
+        className="relative w-full max-w-sm cursor-grab touch-none rounded-3xl bg-white p-3 shadow-xl active:cursor-grabbing dark:bg-neutral-800"
       >
         <motion.div
           style={{ opacity: confirmOpacity }}
@@ -132,10 +134,20 @@ export function AuditDeck({
           </p>
         )}
         <div className="grid grid-cols-1 gap-2">
-          <Photo url={urls.full} label="FULL" time={stamp(current.full_taken_at)} />
-          <Photo url={urls.empty} label="EMPTY" time={stamp(current.empty_taken_at)} />
+          <Photo
+            url={urls.full}
+            label="FULL"
+            time={stamp(current.full_taken_at)}
+            onOpen={() => urls.full && setPreview({ url: urls.full, label: "FULL" })}
+          />
+          <Photo
+            url={urls.empty}
+            label="EMPTY"
+            time={stamp(current.empty_taken_at)}
+            onOpen={() => urls.empty && setPreview({ url: urls.empty, label: "EMPTY" })}
+          />
         </div>
-        <div className="mt-3 flex flex-wrap justify-center gap-2 text-xs">
+        <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
           <span className="rounded-full bg-neutral-100 px-2 py-1 dark:bg-neutral-700">
             ⏱ gap {fmtGap(gap)}
           </span>
@@ -143,6 +155,18 @@ export function AuditDeck({
             <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-700">
               {current.claimed_chug ? "claims chug" : "looks chugged"} 🍺×2
             </span>
+          )}
+          {current.is_morning && (
+            <span className="rounded-full bg-sky-100 px-2 py-1 text-sky-700">Morning +1</span>
+          )}
+          {current.is_happy_hour && (
+            <span className="rounded-full bg-pink-100 px-2 py-1 text-pink-700">Happy hour ⏰ +1</span>
+          )}
+          {current.is_early_bird && (
+            <span className="rounded-full bg-lime-100 px-2 py-1 text-lime-700">Early Bird 🐦 +1</span>
+          )}
+          {current.is_night_owl && (
+            <span className="rounded-full bg-indigo-100 px-2 py-1 text-indigo-700">Night Owl 🌙 +1</span>
           )}
         </div>
       </motion.div>
@@ -165,13 +189,42 @@ export function AuditDeck({
           ✓
         </button>
       </div>
+
+      {preview && (
+        <PhotoPreview url={preview.url} label={preview.label} onClose={() => setPreview(null)} />
+      )}
     </div>
   );
 }
 
-function Photo({ url, label, time }: { url: string | null; label: string; time: string }) {
+function Photo({
+  url,
+  label,
+  time,
+  onOpen,
+}: {
+  url: string | null;
+  label: string;
+  time: string;
+  onOpen: () => void;
+}) {
+  // The card itself is draggable (left/right swipe), so distinguish a real tap
+  // from a swipe by tracking how far the pointer moved before release.
+  const down = useRef<{ x: number; y: number } | null>(null);
+
   return (
-    <div className="relative mx-auto h-[36vh] w-[36vh] max-w-full overflow-hidden rounded-xl bg-neutral-200 dark:bg-neutral-700">
+    <div
+      className="relative mx-auto h-[23vh] w-[23vh] max-w-full overflow-hidden rounded-xl bg-neutral-200 dark:bg-neutral-700"
+      onPointerDown={(e) => {
+        down.current = { x: e.clientX, y: e.clientY };
+      }}
+      onPointerUp={(e) => {
+        const d = down.current;
+        down.current = null;
+        if (!url || !d) return;
+        if (Math.abs(e.clientX - d.x) < 8 && Math.abs(e.clientY - d.y) < 8) onOpen();
+      }}
+    >
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt={label} className="h-full w-full object-cover" />
@@ -184,6 +237,11 @@ function Photo({ url, label, time }: { url: string | null; label: string; time: 
       <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1 text-[10px] text-white">
         {time}
       </span>
+      {url && (
+        <span className="pointer-events-none absolute right-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+          🔍 tap
+        </span>
+      )}
     </div>
   );
 }

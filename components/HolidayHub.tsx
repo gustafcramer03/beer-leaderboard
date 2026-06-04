@@ -8,9 +8,14 @@ import { AuditDeck } from "./AuditDeck";
 import { Leaderboard } from "./Leaderboard";
 import { AdminQueue } from "./AdminQueue";
 import { LogBeer } from "./LogBeer";
+import { HappyHourBanner } from "./HappyHourBanner";
+import { AchievementsCabinet } from "./AchievementsCabinet";
+import { RuleBook } from "./RuleBook";
 import { TripStats } from "./TripStats";
+import { PaceBoard } from "./PaceBoard";
 
-type Tab = "board" | "stats" | "log" | "admin";
+type Tab = "board" | "log" | "menu";
+type MenuView = "achievements" | "stats" | "pace" | "rules" | "rulings";
 
 export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: () => void }) {
   const { userId } = useSession();
@@ -19,6 +24,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
   const [queue, setQueue] = useState<AuditItem[] | null>(null);
   const [gateCleared, setGateCleared] = useState(false);
   const [tab, setTab] = useState<Tab>("board");
+  const [view, setView] = useState<MenuView | null>(null);
 
   const loadQueue = useCallback(async () => {
     try {
@@ -44,9 +50,10 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
   if (!gateCleared && queue.length > 0) {
     return (
       <div className="flex flex-1 flex-col">
+        <HappyHourBanner holidayId={holiday.id} />
         <Header holiday={holiday} onLeave={onLeave} />
-        <div className="flex flex-1 flex-col items-center justify-center p-4">
-          <p className="mb-4 max-w-xs text-center text-sm text-neutral-500">
+        <div className="flex flex-1 flex-col items-center justify-start p-4 pt-2">
+          <p className="mb-3 max-w-xs text-center text-sm text-neutral-500">
             Before you can log your own, audit your mates&apos; beers. Be fair! 🍻
           </p>
           <AuditDeck items={queue} onCleared={() => setGateCleared(true)} />
@@ -55,13 +62,27 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
     );
   }
 
+  function openView(v: MenuView) {
+    setView(v);
+  }
+
+  async function recheckAudit() {
+    await loadQueue();
+  }
+
   return (
     <div className="flex flex-1 flex-col">
+      <HappyHourBanner holidayId={holiday.id} />
       <Header holiday={holiday} onLeave={onLeave} />
 
-      <div className="flex-1 overflow-y-auto pb-20">
-        {tab === "board" && <Leaderboard holidayId={holiday.id} />}
-        {tab === "stats" && <TripStats holidayId={holiday.id} />}
+      <div className="flex-1 overflow-y-auto pb-28">
+        {tab === "board" && (
+          <Leaderboard
+            holidayId={holiday.id}
+            onOpenStats={() => setView("stats")}
+            onOpenRules={() => setView("rules")}
+          />
+        )}
         {tab === "log" && (
           <LogBeer
             holidayId={holiday.id}
@@ -69,12 +90,13 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
             onCancel={() => setTab("board")}
           />
         )}
-        {tab === "admin" && isAdmin && <AdminQueue holidayId={holiday.id} />}
+        {tab === "menu" && (
+          <MenuPage isAdmin={isAdmin} onSelect={openView} onRecheckAudit={recheckAudit} />
+        )}
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-center justify-around border-t border-neutral-200 bg-white py-2 dark:border-neutral-700 dark:bg-neutral-900">
+      <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-center justify-around border-t border-neutral-200 bg-white pt-2 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] dark:border-neutral-700 dark:bg-neutral-900">
         <TabButton active={tab === "board"} onClick={() => setTab("board")} icon="🏆" label="Board" />
-        <TabButton active={tab === "stats"} onClick={() => setTab("stats")} icon="📊" label="Stats" />
         <button
           onClick={() => setTab("log")}
           className="flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full bg-amber-500 text-2xl text-white shadow-lg"
@@ -82,12 +104,116 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
         >
           🍺
         </button>
-        {isAdmin ? (
-          <TabButton active={tab === "admin"} onClick={() => setTab("admin")} icon="⚖️" label="Rulings" />
-        ) : (
-          <TabButton active={false} onClick={loadQueue} icon="🔄" label="Audit" />
-        )}
+        <TabButton active={tab === "menu"} onClick={() => setTab("menu")} icon="☰" label="Menu" />
       </nav>
+
+      {view === "achievements" && userId && (
+        <AchievementsCabinet
+          holidayId={holiday.id}
+          userId={userId}
+          onClose={() => setView(null)}
+        />
+      )}
+      {view === "stats" && <StatsView holidayId={holiday.id} onClose={() => setView(null)} />}
+      {view === "pace" && <PaceBoard holidayId={holiday.id} onClose={() => setView(null)} />}
+      {view === "rules" && <RuleBook onClose={() => setView(null)} />}
+      {view === "rulings" && isAdmin && (
+        <RulingsView holidayId={holiday.id} onClose={() => setView(null)} />
+      )}
+    </div>
+  );
+}
+
+// The Menu page: every secondary page laid out as a grid of tiles.
+function MenuPage({
+  isAdmin,
+  onSelect,
+  onRecheckAudit,
+}: {
+  isAdmin: boolean;
+  onSelect: (v: MenuView) => void;
+  onRecheckAudit: () => void;
+}) {
+  return (
+    <div className="mx-auto flex max-w-md flex-col gap-4 p-4">
+      <h2 className="text-lg font-bold">Menu</h2>
+      <div className="grid grid-cols-2 gap-3">
+        <MenuTile icon="🏅" label="Trophy cabinet" sub="Your achievements" onClick={() => onSelect("achievements")} />
+        <MenuTile icon="📊" label="Trip stats" sub="Group highlights" onClick={() => onSelect("stats")} />
+        <MenuTile icon="📈" label="Pace board" sub="Trends & projections" onClick={() => onSelect("pace")} />
+        <MenuTile icon="📖" label="How to play" sub="Rules & scoring" onClick={() => onSelect("rules")} />
+        <MenuTile icon="🔄" label="Audit beers" sub="Check for new ones" onClick={onRecheckAudit} />
+        {isAdmin && (
+          <MenuTile icon="⚖️" label="Rulings" sub="Settle challenges" onClick={() => onSelect("rulings")} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MenuTile({
+  icon,
+  label,
+  sub,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  sub: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center gap-1 rounded-2xl bg-white p-5 text-center shadow-sm transition active:scale-[0.98] dark:bg-neutral-800"
+    >
+      <span className="text-4xl">{icon}</span>
+      <span className="mt-1 text-sm font-bold leading-tight">{label}</span>
+      <span className="text-[11px] leading-tight text-neutral-400">{sub}</span>
+    </button>
+  );
+}
+
+// Full-screen wrapper around the trip stats view (lives in the Menu now).
+function StatsView({ holidayId, onClose }: { holidayId: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
+      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+        <h2 className="text-lg font-bold">📊 Trip stats</h2>
+        <button
+          onClick={onClose}
+          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+        >
+          Done
+        </button>
+      </header>
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-md">
+          <TripStats holidayId={holidayId} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Full-screen wrapper around the admin rulings queue (moved into the Menu).
+function RulingsView({ holidayId, onClose }: { holidayId: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
+      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+        <h2 className="text-lg font-bold">⚖️ Rulings</h2>
+        <button
+          onClick={onClose}
+          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+        >
+          Done
+        </button>
+      </header>
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-md">
+          <AdminQueue holidayId={holidayId} />
+        </div>
+      </div>
     </div>
   );
 }

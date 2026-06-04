@@ -111,7 +111,8 @@ export function RuleBook({ onClose }: { onClose: () => void }) {
               Tap anyone on the league table to open their{" "}
               <span className="font-semibold">ledger</span> — a list of every beer they&apos;ve
               logged, with the points each one scored, the badges explaining why (chug, chain,
-              morning), the challenge tally, and any admin adjustments. Tap a beer to see its photos.
+              morning, happy hour, early bird, night owl), the challenge tally, and any admin
+              adjustments. Tap a beer to see its photos.
             </p>
           </Section>
 
@@ -141,15 +142,45 @@ export function RuleBook({ onClose }: { onClose: () => void }) {
                 <span className="font-semibold">07:00 and 10:59</span> (local time) earns a bonus{" "}
                 <span className="font-semibold">+1</span>.
               </li>
+              <li>
+                <Badge label="Happy hour ⏰ +1" cls="bg-pink-100 text-pink-700" /> Every day the app
+                secretly picks one <span className="font-semibold">happy hour</span> between{" "}
+                <span className="font-semibold">2pm and 11pm</span> — the same hour for the whole
+                trip, different each day. Any beer started during it has its base value{" "}
+                <span className="font-semibold">doubled</span> (an added{" "}
+                <span className="font-semibold">+1</span>). When you open the app during happy hour, a
+                banner pops up to let you know. 🍻
+              </li>
+              <li>
+                <Badge label="Early Bird 🐦 +1" cls="bg-lime-100 text-lime-700" /> A daily prize for
+                the <span className="font-semibold">whole group</span>: the{" "}
+                <span className="font-semibold">first person in the trip to finish</span> a beer each
+                day earns a bonus <span className="font-semibold">+1</span>. Only one beer wins it.
+              </li>
+              <li>
+                <Badge label="Night Owl 🌙 +1" cls="bg-indigo-100 text-indigo-700" /> The mirror
+                image, but for genuine late nights only: the{" "}
+                <span className="font-semibold">last person in the trip to finish</span> a beer each
+                day earns <span className="font-semibold">+1</span> — but{" "}
+                <span className="font-semibold">only if that beer is finished after midnight</span>{" "}
+                (between 12am and 7am). If everyone calls it a night by 11pm, nobody gets Night Owl
+                that day. Judged on the <span className="font-semibold">empty (finish) photo</span>.
+                A &quot;day&quot; runs <span className="font-semibold">7am to 7am</span>, so a 4am
+                nightcap still counts as the previous day&apos;s last beer — stay up latest to nab
+                it. 🌙
+              </li>
             </ul>
             <p>
               Chug and chain <span className="font-semibold">don&apos;t stack</span> — a beer takes
-              whichever is higher. Morning is the one bonus added on top.
+              whichever is higher. Morning, happy hour, early bird and night owl are all bonuses{" "}
+              <span className="font-semibold">added on top</span>, and they stack with each other.
             </p>
             <p className="rounded-xl bg-neutral-100 p-3 text-xs dark:bg-neutral-800">
               <span className="font-semibold">Example:</span> a chug at 08:30 = 2 (chug) + 1
               (morning) = <span className="font-semibold">3 points</span>. The 4th beer in a chain at
-              09:00 = 4 (chain) + 1 (morning) = <span className="font-semibold">5 points</span>.
+              09:00 = 4 (chain) + 1 (morning) = <span className="font-semibold">5 points</span>. A
+              chug during happy hour = 2 (chug) + 1 (happy hour) ={" "}
+              <span className="font-semibold">3 points</span>.
             </p>
             <p>
               Rejected beers score <span className="font-semibold">0</span>. An admin can override

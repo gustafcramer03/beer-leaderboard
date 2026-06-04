@@ -1,8 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LedgerEntry } from "@/lib/types";
 import { getUserLedger, signedUrl } from "@/lib/api";
+import { PhotoPreview } from "./PhotoPreview";
+
+// Save a remote image to the device. On mobile we hand it to the native share
+// sheet (which offers "Save Image" / "Save to Photos" → the camera roll); if
+// that isn't available we fall back to a plain download.
+async function saveImageToDevice(url: string, filename: string): Promise<void> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const file = new File([blob], filename, { type: blob.type || "image/jpeg" });
+
+  const nav = navigator as Navigator & {
+    canShare?: (data?: ShareData) => boolean;
+  };
+  if (typeof nav.canShare === "function" && nav.canShare({ files: [file] })) {
+    try {
+      await nav.share({ files: [file] });
+      return;
+    } catch (e) {
+      // User dismissed the share sheet — nothing more to do.
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      // Otherwise fall through to the download fallback.
+    }
+  }
+
+  const objUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(objUrl);
+}
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
@@ -35,6 +68,15 @@ function badges(e: LedgerEntry): { label: string; cls: string }[] {
   }
   if (e.is_morning) {
     out.push({ label: "Morning +1", cls: "bg-sky-100 text-sky-700" });
+  }
+  if (e.is_happy_hour) {
+    out.push({ label: "Happy hour ⏰ +1", cls: "bg-pink-100 text-pink-700" });
+  }
+  if (e.is_early_bird) {
+    out.push({ label: "Early Bird 🐦 +1", cls: "bg-lime-100 text-lime-700" });
+  }
+  if (e.is_night_owl) {
+    out.push({ label: "Night Owl 🌙 +1", cls: "bg-indigo-100 text-indigo-700" });
   }
   return out;
 }
@@ -180,11 +222,91 @@ function LedgerPhotos({ entry }: { entry: LedgerEntry }) {
 }
 
 function Photo({ url, label, time }: { url: string | null; label: string; time: string }) {
+  // A short tap opens the zoom inspector. A long-press (or right-click) reveals
+  // a "Save to Photos" option — in a home-screen PWA iOS suppresses its own
+  // image menu, so we provide our own.
+  const [menu, setMenu] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const timer = useRef<number | null>(null);
+  const down = useRef<{ x: number; y: number } | null>(null);
+  const longFired = useRef(false);
+
+  function clearTimer() {
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+      timer.current = null;
+    }
+  }
+  function startPress(e: React.PointerEvent) {
+    if (!url) return;
+    down.current = { x: e.clientX, y: e.clientY };
+    longFired.current = false;
+    clearTimer();
+    timer.current = window.setTimeout(() => {
+      longFired.current = true;
+      setMenu(true);
+    }, 450);
+  }
+  function movePress(e: React.PointerEvent) {
+    const d = down.current;
+    if (d && (Math.abs(e.clientX - d.x) > 8 || Math.abs(e.clientY - d.y) > 8)) {
+      clearTimer(); // a scroll/drag, not a press
+    }
+  }
+  function endPress(e: React.PointerEvent) {
+    clearTimer();
+    const d = down.current;
+    down.current = null;
+    if (!url || !d) return;
+    // A clean short tap (long-press didn't fire, menu closed, little movement)
+    // opens the zoom preview.
+    if (
+      !longFired.current &&
+      !menu &&
+      Math.abs(e.clientX - d.x) < 8 &&
+      Math.abs(e.clientY - d.y) < 8
+    ) {
+      setPreview(true);
+    }
+  }
+
+  async function save() {
+    if (!url) return;
+    setSaving(true);
+    try {
+      await saveImageToDevice(url, `beer-${label.toLowerCase()}-${time.replace(/\D/g, "")}.jpg`);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+      setMenu(false);
+    }
+  }
+
   return (
-    <div className="relative aspect-square overflow-hidden rounded-xl bg-neutral-200 dark:bg-neutral-700">
+    <div
+      className="relative aspect-square overflow-hidden rounded-xl bg-neutral-200 dark:bg-neutral-700"
+      onPointerDown={startPress}
+      onPointerUp={endPress}
+      onPointerMove={movePress}
+      onPointerLeave={clearTimer}
+      onContextMenu={(e) => {
+        if (!url) return;
+        e.preventDefault();
+        longFired.current = true;
+        setMenu(true);
+      }}
+    >
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={label} className="h-full w-full object-cover" />
+        <img
+          src={url}
+          alt={label}
+          draggable={false}
+          className="h-full w-full select-none object-cover"
+          style={{ WebkitTouchCallout: "none" }}
+        />
       ) : (
         <div className="flex h-full items-center justify-center text-neutral-400">…</div>
       )}
@@ -194,6 +316,33 @@ function Photo({ url, label, time }: { url: string | null; label: string; time: 
       <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1 text-[10px] text-white">
         {time}
       </span>
+      {url && (
+        <span className="pointer-events-none absolute right-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+          🔍
+        </span>
+      )}
+
+      {menu && (
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/50"
+          onClick={() => setMenu(false)}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              save();
+            }}
+            disabled={saving}
+            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-neutral-900 shadow active:scale-95 disabled:opacity-60"
+          >
+            {saving ? "Saving…" : "📷 Save to Photos"}
+          </button>
+        </div>
+      )}
+
+      {preview && url && (
+        <PhotoPreview url={url} label={label} onClose={() => setPreview(false)} />
+      )}
     </div>
   );
 }

@@ -2,14 +2,22 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { StandingsResult } from "@/lib/types";
-import { getStandings, refreshSnapshot } from "@/lib/api";
+import { getStandings, refreshSnapshot, setHolidayState } from "@/lib/api";
 import { useSession } from "./SessionProvider";
 import { PlayerLedger } from "./PlayerLedger";
-import { RuleBook } from "./RuleBook";
+import { RevealShow } from "./RevealShow";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
-export function Leaderboard({ holidayId }: { holidayId: string }) {
+export function Leaderboard({
+  holidayId,
+  onOpenStats,
+  onOpenRules,
+}: {
+  holidayId: string;
+  onOpenStats: () => void;
+  onOpenRules: () => void;
+}) {
   const { userId } = useSession();
   const [result, setResult] = useState<StandingsResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -17,7 +25,8 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
 
   const [peeking, setPeeking] = useState(false);
   const [ledgerFor, setLedgerFor] = useState<{ id: string; name: string } | null>(null);
-  const [showRules, setShowRules] = useState(false);
+  const [stateBusy, setStateBusy] = useState(false);
+  const [showReveal, setShowReveal] = useState(false);
 
   const load = useCallback(
     async (adminPeek = false) => {
@@ -49,6 +58,18 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
     }
   }
 
+  async function changeState(state: "live" | "dark" | "reveal" | "auto") {
+    setStateBusy(true);
+    try {
+      await setHolidayState(holidayId, state);
+      await load();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setStateBusy(false);
+    }
+  }
+
   if (loading) return <p className="p-6 text-center text-neutral-500">Loading…</p>;
   if (!result) return <p className="p-6 text-center text-neutral-500">No data yet.</p>;
 
@@ -74,13 +95,23 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
             {peeking ? "Peeking…" : "👁️ Peek at standings (admin)"}
           </button>
         )}
-        <button
-          onClick={() => setShowRules(true)}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
-        >
-          📖 Rules
-        </button>
-        {showRules && <RuleBook onClose={() => setShowRules(false)} />}
+        <div className="flex gap-2">
+          <button
+            onClick={onOpenStats}
+            className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          >
+            📊 Stats
+          </button>
+          <button
+            onClick={onOpenRules}
+            className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          >
+            📖 Rules
+          </button>
+        </div>
+        {result.is_admin && (
+          <AdminTripControls state={result.state} busy={stateBusy} onChange={changeState} />
+        )}
       </div>
     );
   }
@@ -103,6 +134,14 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
               Champion: {standings[0].display_name} — {standings[0].points} pts
             </p>
           )}
+          {standings.length > 0 && (
+            <button
+              onClick={() => setShowReveal(true)}
+              className="mt-3 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold backdrop-blur active:scale-95"
+            >
+              ▶️ Play the reveal
+            </button>
+          )}
         </div>
       )}
 
@@ -115,7 +154,14 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
             </span>
           )}
           <button
-            onClick={() => setShowRules(true)}
+            onClick={onOpenStats}
+            aria-label="Trip stats"
+            className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium dark:bg-neutral-700"
+          >
+            📊 Stats
+          </button>
+          <button
+            onClick={onOpenRules}
             aria-label="How the game works"
             className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium dark:bg-neutral-700"
           >
@@ -158,13 +204,16 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
       </ul>
 
       {result.is_admin && (
-        <button
-          onClick={adminRefresh}
-          disabled={refreshing}
-          className="mt-2 self-center rounded-full border border-amber-400 px-4 py-2 text-sm text-amber-600 disabled:opacity-40"
-        >
-          {refreshing ? "Refreshing…" : "↻ Refresh now (admin)"}
-        </button>
+        <>
+          <button
+            onClick={adminRefresh}
+            disabled={refreshing}
+            className="mt-2 self-center rounded-full border border-amber-400 px-4 py-2 text-sm text-amber-600 disabled:opacity-40"
+          >
+            {refreshing ? "Refreshing…" : "↻ Refresh now (admin)"}
+          </button>
+          <AdminTripControls state={result.state} busy={stateBusy} onChange={changeState} />
+        </>
       )}
       <p className="text-center text-xs text-neutral-400">
         Scores auto-update hourly. Tap a player to see their beers.
@@ -179,7 +228,75 @@ export function Leaderboard({ holidayId }: { holidayId: string }) {
         />
       )}
 
-      {showRules && <RuleBook onClose={() => setShowRules(false)} />}
+      {showReveal && (
+        <RevealShow standings={standings} onClose={() => setShowReveal(false)} />
+      )}
+    </div>
+  );
+}
+
+// Admin-only board-state controls. Toggle the dark window on/off and end the
+// trip to trigger the reveal. 'auto' hands control back to the calendar.
+function AdminTripControls({
+  state,
+  busy,
+  onChange,
+}: {
+  state: "live" | "dark" | "reveal";
+  busy: boolean;
+  onChange: (s: "live" | "dark" | "reveal" | "auto") => void;
+}) {
+  return (
+    <div className="mt-3 flex flex-col gap-2 rounded-2xl border border-neutral-200 p-3 dark:border-neutral-700">
+      <span className="text-center text-xs font-semibold uppercase tracking-wide text-neutral-400">
+        Admin controls
+      </span>
+      <div className="flex flex-wrap justify-center gap-2">
+        {state !== "dark" ? (
+          <button
+            onClick={() => onChange("dark")}
+            disabled={busy}
+            className="rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-40 dark:bg-neutral-200 dark:text-neutral-900"
+          >
+            🌑 Go dark
+          </button>
+        ) : (
+          <button
+            onClick={() => onChange("live")}
+            disabled={busy}
+            className="rounded-full bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+          >
+            ☀️ Lift the dark
+          </button>
+        )}
+
+        {state !== "reveal" ? (
+          <button
+            onClick={() => onChange("reveal")}
+            disabled={busy}
+            className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
+          >
+            🏆 End trip & reveal
+          </button>
+        ) : (
+          <button
+            onClick={() => onChange("live")}
+            disabled={busy}
+            className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium disabled:opacity-40 dark:border-neutral-600"
+          >
+            ↩️ Reopen the board
+          </button>
+        )}
+
+        <button
+          onClick={() => onChange("auto")}
+          disabled={busy}
+          className="rounded-full border border-neutral-300 px-4 py-2 text-sm text-neutral-500 disabled:opacity-40 dark:border-neutral-600"
+        >
+          🗓️ Auto (by date)
+        </button>
+      </div>
+      {busy && <span className="text-center text-xs text-neutral-400">Updating…</span>}
     </div>
   );
 }
