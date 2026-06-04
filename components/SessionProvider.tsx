@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
-type Profile = { id: string; display_name: string };
+type Profile = { id: string; display_name: string; avatar_path: string | null };
 
 type Ctx = {
   ready: boolean;
@@ -53,7 +53,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const loadProfile = useCallback(async (uid: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name")
+      .select("id, display_name, avatar_path")
       .eq("id", uid)
       .maybeSingle();
     setProfile(data ?? null);

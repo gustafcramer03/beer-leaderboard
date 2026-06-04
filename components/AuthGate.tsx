@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "./SessionProvider";
+import { uploadAvatar } from "@/lib/api";
 
 type Mode = "new" | "returning";
 
@@ -15,6 +16,21 @@ export function AuthGate() {
   // After a successful sign-up we show a one-time reminder of the login details.
   const [saved, setSaved] = useState<{ name: string; code: string } | null>(null);
 
+  // Optional profile photo chosen during sign-up (selfie or library pick).
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!photo) {
+      setPhotoPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(photo);
+    setPhotoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photo]);
+
   const canSubmit = name.trim().length > 0 && code.length > 0 && !busy;
 
   async function submit() {
@@ -24,6 +40,14 @@ export function AuthGate() {
     try {
       if (mode === "new") {
         await signUp(name, code);
+        // Avatar is optional — never block account creation if it fails.
+        if (photo) {
+          try {
+            await uploadAvatar(photo);
+          } catch (e) {
+            console.error("avatar upload failed", e);
+          }
+        }
         setSaved({ name: name.trim(), code });
       } else {
         await signIn(name, code);
@@ -107,6 +131,50 @@ export function AuthGate() {
       />
       {mode === "new" && (
         <p className="-mt-3 text-xs text-neutral-400">Any code you&apos;ll remember — short is fine.</p>
+      )}
+
+      {mode === "new" && (
+        <div className="flex flex-col items-center gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-neutral-300 bg-neutral-100 text-2xl dark:border-neutral-600 dark:bg-neutral-800"
+            aria-label="Add a profile photo"
+          >
+            {photoPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photoPreview} alt="" className="h-full w-full object-cover" />
+            ) : (
+              "📷"
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="text-xs font-medium text-amber-600"
+          >
+            {photo ? "Change photo" : "Add a profile photo (optional)"}
+          </button>
+          {photo && (
+            <button
+              type="button"
+              onClick={() => setPhoto(null)}
+              className="text-xs text-neutral-400"
+            >
+              Remove
+            </button>
+          )}
+          <p className="max-w-xs text-center text-[11px] text-neutral-400">
+            Take a selfie or pick one from your camera roll. Skip it and you&apos;ll get the Lorax. 🟠
+          </p>
+        </div>
       )}
 
       <button

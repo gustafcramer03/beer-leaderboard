@@ -40,6 +40,38 @@ export async function compressImage(file: File): Promise<File> {
   }
 }
 
+// Square-crop (centre) + downscale a profile photo to a small avatar. Avatars
+// are shown tiny, so 256px JPEG keeps each one to a few KB.
+const AVATAR_DIM = 256;
+
+export async function compressAvatar(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+
+  try {
+    const bitmap = await loadBitmap(file);
+    const { width, height } = bitmap;
+    const side = Math.min(width, height);
+    const sx = (width - side) / 2;
+    const sy = (height - side) / 2;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = AVATAR_DIM;
+    canvas.height = AVATAR_DIM;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, AVATAR_DIM, AVATAR_DIM);
+    if ("close" in bitmap && typeof bitmap.close === "function") bitmap.close();
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.8),
+    );
+    if (!blob) return file;
+    return new File([blob], "avatar.jpg", { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
 async function loadBitmap(file: File): Promise<ImageBitmap | HTMLImageElement> {
   // createImageBitmap honours EXIF orientation on modern browsers (incl. iOS 16+).
   if (typeof createImageBitmap === "function") {

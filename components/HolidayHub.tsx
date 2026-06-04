@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import type { Holiday, AuditItem } from "@/lib/types";
-import { getAuditQueue, challengedBeers } from "@/lib/api";
+import { getAuditQueue, challengedBeers, uploadAvatar } from "@/lib/api";
 import { useSession } from "./SessionProvider";
+import { Avatar } from "./Avatar";
 import { AuditDeck } from "./AuditDeck";
 import { Leaderboard } from "./Leaderboard";
 import { AdminQueue } from "./AdminQueue";
@@ -18,8 +19,13 @@ type Tab = "board" | "log" | "menu";
 type MenuView = "achievements" | "stats" | "pace" | "rules" | "rulings";
 
 export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: () => void }) {
-  const { userId } = useSession();
+  const { userId, profile, refreshProfile } = useSession();
   const isAdmin = holiday.admin_id === userId;
+
+  async function changeAvatar(file: File) {
+    await uploadAvatar(file);
+    await refreshProfile();
+  }
 
   const [queue, setQueue] = useState<AuditItem[] | null>(null);
   const [gateCleared, setGateCleared] = useState(false);
@@ -141,6 +147,9 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
             onRecheckAudit={recheckAudit}
             auditCount={auditCount}
             rulingCount={rulingCount}
+            displayName={profile?.display_name ?? "You"}
+            avatarPath={profile?.avatar_path ?? null}
+            onChangeAvatar={changeAvatar}
           />
         )}
       </div>
@@ -187,16 +196,23 @@ function MenuPage({
   onRecheckAudit,
   auditCount,
   rulingCount,
+  displayName,
+  avatarPath,
+  onChangeAvatar,
 }: {
   isAdmin: boolean;
   onSelect: (v: MenuView) => void;
   onRecheckAudit: () => void;
   auditCount: number;
   rulingCount: number;
+  displayName: string;
+  avatarPath: string | null;
+  onChangeAvatar: (file: File) => Promise<void>;
 }) {
   return (
     <div className="mx-auto flex max-w-md flex-col gap-4 p-4">
       <h2 className="text-lg font-bold">Menu</h2>
+      <ProfileCard displayName={displayName} avatarPath={avatarPath} onChangeAvatar={onChangeAvatar} />
       <div className="grid grid-cols-2 gap-3">
         <MenuTile icon="🏅" label="Trophy cabinet" sub="Your achievements" onClick={() => onSelect("achievements")} />
         <MenuTile icon="📊" label="Trip stats" sub="Group highlights" onClick={() => onSelect("stats")} />
@@ -218,6 +234,66 @@ function MenuPage({
             badge={rulingCount}
           />
         )}
+      </div>
+    </div>
+  );
+}
+
+// Profile header in the Menu: your avatar + name with a tap-to-change photo.
+// Doubles as the way existing accounts (who never saw the sign-up step) add one.
+function ProfileCard({
+  displayName,
+  avatarPath,
+  onChangeAvatar,
+}: {
+  displayName: string;
+  avatarPath: string | null;
+  onChangeAvatar: (file: File) => Promise<void>;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    try {
+      await onChangeAvatar(file);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-800">
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => pick(e.target.files?.[0])}
+      />
+      <button
+        onClick={() => fileRef.current?.click()}
+        disabled={busy}
+        className="relative disabled:opacity-50"
+        aria-label="Change profile photo"
+      >
+        <Avatar path={avatarPath} size={56} />
+        <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs text-white shadow">
+          📷
+        </span>
+      </button>
+      <div className="min-w-0">
+        <div className="truncate font-bold">{displayName}</div>
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={busy}
+          className="text-xs font-medium text-amber-600 disabled:opacity-50"
+        >
+          {busy ? "Uploading…" : avatarPath ? "Change photo" : "Add a profile photo"}
+        </button>
       </div>
     </div>
   );

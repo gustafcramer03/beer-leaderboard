@@ -27,3 +27,4 @@ export const supabase = createClient(
 });
 
 export const PHOTO_BUCKET = "beer-photos";
+export const AVATAR_BUCKET = "avatars";

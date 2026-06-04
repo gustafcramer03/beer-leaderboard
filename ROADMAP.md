@@ -15,8 +15,15 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 - [ ] **Live activity feed / "what's happening"** 📰 — reverse-chron ticker ("🍺 Anna sank her
   4th… 🐦 Tom grabbed Early Bird… 🔥 Sam's on a 3-chain!"). Makes the trip feel alive between
   board refreshes. _Needs a small RPC over recent `beers` rows + frontend list._
+- [x] **Profile photos** 📸 — _SHIPPED_ (migration 0021). Optional selfie/library photo at
+  sign-up, square-cropped + compressed client-side to a ~256px JPEG, stored in a private
+  `avatars` bucket at `{uid}/avatar.jpg` and read via signed URLs. `profiles.avatar_path` holds
+  it; accounts without one fall back to a bundled static Lorax (`public/default-avatar.png`, zero
+  storage). Reusable `Avatar.tsx`; editable from the Menu profile card (covers existing accounts).
+  Foundation for the rivalry cards below.
 - [ ] **Head-to-head / rivalry card** ⚔️ — tap two players to compare totals, chugs, fastest
-  chug, bonus tallies side by side. _Mostly frontend if it reuses ledger/stats data._
+  chug, bonus tallies side by side. _Mostly frontend if it reuses ledger/stats data; now that
+  profile photos exist, show each player's avatar on the card._
 - [x] **Pace projection board** 📈 — _SHIPPED_. Full-page line charts: cumulative beers/points
   drawn solid up to today, dashed projection to trip end at current daily pace. Group chart
   (red Beers + blue Points) and a per-player chart (one colour each, 🍺/🎯 toggle, tap a line

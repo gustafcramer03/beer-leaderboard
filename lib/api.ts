@@ -1,7 +1,7 @@
 "use client";
 
-import { supabase, PHOTO_BUCKET } from "@/lib/supabase";
-import { compressImage } from "@/lib/image";
+import { supabase, PHOTO_BUCKET, AVATAR_BUCKET } from "@/lib/supabase";
+import { compressImage, compressAvatar } from "@/lib/image";
 import type {
   Holiday,
   AuditItem,
@@ -288,6 +288,36 @@ export async function discardBeer(beerId: string): Promise<void> {
 
 export async function signedUrl(path: string): Promise<string | null> {
   const { data } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, 120);
+  return data?.signedUrl ?? null;
+}
+
+// --- Profile avatars ---
+
+// Compress (square ~256px JPEG) and store the caller's avatar, then point their
+// profile row at it. Returns the storage path. Overwrites any existing avatar.
+export async function uploadAvatar(file: File): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) throw new Error("not signed in");
+
+  const upload = await compressAvatar(file);
+  const path = `${uid}/avatar.jpg`;
+  const { error: upErr } = await supabase.storage
+    .from(AVATAR_BUCKET)
+    .upload(path, upload, { upsert: true, contentType: "image/jpeg" });
+  if (upErr) throw upErr;
+
+  const { error: updErr } = await supabase
+    .from("profiles")
+    .update({ avatar_path: path })
+    .eq("id", uid);
+  if (updErr) throw updErr;
+
+  return path;
+}
+
+export async function avatarUrl(path: string): Promise<string | null> {
+  const { data } = await supabase.storage.from(AVATAR_BUCKET).createSignedUrl(path, 3600);
   return data?.signedUrl ?? null;
 }
 
