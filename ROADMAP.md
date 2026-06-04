@@ -29,8 +29,11 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   Bird/Night Owl, or overtaking someone; `navigator.vibrate()` on log/swipe. _Frontend-only._
 - [ ] **Pull-to-refresh + optimistic board** — manual refresh gesture so people don't wait for
   the hourly cron, plus an optimistic "+1" the moment a beer is logged. _Frontend-only._
-- [ ] **"Your position" sticky chip** — sticky footer showing your own rank on a long board.
-  _Frontend-only._
+- [x] **"Your position" sticky chip** — _SHIPPED_. Amber pill fixed above the bottom nav
+  (`bottom-24`) showing your rank/points/beer count, visible only while your own row is scrolled
+  off-screen; tap to smooth-scroll back to it. IntersectionObserver on the user's `<li>` (negative
+  bottom `rootMargin` so a row hidden behind the nav counts as off-screen). `Leaderboard.tsx`,
+  frontend-only.
 - [ ] **Empty/loading states with personality** — extend the Stats-tab warmth to an empty board,
   empty audit queue ("All caught up — go drink 🍺"), and skeleton loaders. _Frontend-only._
 - [ ] **Share card generator** 📲 — "Share my stats" button rendering a branded image (canvas)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import type { StandingsResult } from "@/lib/types";
 import { getStandings, refreshSnapshot, setHolidayState } from "@/lib/api";
 import { useSession } from "./SessionProvider";
@@ -27,6 +27,26 @@ export function Leaderboard({
   const [ledgerFor, setLedgerFor] = useState<{ id: string; name: string } | null>(null);
   const [stateBusy, setStateBusy] = useState(false);
   const [showReveal, setShowReveal] = useState(false);
+
+  // Sticky "your position" chip: shown only while your own row is scrolled
+  // out of view. rootMargin trims the bottom so a row hidden behind the nav
+  // bar counts as off-screen.
+  const meRef = useRef<HTMLLIElement>(null);
+  const [showChip, setShowChip] = useState(false);
+
+  useEffect(() => {
+    const el = meRef.current;
+    if (!el) {
+      setShowChip(false);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      ([entry]) => setShowChip(!entry.isIntersecting),
+      { root: null, rootMargin: "0px 0px -96px 0px", threshold: 0 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [result, userId]);
 
   const load = useCallback(
     async (adminPeek = false) => {
@@ -117,6 +137,8 @@ export function Leaderboard({
   }
 
   const standings = result.standings ?? [];
+  const meIndex = standings.findIndex((s) => s.user_id === userId);
+  const me = meIndex >= 0 ? standings[meIndex] : null;
 
   return (
     <div className="flex flex-col gap-3 p-4">
@@ -172,7 +194,7 @@ export function Leaderboard({
 
       <ul className="flex flex-col gap-2">
         {standings.map((s, i) => (
-          <li key={s.user_id}>
+          <li key={s.user_id} ref={s.user_id === userId ? meRef : null}>
             <button
               onClick={() => setLedgerFor({ id: s.user_id, name: s.display_name })}
               className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left shadow-sm transition active:scale-[0.99] ${
@@ -230,6 +252,22 @@ export function Leaderboard({
 
       {showReveal && (
         <RevealShow standings={standings} onClose={() => setShowReveal(false)} />
+      )}
+
+      {showChip && me && (
+        <button
+          onClick={() => meRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+          className="fixed inset-x-0 bottom-24 z-30 mx-auto flex w-[calc(100%-2rem)] max-w-sm items-center justify-between rounded-full bg-amber-500 px-4 py-2.5 text-left text-white shadow-lg active:scale-[0.99]"
+        >
+          <span className="flex items-center gap-3">
+            <span className="w-6 text-center font-bold">{MEDALS[meIndex] ?? `#${meIndex + 1}`}</span>
+            <span className="font-semibold">You</span>
+          </span>
+          <span className="text-sm">
+            <span className="font-bold">{me.points}</span>
+            <span className="ml-1 text-amber-100">pts · {me.beer_count}🍺</span>
+          </span>
+        </button>
       )}
     </div>
   );
