@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Holiday, AuditItem } from "@/lib/types";
-import { getAuditQueue } from "@/lib/api";
+import { getAuditQueue, challengedBeers } from "@/lib/api";
 import { useSession } from "./SessionProvider";
 import { AuditDeck } from "./AuditDeck";
 import { Leaderboard } from "./Leaderboard";
@@ -25,15 +25,19 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
   const [gateCleared, setGateCleared] = useState(false);
   const [tab, setTab] = useState<Tab>("board");
   const [view, setView] = useState<MenuView | null>(null);
+  const [auditCount, setAuditCount] = useState(0);
+  const [rulingCount, setRulingCount] = useState(0);
 
   const loadQueue = useCallback(async () => {
     try {
       const q = await getAuditQueue(holiday.id);
       setQueue(q);
+      setAuditCount(q.length);
       setGateCleared(q.length === 0);
     } catch (e) {
       console.error(e);
       setQueue([]);
+      setAuditCount(0);
       setGateCleared(true);
     }
   }, [holiday.id]);
@@ -41,6 +45,40 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
   useEffect(() => {
     loadQueue();
   }, [loadQueue]);
+
+  // Display-only counts for the nudge badges — refreshed without re-triggering
+  // the audit gate, so beers others log/challenge while you're in the app
+  // surface on the Menu. Ruling count is admin-only (beers awaiting a ruling).
+  const refreshBadges = useCallback(async () => {
+    try {
+      const q = await getAuditQueue(holiday.id);
+      setAuditCount(q.length);
+    } catch {
+      /* badge is best-effort; ignore failures */
+    }
+    if (isAdmin) {
+      try {
+        const c = await challengedBeers(holiday.id);
+        setRulingCount(c.length);
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [holiday.id, isAdmin]);
+
+  useEffect(() => {
+    if (!gateCleared) return;
+    refreshBadges();
+    const id = setInterval(refreshBadges, 60_000);
+    const onFocus = () => refreshBadges();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [gateCleared, refreshBadges]);
 
   // Audit gate: must clear everyone else's pending beers before using the app.
   if (queue === null) {
@@ -56,7 +94,13 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
           <p className="mb-3 max-w-xs text-center text-sm text-neutral-500">
             Before you can log your own, audit your mates&apos; beers. Be fair! 🍻
           </p>
-          <AuditDeck items={queue} onCleared={() => setGateCleared(true)} />
+          <AuditDeck
+            items={queue}
+            onCleared={() => {
+              setGateCleared(true);
+              setAuditCount(0);
+            }}
+          />
         </div>
       </div>
     );
@@ -91,7 +135,13 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
           />
         )}
         {tab === "menu" && (
-          <MenuPage isAdmin={isAdmin} onSelect={openView} onRecheckAudit={recheckAudit} />
+          <MenuPage
+            isAdmin={isAdmin}
+            onSelect={openView}
+            onRecheckAudit={recheckAudit}
+            auditCount={auditCount}
+            rulingCount={rulingCount}
+          />
         )}
       </div>
 
@@ -104,7 +154,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
         >
           🍺
         </button>
-        <TabButton active={tab === "menu"} onClick={() => setTab("menu")} icon="☰" label="Menu" />
+        <TabButton active={tab === "menu"} onClick={() => setTab("menu")} icon="☰" label="Menu" badge={auditCount + rulingCount} />
       </nav>
 
       {view === "achievements" && userId && (
@@ -118,7 +168,13 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
       {view === "pace" && <PaceBoard holidayId={holiday.id} onClose={() => setView(null)} />}
       {view === "rules" && <RuleBook onClose={() => setView(null)} />}
       {view === "rulings" && isAdmin && (
-        <RulingsView holidayId={holiday.id} onClose={() => setView(null)} />
+        <RulingsView
+          holidayId={holiday.id}
+          onClose={() => {
+            setView(null);
+            refreshBadges();
+          }}
+        />
       )}
     </div>
   );
@@ -129,10 +185,14 @@ function MenuPage({
   isAdmin,
   onSelect,
   onRecheckAudit,
+  auditCount,
+  rulingCount,
 }: {
   isAdmin: boolean;
   onSelect: (v: MenuView) => void;
   onRecheckAudit: () => void;
+  auditCount: number;
+  rulingCount: number;
 }) {
   return (
     <div className="mx-auto flex max-w-md flex-col gap-4 p-4">
@@ -142,9 +202,21 @@ function MenuPage({
         <MenuTile icon="📊" label="Trip stats" sub="Group highlights" onClick={() => onSelect("stats")} />
         <MenuTile icon="📈" label="Pace board" sub="Trends & projections" onClick={() => onSelect("pace")} />
         <MenuTile icon="📖" label="How to play" sub="Rules & scoring" onClick={() => onSelect("rules")} />
-        <MenuTile icon="🔄" label="Audit beers" sub="Check for new ones" onClick={onRecheckAudit} />
+        <MenuTile
+          icon="🔄"
+          label="Audit beers"
+          sub={auditCount > 0 ? `${auditCount} waiting` : "Check for new ones"}
+          onClick={onRecheckAudit}
+          badge={auditCount}
+        />
         {isAdmin && (
-          <MenuTile icon="⚖️" label="Rulings" sub="Settle challenges" onClick={() => onSelect("rulings")} />
+          <MenuTile
+            icon="⚖️"
+            label="Rulings"
+            sub={rulingCount > 0 ? `${rulingCount} to settle` : "Settle challenges"}
+            onClick={() => onSelect("rulings")}
+            badge={rulingCount}
+          />
         )}
       </div>
     </div>
@@ -156,21 +228,36 @@ function MenuTile({
   label,
   sub,
   onClick,
+  badge = 0,
 }: {
   icon: string;
   label: string;
   sub: string;
   onClick: () => void;
+  badge?: number;
 }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-1 rounded-2xl bg-white p-5 text-center shadow-sm transition active:scale-[0.98] dark:bg-neutral-800"
+      className="relative flex flex-col items-center gap-1 rounded-2xl bg-white p-5 text-center shadow-sm transition active:scale-[0.98] dark:bg-neutral-800"
     >
+      {badge > 0 && <CountBubble count={badge} className="right-2 top-2" />}
       <span className="text-4xl">{icon}</span>
       <span className="mt-1 text-sm font-bold leading-tight">{label}</span>
       <span className="text-[11px] leading-tight text-neutral-400">{sub}</span>
     </button>
+  );
+}
+
+// Red notification bubble used for the audit nudge.
+function CountBubble({ count, className = "" }: { count: number; className?: string }) {
+  return (
+    <span
+      className={`absolute flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white shadow ${className}`}
+      aria-label={`${count} beers to audit`}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
   );
 }
 
@@ -245,19 +332,22 @@ function TabButton({
   onClick,
   icon,
   label,
+  badge = 0,
 }: {
   active: boolean;
   onClick: () => void;
   icon: string;
   label: string;
+  badge?: number;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-0.5 px-4 text-xs ${
+      className={`relative flex flex-col items-center gap-0.5 px-4 text-xs ${
         active ? "text-amber-600" : "text-neutral-400"
       }`}
     >
+      {badge > 0 && <CountBubble count={badge} className="right-1 -top-1" />}
       <span className="text-xl">{icon}</span>
       {label}
     </button>

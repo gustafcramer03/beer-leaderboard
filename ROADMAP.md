@@ -43,8 +43,14 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   _Needs web-push keys, a subscription table, and a sender._
 - [ ] **Daily recap** 🌅 — once-a-day summary card on first open (yesterday's winner, total sunk,
   Early Bird/Night Owl winners). _Reuses stats-style data._
-- [ ] **Audit nudge badge** — a count bubble on the Rulings/Audit menu item so people know beers
-  are waiting. _Frontend-only._
+- [x] **Audit + rulings nudge badges** — _SHIPPED_. Red count bubbles on the 🔄 Audit beers tile
+  (mates' beers waiting to swipe) and, for the admin, the ⚖️ Rulings tile (beers awaiting a
+  ruling); the ☰ Menu bottom-nav tab shows the combined total. Polls every 60s and on window
+  focus so new beers/challenges surface without forcing the audit gate. `HolidayHub.tsx`, reuses
+  `getAuditQueue` + `challengedBeers`.
+- [x] **Rulings are final** — _SHIPPED_ (migration 0019). A beer reaches the admin only the first
+  time it's challenged; once ruled (uphold / reject / set score) it's stamped `admin_ruled_at` and
+  a later challenge can never re-escalate it. Players still audit every beer; admin reviews once.
 
 ## 🛠️ Admin niceties
 
