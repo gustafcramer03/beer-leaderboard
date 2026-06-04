@@ -61,6 +61,7 @@ export type LedgerEntry = {
   is_night_owl: boolean;
   is_offline: boolean;
   score_override: number | null;
+  override_reason: string | null;
   points: number;
   reviews_total: number;
   reviews_challenged: number;

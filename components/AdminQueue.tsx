@@ -37,10 +37,10 @@ export function AdminQueue({ holidayId }: { holidayId: string }) {
     }
   }
 
-  async function setScore(beerId: string, points: number) {
+  async function setScore(beerId: string, points: number, reason: string) {
     setBusyId(beerId);
     try {
-      await adminSetBeerScore(beerId, points);
+      await adminSetBeerScore(beerId, points, reason);
       await load();
     } catch (e) {
       console.error(e);
@@ -86,7 +86,7 @@ function AdminCard({
   beer: Beer;
   busy: boolean;
   onRule: (id: string, d: "confirm" | "reject") => void;
-  onSetScore: (id: string, points: number) => void;
+  onSetScore: (id: string, points: number, reason: string) => void;
 }) {
   const [urls, setUrls] = useState<{ full: string | null; empty: string | null }>({
     full: null,
@@ -94,6 +94,7 @@ function AdminCard({
   });
   const [editing, setEditing] = useState(false);
   const [points, setPoints] = useState(1);
+  const [reason, setReason] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -164,17 +165,28 @@ function AdminCard({
             </button>
             <span className="text-sm text-neutral-400">pts</span>
           </div>
+          <input
+            type="text"
+            value={reason}
+            onChange={(e) => setReason(e.target.value.slice(0, 200))}
+            placeholder="Reason (optional, e.g. claimed a chug they walked)"
+            maxLength={200}
+            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-900"
+          />
           <div className="mt-1 flex gap-3">
             <button
               disabled={busy}
-              onClick={() => setEditing(false)}
+              onClick={() => {
+                setEditing(false);
+                setReason("");
+              }}
               className="flex-1 rounded-full bg-neutral-200 py-2 font-semibold text-neutral-700 disabled:opacity-40 dark:bg-neutral-700 dark:text-neutral-200"
             >
               Cancel
             </button>
             <button
               disabled={busy}
-              onClick={() => onSetScore(beer.id, points)}
+              onClick={() => onSetScore(beer.id, points, reason)}
               className="flex-1 rounded-full bg-green-500 py-2 font-semibold text-white disabled:opacity-40"
             >
               Save {points} pts

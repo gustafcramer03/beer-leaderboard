@@ -183,10 +183,12 @@ export async function adminRuleBeer(
 export async function adminSetBeerScore(
   beerId: string,
   points: number,
+  reason?: string | null,
 ): Promise<void> {
   const { error } = await supabase.rpc("admin_set_beer_score", {
     p_beer: beerId,
     p_points: points,
+    p_reason: reason ?? null,
   });
   if (error) throw error;
 }

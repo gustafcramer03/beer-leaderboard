@@ -118,12 +118,16 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 ## 🛠️ Admin niceties
 
 - [ ] **Invite via QR / share link** — faster onboarding than typing the invite code.
-- [ ] **Admin "adjust score" with reason** — store a short note alongside `score_override` so the
-  _Adjusted ✎_ badge can show *why* on tap. _Small migration (add a column) + UI._
+- [x] **Admin "adjust score" with reason** — _SHIPPED_ (migration 0029). The admin's "Set score ✎"
+  ruling now takes an optional note (≤200 chars) stored in `beers.score_override_reason` alongside
+  `score_override`; `admin_set_beer_score(beer, points, reason)` persists it and `admin_rule_beer`
+  (uphold/reject) clears it with the override. `user_ledger` returns `override_reason`, and tapping
+  an _Adjusted ✎_ beer in the player ledger reveals the reason above the photos. `AdminQueue.tsx`
+  (reason input) + `PlayerLedger.tsx`.
 
 ---
 
 _What's left, by effort-to-payoff: **pull-to-refresh + optimistic board** is the cheap frontend win.
 **Push notifications** phase 1 (happy-hour start/end) is live; later phases (audit nudges,
-challenge alerts, grand-reveal) reuse the same pipeline. **Invite via QR / share link** and
-**admin "adjust score" with reason** round out the admin niceties._
+challenge alerts, grand-reveal) reuse the same pipeline. **Invite via QR / share link** is the
+last untouched admin nicety._

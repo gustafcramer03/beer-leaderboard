@@ -186,7 +186,16 @@ export function PlayerLedger({
                     <span className="text-neutral-300">{open ? "▲" : "▼"}</span>
                   </div>
                 </button>
-                {open && <LedgerPhotos entry={e} />}
+                {open && (
+                  <>
+                    {e.score_override !== null && e.override_reason && (
+                      <p className="border-t border-neutral-100 px-4 py-2 text-[11px] leading-snug text-indigo-700 dark:border-neutral-700 dark:text-indigo-300">
+                        <span className="font-semibold">Adjusted ✎</span> — {e.override_reason}
+                      </p>
+                    )}
+                    <LedgerPhotos entry={e} />
+                  </>
+                )}
               </li>
             );
           })}
