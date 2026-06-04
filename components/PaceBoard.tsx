@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { PaceSeries, PaceEvent } from "@/lib/types";
 import { getPaceSeries } from "@/lib/api";
+import { Loading } from "./Loading";
 
 const PALETTE = [
   "#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6",
@@ -261,7 +262,7 @@ export function PaceBoard({ holidayId, onClose }: { holidayId: string; onClose: 
                 : error}
             </p>
           ) : !data ? (
-            <p className="p-6 text-center text-neutral-500">Loading…</p>
+            <Loading label="Plotting the trajectory…" />
           ) : noData ? (
             <div className="p-8 text-center text-neutral-500">
               <div className="mb-2 text-5xl">📈</div>

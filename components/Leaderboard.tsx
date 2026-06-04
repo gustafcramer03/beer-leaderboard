@@ -6,6 +6,7 @@ import { getStandings, refreshSnapshot, setHolidayState, setTripEnd } from "@/li
 import { useSession } from "./SessionProvider";
 import { PlayerLedger } from "./PlayerLedger";
 import { RevealShow } from "./RevealShow";
+import { SkeletonRows } from "./Loading";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -116,7 +117,17 @@ export function Leaderboard({
     }
   }
 
-  if (loading) return <p className="p-6 text-center text-neutral-500">Loading…</p>;
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-3 p-4">
+        <div className="flex items-center justify-between">
+          <span className="h-5 w-28 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+          <span className="h-5 w-20 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+        </div>
+        <SkeletonRows count={6} />
+      </div>
+    );
+  }
   if (!result) return <p className="p-6 text-center text-neutral-500">No data yet.</p>;
 
   if (result.state === "dark" && result.standings === null) {

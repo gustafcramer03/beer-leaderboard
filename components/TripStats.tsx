@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import type { TripStats as TripStatsT } from "@/lib/types";
 import { tripStats } from "@/lib/api";
+import { Loading } from "./Loading";
 
 function fmtHour(h: number) {
   const a = String(h).padStart(2, "0");
@@ -77,7 +78,7 @@ export function TripStats({ holidayId }: { holidayId: string }) {
       </p>
     );
   }
-  if (!stats) return <p className="p-6 text-center text-neutral-500">Loading…</p>;
+  if (!stats) return <Loading label="Adding up the rounds…" />;
 
   const dark = stats.state === "dark";
 

@@ -57,8 +57,13 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   decides top vs bottom from `boundingClientRect.top` vs `rootBounds.top` (negative bottom
   `rootMargin` so a row hidden behind the nav counts as off-screen). `Leaderboard.tsx`,
   frontend-only.
-- [ ] **Empty/loading states with personality** — extend the Stats-tab warmth to an empty board,
-  empty audit queue ("All caught up — go drink 🍺"), and skeleton loaders. _Frontend-only._
+- [x] **Empty/loading states with personality** — _SHIPPED_. Shared `Loading.tsx`: a bouncing-🍺
+  spinner with a random bartender pun ("Pouring the standings…", "Counting the empties…"), plus
+  `SkeletonRows`/`SkeletonCards` pulse placeholders. The board now shows shaped skeleton rows on
+  first load and the activity feed shows skeleton cards; every other view (stats, pace, trophies,
+  head-to-head, rulings, holiday picker, hub gate, boot screen) swaps its bare "Loading…" for a
+  context-specific witty line. Empty states already had warmth (e.g. "No beers logged yet. Be the
+  first! 🍺"). _Frontend-only._
 - [ ] **Share card generator** 📲 — "Share my stats" button rendering a branded image (canvas)
   of your rank/beers/best chug for the group chat. _Frontend (Web Share files API already wired)._
 

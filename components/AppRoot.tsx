@@ -32,7 +32,13 @@ export function AppRoot() {
   }
 
   if (!ready) {
-    return <div className="flex flex-1 items-center justify-center text-3xl">🍺</div>;
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <span className="animate-bounce text-5xl" role="img" aria-label="loading">
+          🍺
+        </span>
+      </div>
+    );
   }
 
   if (!profile) return <AuthGate />;

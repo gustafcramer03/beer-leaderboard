@@ -15,6 +15,7 @@ import {
   adminDeleteTrip,
   adminDeleteMember,
 } from "@/lib/api";
+import { Loading } from "./Loading";
 
 function fmtBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -148,7 +149,7 @@ function Dashboard({ password }: { password: string }) {
   }
 
   if (!trips || !summary) {
-    return <p className="flex-1 p-8 text-center text-neutral-500">Loading…</p>;
+    return <Loading className="flex-1" label="Cracking open the books…" />;
   }
 
   return (

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getActivityFeed } from "@/lib/api";
 import type { ActivityEvent } from "@/lib/types";
 import { Avatar } from "./Avatar";
+import { SkeletonCards } from "./Loading";
 
 // Live "what's happening" ticker — only the bigger moments (never every beer).
 // Reverse-chron, polls every 45s and on window focus so the trip feels alive
@@ -67,9 +68,7 @@ export function ActivityFeed({
 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex max-w-md flex-col gap-2 p-4">
-          {loading && events === null && !dark && (
-            <p className="p-8 text-center text-sm text-neutral-500">Catching up…</p>
-          )}
+          {loading && events === null && !dark && <SkeletonCards count={5} />}
 
           {error && <p className="p-6 text-center text-sm text-red-600">{error}</p>}
 

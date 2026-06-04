@@ -5,6 +5,7 @@ import type { Holiday } from "@/lib/types";
 import { myHolidays, createHoliday, joinHoliday } from "@/lib/api";
 import { useSession } from "./SessionProvider";
 import { DbManagement } from "./DbManagement";
+import { Loading } from "./Loading";
 
 export function HolidayPicker({ onPick }: { onPick: (h: Holiday) => void }) {
   const { profile, signOut } = useSession();
@@ -28,7 +29,7 @@ export function HolidayPicker({ onPick }: { onPick: (h: Holiday) => void }) {
     load();
   }, [load]);
 
-  if (loading) return <p className="p-8 text-center text-neutral-500">Loading…</p>;
+  if (loading) return <Loading label="Rounding up your trips…" />;
 
   return (
     <div className="flex flex-col gap-4 p-5">

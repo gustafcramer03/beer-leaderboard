@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { holidayMembers, getHeadToHead } from "@/lib/api";
 import type { HolidayMember, RivalryPlayer, HeadToHead } from "@/lib/types";
 import { Avatar } from "./Avatar";
+import { Loading } from "./Loading";
 
 type MetricKey =
   | "points"
@@ -117,7 +118,7 @@ export function RivalryCard({ holidayId, onClose }: { holidayId: string; onClose
             </div>
           )}
 
-          {loading && <p className="p-6 text-center text-neutral-500">Crunching the numbers…</p>}
+          {loading && <Loading label="Sizing up the contenders…" />}
           {error && <p className="p-6 text-center text-sm text-red-600">{error}</p>}
 
           {!loading && !error && (!aId || !bId) && (

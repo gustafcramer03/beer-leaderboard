@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Beer } from "@/lib/types";
 import { challengedBeers, adminRuleBeer, adminSetBeerScore, signedUrl } from "@/lib/api";
+import { Loading } from "./Loading";
 
 export function AdminQueue({ holidayId }: { holidayId: string }) {
   const [beers, setBeers] = useState<Beer[]>([]);
@@ -48,13 +49,14 @@ export function AdminQueue({ holidayId }: { holidayId: string }) {
     }
   }
 
-  if (loading) return <p className="p-6 text-center text-neutral-500">Loading…</p>;
+  if (loading) return <Loading label="Reviewing the disputes…" />;
 
   if (beers.length === 0) {
     return (
       <div className="p-8 text-center text-neutral-500">
         <div className="mb-2 text-5xl">⚖️</div>
-        No challenged beers right now.
+        <p className="font-medium">No challenged beers right now.</p>
+        <p className="mt-1 text-sm">Order in the court. 🧑‍⚖️</p>
       </div>
     );
   }

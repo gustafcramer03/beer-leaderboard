@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import type { Achievements } from "@/lib/types";
 import { getAchievements } from "@/lib/api";
+import { Loading } from "./Loading";
 
 // The trophy catalogue. Add a row here + the matching count in the
 // user_achievements RPC to introduce a new trophy.
@@ -104,7 +105,7 @@ export function AchievementsCabinet({
               {error}
             </p>
           ) : !data ? (
-            <p className="p-6 text-center text-neutral-500">Loading…</p>
+            <Loading label="Polishing the silverware…" />
           ) : (
             <>
               <div className="rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 p-4 text-center text-white shadow">

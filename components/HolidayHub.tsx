@@ -17,6 +17,7 @@ import { TripStats } from "./TripStats";
 import { PaceBoard } from "./PaceBoard";
 import { RivalryCard } from "./RivalryCard";
 import { ActivityFeed } from "./ActivityFeed";
+import { Loading } from "./Loading";
 
 type Tab = "board" | "log" | "menu";
 type MenuView = "achievements" | "stats" | "pace" | "rivalry" | "activity" | "rules" | "rulings";
@@ -91,7 +92,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
 
   // Audit gate: must clear everyone else's pending beers before using the app.
   if (queue === null) {
-    return <p className="p-8 text-center text-neutral-500">Loading…</p>;
+    return <Loading label="Lining up the bottles…" />;
   }
 
   if (!gateCleared && queue.length > 0) {
