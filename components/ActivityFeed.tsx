@@ -1,0 +1,146 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { getActivityFeed } from "@/lib/api";
+import type { ActivityEvent } from "@/lib/types";
+import { Avatar } from "./Avatar";
+
+// Live "what's happening" ticker — only the bigger moments (never every beer).
+// Reverse-chron, polls every 45s and on window focus so the trip feels alive
+// between board refreshes. Hidden while the board is dark for non-admins.
+export function ActivityFeed({ holidayId, onClose }: { holidayId: string; onClose: () => void }) {
+  const [events, setEvents] = useState<ActivityEvent[] | null>(null);
+  const [dark, setDark] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await getActivityFeed(holidayId, 80);
+      if (res.events === null) {
+        setDark(true);
+        setEvents(null);
+      } else {
+        setDark(false);
+        setEvents(res.events);
+      }
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't load the feed");
+    } finally {
+      setLoading(false);
+    }
+  }, [holidayId]);
+
+  useEffect(() => {
+    let active = true;
+    load();
+    const id = setInterval(() => active && load(), 45_000);
+    const onFocus = () => active && load();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      active = false;
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [load]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
+      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+        <h2 className="text-lg font-bold">📰 What&apos;s happening</h2>
+        <button
+          onClick={onClose}
+          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+        >
+          Done
+        </button>
+      </header>
+
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto flex max-w-md flex-col gap-2 p-4">
+          {loading && events === null && !dark && (
+            <p className="p-8 text-center text-sm text-neutral-500">Catching up…</p>
+          )}
+
+          {error && <p className="p-6 text-center text-sm text-red-600">{error}</p>}
+
+          {dark && (
+            <p className="p-8 text-center text-sm text-neutral-500">
+              🌑 The board is dark — the feed is hidden until the reveal.
+            </p>
+          )}
+
+          {!dark && !error && events && events.length === 0 && (
+            <p className="p-8 text-center text-sm text-neutral-500">
+              Nothing big yet — go make some history. 🍺
+            </p>
+          )}
+
+          {!dark &&
+            events &&
+            events.map((e, i) => <FeedRow key={`${e.type}-${e.user_id}-${e.at}-${i}`} e={e} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeedRow({ e }: { e: ActivityEvent }) {
+  const { emoji, text } = describe(e);
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm dark:bg-neutral-800">
+      <div className="relative shrink-0">
+        <Avatar path={e.avatar_path} size={44} />
+        <span className="absolute -bottom-1 -right-1 text-lg drop-shadow-sm">{emoji}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm leading-snug">
+          <span className="font-bold">{e.display_name}</span> {text}
+        </p>
+        <p className="text-[11px] text-neutral-400">{relativeTime(e.at)}</p>
+      </div>
+    </div>
+  );
+}
+
+// Per-type emoji + phrasing. `n` carries the type-specific number.
+function describe(e: ActivityEvent): { emoji: string; text: string } {
+  switch (e.type) {
+    case "chug":
+      return { emoji: "⚡", text: "chugged a beer!" };
+    case "early_bird":
+      return { emoji: "🐦", text: "grabbed Early Bird — first of the day." };
+    case "night_owl":
+      return { emoji: "🌙", text: "took Night Owl — last one standing." };
+    case "happy_hour":
+      return { emoji: "🍻", text: "landed a beer in happy hour." };
+    case "chain":
+      return { emoji: "🔥", text: `finished a ${e.n}-beer chain!` };
+    case "day_milestone":
+      return { emoji: "🍺", text: `hit ${e.n} beers in a day.` };
+    case "trip_milestone":
+      return { emoji: "🏅", text: `reached ${e.n} beers this trip!` };
+    case "lead":
+      return { emoji: "👑", text: `took the lead — now on ${e.n} pts.` };
+    case "legend":
+      return { emoji: "🏆", text: `was crowned Legend of the Day (${e.n} 🍺).` };
+    case "first_blood":
+      return { emoji: "🩸", text: "drew first blood — the trip's very first beer!" };
+    default:
+      return { emoji: "🍺", text: "did something noteworthy." };
+  }
+}
+
+function relativeTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  const diff = Date.now() - then;
+  const mins = Math.round(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}

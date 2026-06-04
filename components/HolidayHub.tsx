@@ -16,9 +16,10 @@ import { RuleBook } from "./RuleBook";
 import { TripStats } from "./TripStats";
 import { PaceBoard } from "./PaceBoard";
 import { RivalryCard } from "./RivalryCard";
+import { ActivityFeed } from "./ActivityFeed";
 
 type Tab = "board" | "log" | "menu";
-type MenuView = "achievements" | "stats" | "pace" | "rivalry" | "rules" | "rulings";
+type MenuView = "achievements" | "stats" | "pace" | "rivalry" | "activity" | "rules" | "rulings";
 
 export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: () => void }) {
   const { userId, profile, refreshProfile } = useSession();
@@ -182,6 +183,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
       {view === "stats" && <StatsView holidayId={holiday.id} onClose={() => setView(null)} />}
       {view === "pace" && <PaceBoard holidayId={holiday.id} onClose={() => setView(null)} />}
       {view === "rivalry" && <RivalryCard holidayId={holiday.id} onClose={() => setView(null)} />}
+      {view === "activity" && <ActivityFeed holidayId={holiday.id} onClose={() => setView(null)} />}
       {view === "rules" && <RuleBook onClose={() => setView(null)} />}
       {view === "rulings" && isAdmin && (
         <RulingsView
@@ -223,6 +225,7 @@ function MenuPage({
       <div className="grid grid-cols-2 gap-3">
         <MenuTile icon="🏅" label="Trophy cabinet" sub="Your achievements" onClick={() => onSelect("achievements")} />
         <MenuTile icon="📊" label="Trip stats" sub="Group highlights" onClick={() => onSelect("stats")} />
+        <MenuTile icon="📰" label="What's happening" sub="Live activity feed" onClick={() => onSelect("activity")} />
         <MenuTile icon="📈" label="Pace board" sub="Trends & projections" onClick={() => onSelect("pace")} />
         <MenuTile icon="⚔️" label="Head to head" sub="Compare two players" onClick={() => onSelect("rivalry")} />
         <MenuTile icon="📖" label="How to play" sub="Rules & scoring" onClick={() => onSelect("rules")} />

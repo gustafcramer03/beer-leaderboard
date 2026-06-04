@@ -12,9 +12,14 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   (e.g. `2× Centurion` = 200 beers). Includes **Legend of the Day** (most beers in a single
   day). Lives in the new bottom-ribbon **Menu**. Migration 0016 (`user_achievements`) +
   `AchievementsCabinet.tsx`.
-- [ ] **Live activity feed / "what's happening"** 📰 — reverse-chron ticker ("🍺 Anna sank her
-  4th… 🐦 Tom grabbed Early Bird… 🔥 Sam's on a 3-chain!"). Makes the trip feel alive between
-  board refreshes. _Needs a small RPC over recent `beers` rows + frontend list._
+- [x] **Live activity feed / "what's happening"** 📰 — _SHIPPED_ (migration 0025). Menu → "What's
+  happening": reverse-chron ticker of only the *bigger* moments — chugs ⚡, Early Bird 🐦, Night Owl
+  🌙, happy-hour landings 🍻, completed 3+ chains 🔥 (with final length), per-day milestones (10th
+  then every 5th) 🍺, per-trip milestones (10th, 25th & every 25th) 🏅, lead changes 👑, Legend of
+  the Day 🏆, and first blood 🩸 (the trip's very first beer). `activity_feed(holiday, limit)` RPC
+  derives events on the fly from `beers`, reusing the exact `compute_standings` scoring so "took the
+  lead" matches the board; polls every 45s + on focus. Withheld while the board is dark for
+  non-admins. `ActivityFeed.tsx`.
 - [x] **Profile photos** 📸 — _SHIPPED_ (migration 0021). Optional selfie/library photo at
   sign-up, square-cropped + compressed client-side to a ~256px JPEG, stored in a private
   `avatars` bucket at `{uid}/avatar.jpg` and read via signed URLs. `profiles.avatar_path` holds

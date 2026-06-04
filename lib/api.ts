@@ -18,6 +18,7 @@ import type {
   LegendOfTheDay,
   HolidayMember,
   HeadToHead,
+  ActivityFeed,
 } from "@/lib/types";
 
 export async function myHolidays(): Promise<Holiday[]> {
@@ -387,6 +388,21 @@ export async function getHeadToHead(
   });
   if (error) throw error;
   return data as HeadToHead;
+}
+
+// The live activity feed — only the bigger moments (chugs, early bird, chains,
+// milestones, lead changes…), newest first. `events` is null while the board is
+// dark for non-admins.
+export async function getActivityFeed(
+  holidayId: string,
+  limit = 50,
+): Promise<ActivityFeed> {
+  const { data, error } = await supabase.rpc("activity_feed", {
+    p_holiday: holidayId,
+    p_limit: limit,
+  });
+  if (error) throw error;
+  return data as ActivityFeed;
 }
 
 // --- DB Management (password-gated owner tooling) ---

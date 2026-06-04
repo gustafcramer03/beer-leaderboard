@@ -144,6 +144,37 @@ export type HeadToHead = {
   players: [RivalryPlayer, RivalryPlayer] | null;
 };
 
+// One entry in the live activity feed. `n` carries the type-specific number
+// (chain length, milestone count, the leader's running points) or null when the
+// event doesn't need one. `at` is the moment it happened (ISO timestamptz).
+export type ActivityEventType =
+  | "chug"
+  | "early_bird"
+  | "night_owl"
+  | "happy_hour"
+  | "chain"
+  | "day_milestone"
+  | "trip_milestone"
+  | "lead"
+  | "legend"
+  | "first_blood";
+
+export type ActivityEvent = {
+  type: ActivityEventType;
+  at: string;
+  user_id: string;
+  display_name: string;
+  avatar_path: string | null;
+  n: number | null;
+};
+
+// activity_feed RPC result. `events` is null while the board is dark for
+// non-admins (it would leak standings); otherwise newest-first, capped.
+export type ActivityFeed = {
+  state: "live" | "dark" | "reveal";
+  events: ActivityEvent[] | null;
+};
+
 export type StandingsResult = {
   state: "live" | "dark" | "reveal";
   is_admin: boolean;
