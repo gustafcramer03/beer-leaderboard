@@ -49,6 +49,50 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
   const [auditCount, setAuditCount] = useState(0);
   const [rulingCount, setRulingCount] = useState(0);
 
+  // Optimistic board + pull-to-refresh wiring. `logSignal` bumps the board's
+  // own row by +1 the instant a beer is logged; `refreshSignal` triggers a
+  // background reconcile from the pull gesture. `pull` is the live drag offset
+  // (px) for the rubber-band indicator; `pullRefreshing` keeps the spinner up
+  // until the board reports it has settled.
+  const [logSignal, setLogSignal] = useState(0);
+  const [refreshSignal, setRefreshSignal] = useState(0);
+  const [pull, setPull] = useState(0);
+  const [pullRefreshing, setPullRefreshing] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const startY = useRef<number | null>(null);
+
+  const PULL_THRESHOLD = 60;
+  const PULL_MAX = 110;
+
+  function onTouchStart(e: React.TouchEvent) {
+    // Only arm the gesture on the board tab, at the very top of the scroller,
+    // and when we're not already refreshing.
+    if (tab !== "board" || pullRefreshing) return;
+    if ((scrollRef.current?.scrollTop ?? 0) > 0) return;
+    startY.current = e.touches[0].clientY;
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    if (startY.current === null) return;
+    const dy = e.touches[0].clientY - startY.current;
+    if (dy <= 0) {
+      setPull(0);
+      return;
+    }
+    // Rubber-band: damp the drag and cap it.
+    setPull(Math.min(PULL_MAX, dy * 0.5));
+  }
+
+  function onTouchEnd() {
+    if (startY.current === null) return;
+    if (pull >= PULL_THRESHOLD && !pullRefreshing) {
+      setPullRefreshing(true);
+      setRefreshSignal((n) => n + 1);
+    }
+    setPull(0);
+    startY.current = null;
+  }
+
   const loadQueue = useCallback(async () => {
     try {
       const q = await getAuditQueue(holiday.id);
@@ -141,21 +185,59 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
       <HappyHourBanner holidayId={holiday.id} />
       <Header holiday={holiday} onLeave={onLeave} />
 
-      <div className="flex-1 overflow-y-auto pb-28">
-        {tab === "board" && (
+      <div
+        ref={scrollRef}
+        className="relative flex-1 overflow-y-auto pb-28"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        {tab === "board" && (pull > 0 || pullRefreshing) && (
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-center"
+            style={{ height: pullRefreshing ? 44 : pull }}
+          >
+            <span
+              className="text-2xl"
+              style={{
+                transform: pullRefreshing
+                  ? "none"
+                  : `rotate(${Math.min(180, (pull / PULL_THRESHOLD) * 180)}deg)`,
+              }}
+            >
+              {pullRefreshing ? "🍺" : pull >= PULL_THRESHOLD ? "🍺" : "↓"}
+            </span>
+          </div>
+        )}
+        {/* Board stays mounted across tabs so its optimistic state survives. */}
+        <div
+          className={tab === "board" ? "" : "hidden"}
+          style={
+            tab === "board" && (pull > 0 || pullRefreshing)
+              ? { transform: `translateY(${pullRefreshing ? 44 : pull}px)`, transition: startY.current === null ? "transform 0.2s" : "none" }
+              : undefined
+          }
+        >
           <Leaderboard
             holidayId={holiday.id}
             endDate={holiday.end_date}
             endTime={holiday.end_time}
             timezone={holiday.timezone}
+            active={tab === "board"}
+            logSignal={logSignal}
+            refreshSignal={refreshSignal}
+            onRefreshSettled={() => setPullRefreshing(false)}
             onOpenStats={() => setView("stats")}
             onOpenRules={() => setView("rules")}
           />
-        )}
+        </div>
         {tab === "log" && (
           <LogBeer
             holidayId={holiday.id}
-            onDone={() => setTab("board")}
+            onDone={() => {
+              setLogSignal((n) => n + 1);
+              setTab("board");
+            }}
             onCancel={() => setTab("board")}
           />
         )}

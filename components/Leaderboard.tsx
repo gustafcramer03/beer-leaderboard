@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import type { StandingsResult } from "@/lib/types";
+import type { StandingsResult, Standing } from "@/lib/types";
 import { getStandings, refreshSnapshot, setHolidayState, setTripEnd } from "@/lib/api";
 import { useSession } from "./SessionProvider";
 import { PlayerLedger } from "./PlayerLedger";
@@ -10,11 +10,41 @@ import { SkeletonRows } from "./Loading";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
+// Optimistic overlay: a not-yet-reconciled +N beers / +N points on your own row.
+// We bump beers by exactly the count (always correct) and points by a provisional
+// +1 each (a chug/chain/bonus may be worth more — the background refresh fixes it).
+type Optimistic = { beers: number; points: number };
+
+function applyOptimistic(
+  standings: Standing[],
+  opt: Optimistic | null,
+  userId: string | null,
+): Standing[] {
+  if (!opt || !userId) return standings;
+  const next = standings.map((s) =>
+    s.user_id === userId
+      ? { ...s, points: s.points + opt.points, beer_count: s.beer_count + opt.beers }
+      : s,
+  );
+  // Mirror compute_standings ordering: points desc, beers desc, name asc.
+  next.sort(
+    (a, b) =>
+      b.points - a.points ||
+      b.beer_count - a.beer_count ||
+      a.display_name.localeCompare(b.display_name),
+  );
+  return next;
+}
+
 export function Leaderboard({
   holidayId,
   endDate,
   endTime,
   timezone,
+  active = true,
+  logSignal = 0,
+  refreshSignal = 0,
+  onRefreshSettled,
   onOpenStats,
   onOpenRules,
 }: {
@@ -22,6 +52,10 @@ export function Leaderboard({
   endDate: string;
   endTime: string;
   timezone: string;
+  active?: boolean;
+  logSignal?: number;
+  refreshSignal?: number;
+  onRefreshSettled?: () => void;
   onOpenStats: () => void;
   onOpenRules: () => void;
 }) {
@@ -29,6 +63,8 @@ export function Leaderboard({
   const [result, setResult] = useState<StandingsResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [optimistic, setOptimistic] = useState<Optimistic | null>(null);
+  const peekRef = useRef(false);
 
   const [peeking, setPeeking] = useState(false);
   const [ledgerFor, setLedgerFor] = useState<{ id: string; name: string } | null>(null);
@@ -64,14 +100,14 @@ export function Leaderboard({
   }, [result, userId]);
 
   const load = useCallback(
-    async (adminPeek = false) => {
-      setLoading(true);
+    async (adminPeek = false, quiet = false) => {
+      if (!quiet) setLoading(true);
       try {
         setResult(await getStandings(holidayId, adminPeek));
       } catch (e) {
         console.error(e);
       } finally {
-        setLoading(false);
+        if (!quiet) setLoading(false);
       }
     },
     [holidayId],
@@ -81,16 +117,63 @@ export function Leaderboard({
     load();
   }, [load]);
 
-  async function adminRefresh() {
+  // Reconcile the optimistic overlay against the truth: force a fresh snapshot,
+  // re-fetch standings quietly (no skeleton flash), then clear the overlay.
+  const reconcile = useCallback(async () => {
     setRefreshing(true);
     try {
       await refreshSnapshot(holidayId);
-      await load();
+      await load(peekRef.current, true);
+      setOptimistic(null);
     } catch (e) {
       console.error(e);
     } finally {
       setRefreshing(false);
     }
+  }, [holidayId, load]);
+
+  // Optimistic +1 the instant a beer is logged, then reconcile in the
+  // background. Skip the very first render (refs seeded to incoming props).
+  const prevLog = useRef(logSignal);
+  useEffect(() => {
+    if (logSignal === prevLog.current) return;
+    prevLog.current = logSignal;
+    // Only overlay when there's a visible board with your row to bump.
+    setResult((cur) => {
+      if (cur?.standings && cur.standings.some((s) => s.user_id === userId)) {
+        setOptimistic((o) => ({
+          beers: (o?.beers ?? 0) + 1,
+          points: (o?.points ?? 0) + 1,
+        }));
+      }
+      return cur;
+    });
+    reconcile();
+  }, [logSignal, reconcile, userId]);
+
+  // Pull-to-refresh from the parent: reconcile, then tell it we've settled.
+  const prevRefresh = useRef(refreshSignal);
+  useEffect(() => {
+    if (refreshSignal === prevRefresh.current) return;
+    prevRefresh.current = refreshSignal;
+    (async () => {
+      await reconcile();
+      onRefreshSettled?.();
+    })();
+  }, [refreshSignal, reconcile, onRefreshSettled]);
+
+  // Quietly re-fetch when the board tab is re-activated (off→on), so switching
+  // back from another tab shows fresh numbers without a skeleton flash.
+  const prevActive = useRef(active);
+  useEffect(() => {
+    if (active && !prevActive.current) {
+      load(peekRef.current, true);
+    }
+    prevActive.current = active;
+  }, [active, load]);
+
+  async function adminRefresh() {
+    await reconcile();
   }
 
   async function changeState(state: "live" | "dark" | "reveal" | "auto") {
@@ -144,6 +227,7 @@ export function Leaderboard({
           <button
             onClick={async () => {
               setPeeking(true);
+              peekRef.current = true;
               await load(true);
               setPeeking(false);
             }}
@@ -182,7 +266,7 @@ export function Leaderboard({
     );
   }
 
-  const standings = result.standings ?? [];
+  const standings = applyOptimistic(result.standings ?? [], optimistic, userId);
   const meIndex = standings.findIndex((s) => s.user_id === userId);
   const me = meIndex >= 0 ? standings[meIndex] : null;
 
@@ -292,7 +376,7 @@ export function Leaderboard({
         </>
       )}
       <p className="text-center text-xs text-neutral-400">
-        Scores auto-update hourly. Tap a player to see their beers.
+        {refreshing ? "Syncing the latest scores…" : "Pull down to refresh. Tap a player to see their beers."}
       </p>
 
       {ledgerFor && (
