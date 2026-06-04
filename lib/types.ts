@@ -39,6 +39,7 @@ export type AuditItem = {
   is_happy_hour: boolean;
   is_early_bird: boolean;
   is_night_owl: boolean;
+  caption: string | null;
 };
 
 export type Standing = {
@@ -62,6 +63,10 @@ export type LedgerEntry = {
   is_offline: boolean;
   score_override: number | null;
   override_reason: string | null;
+  caption: string | null;
+  // Emoji reaction counts (emoji → n) and the caller's own reaction, if any.
+  reactions: Record<string, number>;
+  my_reaction: string | null;
   points: number;
   reviews_total: number;
   reviews_challenged: number;

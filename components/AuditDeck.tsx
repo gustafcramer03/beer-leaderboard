@@ -133,6 +133,11 @@ export function AuditDeck({
             🛜 Logged offline — time is from the photo&apos;s metadata
           </p>
         )}
+        {current.caption && (
+          <p className="mb-2 text-center text-sm italic text-neutral-600 dark:text-neutral-300">
+            &ldquo;{current.caption}&rdquo;
+          </p>
+        )}
         <div className="grid grid-cols-1 gap-2">
           <Photo
             url={urls.full}

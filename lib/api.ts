@@ -260,11 +260,13 @@ export async function startBeer(holidayId: string, fullPhoto: File): Promise<str
 }
 
 // Step 2: upload the empty photo and finish the beer (trigger stamps empty_taken_at).
+// An optional caption rides along on the same owner update.
 export async function finishBeer(
   holidayId: string,
   beerId: string,
   emptyPhoto: File,
   claimedChug: boolean,
+  caption?: string | null,
 ): Promise<void> {
   const upload = await compressImage(emptyPhoto);
   const path = `${holidayId}/${beerId}/empty.jpg`;
@@ -273,11 +275,26 @@ export async function finishBeer(
     .upload(path, upload, { upsert: true, contentType: upload.type || "image/jpeg" });
   if (upErr) throw upErr;
 
+  const cap = (caption ?? "").trim().slice(0, 140) || null;
   const { error: updErr } = await supabase
     .from("beers")
-    .update({ empty_photo_path: path, claimed_chug: claimedChug })
+    .update({ empty_photo_path: path, claimed_chug: claimedChug, caption: cap })
     .eq("id", beerId);
   if (updErr) throw updErr;
+}
+
+// Toggle the caller's emoji reaction on a beer (one per user per beer). Returns
+// the fresh aggregate { counts, mine } so the UI can update precisely.
+export async function reactToBeer(
+  beerId: string,
+  emoji: string,
+): Promise<import("@/lib/reactions").ReactionState> {
+  const { data, error } = await supabase.rpc("react_to_beer", {
+    p_beer: beerId,
+    p_emoji: emoji,
+  });
+  if (error) throw error;
+  return data as import("@/lib/reactions").ReactionState;
 }
 
 // Log a beer that was drunk offline, from two existing camera-roll photos.
@@ -291,6 +308,7 @@ export async function logOfflineBeer(
   fullTaken: string, // ISO
   emptyTaken: string, // ISO
   claimedChug: boolean,
+  caption?: string | null,
 ): Promise<string> {
   const { data: userData } = await supabase.auth.getUser();
   const uid = userData.user?.id;
@@ -320,6 +338,7 @@ export async function logOfflineBeer(
     p_full_taken: fullTaken,
     p_empty_taken: emptyTaken,
     p_claimed_chug: claimedChug,
+    p_caption: (caption ?? "").trim().slice(0, 140) || null,
   });
   if (error) throw error;
   return beerId;

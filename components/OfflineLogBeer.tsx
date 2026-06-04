@@ -37,6 +37,7 @@ export function OfflineLogBeer({
   const [full, setFull] = useState<PhotoState>(blank);
   const [empty, setEmpty] = useState<PhotoState>(blank);
   const [chug, setChug] = useState(false);
+  const [caption, setCaption] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export function OfflineLogBeer({
     setBusy(true);
     setError(null);
     try {
-      await logOfflineBeer(holidayId, full.file, empty.file, fullISO, emptyISO, chug);
+      await logOfflineBeer(holidayId, full.file, empty.file, fullISO, emptyISO, chug, caption);
       if (chug) celebrateChug();
       else celebrateBeer();
       setDone(true);
@@ -111,6 +112,21 @@ export function OfflineLogBeer({
         />
         I chugged this one (claim 🍺×2 — also judged by the time gap)
       </label>
+
+      <div className="flex w-full max-w-xs flex-col gap-1">
+        <input
+          type="text"
+          value={caption}
+          onChange={(e) => setCaption(e.target.value.slice(0, 140))}
+          placeholder="Add a caption… (optional)"
+          maxLength={140}
+          disabled={busy}
+          className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+        />
+        {caption.length > 0 && (
+          <span className="self-end text-[11px] text-neutral-400">{caption.length}/140</span>
+        )}
+      </div>
 
       <button
         disabled={!canSubmit}

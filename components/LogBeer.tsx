@@ -22,6 +22,7 @@ export function LogBeer({
   const [fullFile, setFullFile] = useState<File | null>(null);
   const [emptyFile, setEmptyFile] = useState<File | null>(null);
   const [chug, setChug] = useState(false);
+  const [caption, setCaption] = useState("");
   const [beerId, setBeerId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +77,7 @@ export function LogBeer({
     setBusy(true);
     setError(null);
     try {
-      await finishBeer(holidayId, beerId, emptyFile, chug);
+      await finishBeer(holidayId, beerId, emptyFile, chug, caption);
       if (chug) celebrateChug();
       else celebrateBeer();
       setStep("done");
@@ -190,6 +191,20 @@ export function LogBeer({
             />
             I chugged this one (claim 🍺×2 — verified by timestamps)
           </label>
+          <div className="flex w-full max-w-xs flex-col gap-1">
+            <input
+              type="text"
+              value={caption}
+              onChange={(e) => setCaption(e.target.value.slice(0, 140))}
+              placeholder="Add a caption… (optional)"
+              maxLength={140}
+              disabled={busy}
+              className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+            />
+            {caption.length > 0 && (
+              <span className="self-end text-[11px] text-neutral-400">{caption.length}/140</span>
+            )}
+          </div>
           <button
             disabled={!emptyFile || busy}
             onClick={finish}

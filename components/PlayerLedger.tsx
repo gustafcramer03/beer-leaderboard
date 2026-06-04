@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { LedgerEntry } from "@/lib/types";
-import { getUserLedger, signedUrl } from "@/lib/api";
+import { getUserLedger, signedUrl, reactToBeer } from "@/lib/api";
+import { REACTION_EMOJIS } from "@/lib/reactions";
 import { PhotoPreview } from "./PhotoPreview";
 
 // Save a remote image to the device. On mobile we hand it to the native share
@@ -113,6 +114,23 @@ export function PlayerLedger({
 
   const total = entries?.reduce((sum, e) => sum + e.points, 0) ?? 0;
 
+  // Toggle a reaction and fold the fresh server aggregate back into the entry.
+  async function react(beerId: string, emoji: string) {
+    try {
+      const res = await reactToBeer(beerId, emoji);
+      setEntries(
+        (prev) =>
+          prev?.map((e) =>
+            e.beer_id === beerId
+              ? { ...e, reactions: res.counts, my_reaction: res.mine }
+              : e,
+          ) ?? prev,
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
       <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
@@ -186,6 +204,12 @@ export function PlayerLedger({
                     <span className="text-neutral-300">{open ? "▲" : "▼"}</span>
                   </div>
                 </button>
+                {e.caption && (
+                  <p className="-mt-1 px-4 pb-2 text-sm italic text-neutral-600 dark:text-neutral-300">
+                    &ldquo;{e.caption}&rdquo;
+                  </p>
+                )}
+                <ReactionBar entry={e} onReact={react} />
                 {open && (
                   <>
                     {e.score_override !== null && e.override_reason && (
@@ -201,6 +225,77 @@ export function PlayerLedger({
           })}
         </ul>
       </div>
+    </div>
+  );
+}
+
+// WhatsApp-style reaction bar: existing reactions as pills (your own ringed),
+// plus a "react" trigger that pops the emoji picker. Tapping an emoji toggles it
+// (one reaction per person per beer).
+function ReactionBar({
+  entry,
+  onReact,
+}: {
+  entry: LedgerEntry;
+  onReact: (beerId: string, emoji: string) => void;
+}) {
+  const [picking, setPicking] = useState(false);
+  const pills = Object.entries(entry.reactions).filter(([, n]) => n > 0);
+
+  return (
+    <div className="relative flex flex-wrap items-center gap-1.5 px-4 pb-3">
+      {pills.map(([emoji, n]) => {
+        const mine = entry.my_reaction === emoji;
+        return (
+          <button
+            key={emoji}
+            onClick={() => onReact(entry.beer_id, emoji)}
+            className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-sm transition active:scale-95 ${
+              mine
+                ? "bg-amber-100 ring-1 ring-amber-400 dark:bg-amber-900/40"
+                : "bg-neutral-100 dark:bg-neutral-700"
+            }`}
+          >
+            <span>{emoji}</span>
+            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-300">{n}</span>
+          </button>
+        );
+      })}
+
+      <button
+        onClick={() => setPicking((p) => !p)}
+        className="flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-sm text-neutral-500 transition active:scale-95 dark:bg-neutral-700 dark:text-neutral-300"
+        aria-label="React to this beer"
+      >
+        🙂<span className="text-xs font-bold">+</span>
+      </button>
+
+      {picking && (
+        <>
+          {/* tap-away backdrop */}
+          <button
+            className="fixed inset-0 z-10 cursor-default"
+            aria-label="Close reactions"
+            onClick={() => setPicking(false)}
+          />
+          <div className="absolute bottom-9 left-4 z-20 flex gap-1 rounded-full border border-neutral-200 bg-white p-1.5 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
+            {REACTION_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => {
+                  onReact(entry.beer_id, emoji);
+                  setPicking(false);
+                }}
+                className={`flex h-9 w-9 items-center justify-center rounded-full text-xl transition active:scale-90 ${
+                  entry.my_reaction === emoji ? "bg-amber-100 dark:bg-amber-900/40" : "hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                }`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
