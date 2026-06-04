@@ -102,6 +102,8 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ---
 
-_Best effort-to-payoff picks: confetti/haptics + audit-count badge for instant polish, then the
-activity feed or achievements as the next "fun" headline feature (slot into the RPC-per-view
-pattern)._
+_What's left, by effort-to-payoff: **pull-to-refresh + optimistic board** and the **share card
+generator** are the cheap frontend wins. **Daily recap** is a natural next step now the activity
+feed exists (reuse its event data). **Push notifications** is the biggest retention lever but the
+heaviest lift (web-push keys, a subscription table, a sender). **Invite via QR / share link** and
+**admin "adjust score" with reason** round out the admin niceties._
