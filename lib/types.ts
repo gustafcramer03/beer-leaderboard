@@ -101,6 +101,7 @@ export type StandingsResult = {
   is_admin: boolean;
   can_peek: boolean;
   generated_at: string | null;
+  reveal_at: string | null;
   standings: Standing[] | null;
 };
 

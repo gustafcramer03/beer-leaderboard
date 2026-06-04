@@ -110,6 +110,7 @@ export function Leaderboard({
           Keep drinking and logging — scores are hidden for the final stretch. The winner is
           revealed on the last day. 🍻
         </p>
+        {result.reveal_at && <RevealCountdown revealAt={result.reveal_at} />}
         {result.can_peek && (
           <button
             onClick={async () => {
@@ -285,6 +286,64 @@ export function Leaderboard({
           </span>
         </button>
       )}
+    </div>
+  );
+}
+
+// Live countdown to the grand reveal shown on the dark screen. Ticks every
+// second; once the target passes it flips to an "imminent" message (the admin
+// may have forced the board dark past end_date, so the board itself stays dark
+// until the state actually flips to reveal).
+function RevealCountdown({ revealAt }: { revealAt: string }) {
+  const target = new Date(revealAt).getTime();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const remaining = target - now;
+
+  if (remaining <= 0) {
+    return (
+      <div className="mt-2 rounded-2xl border border-amber-300 bg-amber-50 px-5 py-3 text-center text-sm font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+        🏆 The reveal is imminent…
+      </div>
+    );
+  }
+
+  const totalSeconds = Math.floor(remaining / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const units: { value: number; label: string }[] = [
+    { value: days, label: "days" },
+    { value: hours, label: "hrs" },
+    { value: minutes, label: "min" },
+    { value: seconds, label: "sec" },
+  ];
+
+  return (
+    <div className="mt-2 flex flex-col items-center gap-2">
+      <span className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+        Grand reveal in
+      </span>
+      <div className="flex gap-2">
+        {units.map((u) => (
+          <div
+            key={u.label}
+            className="flex min-w-14 flex-col items-center rounded-xl bg-neutral-100 px-3 py-2 dark:bg-neutral-800"
+          >
+            <span className="text-2xl font-bold tabular-nums">
+              {String(u.value).padStart(2, "0")}
+            </span>
+            <span className="text-[10px] uppercase tracking-wide text-neutral-400">{u.label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

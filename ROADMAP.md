@@ -41,6 +41,11 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 - [ ] **Share card generator** 📲 — "Share my stats" button rendering a branded image (canvas)
   of your rank/beers/best chug for the group chat. _Frontend (Web Share files API already wired)._
 
+- [x] **Dark-mode reveal countdown** ⏳ — _SHIPPED_ (migration 0020). The "board has gone dark"
+  screen now shows a live days/hrs/min/sec countdown to the grand reveal. `get_latest_standings`
+  returns `reveal_at` (midnight of `end_date` in the trip's timezone); `RevealCountdown` in
+  `Leaderboard.tsx` ticks every second and flips to "reveal is imminent" once it passes.
+
 ## 🔔 Utility / stickiness
 
 - [ ] **Push notifications** — "Happy hour starts now ⏰", "You've got beers to audit", "Someone
