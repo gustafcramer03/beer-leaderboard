@@ -18,6 +18,7 @@ import { PaceBoard } from "./PaceBoard";
 import { RivalryCard } from "./RivalryCard";
 import { ActivityFeed } from "./ActivityFeed";
 import { ShareCardView } from "./ShareCard";
+import { PushToggle } from "./PushToggle";
 import { Loading } from "./Loading";
 
 type Tab = "board" | "log" | "menu";
@@ -237,6 +238,7 @@ function MenuPage({
     <div className="mx-auto flex max-w-md flex-col gap-4 p-4">
       <h2 className="text-lg font-bold">Menu</h2>
       <ProfileCard displayName={displayName} avatarPath={avatarPath} onChangeAvatar={onChangeAvatar} />
+      <PushToggle />
       <div className="grid grid-cols-2 gap-3">
         <MenuTile icon="🏅" label="Trophy cabinet" sub="Your achievements" onClick={() => onSelect("achievements")} />
         <MenuTile icon="📊" label="Trip stats" sub="Group highlights" onClick={() => onSelect("stats")} />

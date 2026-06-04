@@ -375,6 +375,32 @@ export async function getShareCard(holidayId: string): Promise<ShareCard> {
   return data as ShareCard;
 }
 
+// --- Web Push subscriptions (per-device) ---
+
+// Register/refresh this device's push subscription (upsert keyed on endpoint).
+export async function savePushSubscription(
+  endpoint: string,
+  p256dh: string,
+  auth: string,
+  userAgent: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc("save_push_subscription", {
+    p_endpoint: endpoint,
+    p_p256dh: p256dh,
+    p_auth: auth,
+    p_ua: userAgent,
+  });
+  if (error) throw error;
+}
+
+// Forget this device's push subscription.
+export async function deletePushSubscription(endpoint: string): Promise<void> {
+  const { error } = await supabase.rpc("delete_push_subscription", {
+    p_endpoint: endpoint,
+  });
+  if (error) throw error;
+}
+
 // Roster for the head-to-head player picker (id, name, avatar).
 export async function holidayMembers(holidayId: string): Promise<HolidayMember[]> {
   const { data, error } = await supabase.rpc("holiday_members", { p_holiday: holidayId });

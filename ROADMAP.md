@@ -80,9 +80,19 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ## 🔔 Utility / stickiness
 
-- [ ] **Push notifications** — "Happy hour starts now ⏰", "You've got beers to audit", "Someone
-  challenged your beer", "Grand reveal is live". Biggest retention lever, heaviest lift.
-  _Needs web-push keys, a subscription table, and a sender._
+- [~] **Push notifications** — _PHASE 1 SHIPPED (happy-hour start & end only)_ (migration 0028).
+  Web Push (VAPID) with no new always-on server: the existing hourly `pg_cron` runs
+  `dispatch_happy_hour_push()`, which calls `happy_hour_push_due()` to find any happy-hour
+  boundary landing in the current hour (per holiday, in its tz), logs it once in `push_sent_log`
+  so it can't double-fire, gathers every member's device subscription, and `net.http_post`s the
+  payload (via `pg_net`) to `/api/push/happy-hour` on Vercel. That Node route validates a shared
+  secret (`x-push-secret`) and signs+sends each notification with the `web-push` library. Devices
+  register via `save_push_subscription`/`delete_push_subscription` RPCs (RLS-locked tables; one row
+  per push endpoint). Start fires "🍻 happy hour is ON … GO QUENCH YOUR THIRST!"; end fires a
+  beers-sunk tally. Client: `lib/push.ts` (subscribe/unsubscribe, hardcoded public VAPID key),
+  `components/PushToggle.tsx` in the Menu (iOS needs Add-to-Home-Screen; nudges accordingly), and
+  `push`/`notificationclick` handlers in `public/sw.js`. _Future phases: beers-to-audit,
+  challenge-on-your-beer, grand-reveal-live._
 - [x] **Legend of the Day** 👑 — _SHIPPED_ (migration 0022). Once-a-day popup on first open
   crowning whoever sank the most beers yesterday — profile photo, name and beer count. Day is
   resolved in the trip timezone; the `legend_of_the_day` RPC returns the celebrated day plus the
@@ -114,6 +124,6 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 ---
 
 _What's left, by effort-to-payoff: **pull-to-refresh + optimistic board** is the cheap frontend win.
-**Push notifications** is the biggest retention lever but the heaviest lift (web-push keys, a
-subscription table, a sender). **Invite via QR / share link** and **admin "adjust score" with
-reason** round out the admin niceties._
+**Push notifications** phase 1 (happy-hour start/end) is live; later phases (audit nudges,
+challenge alerts, grand-reveal) reuse the same pipeline. **Invite via QR / share link** and
+**admin "adjust score" with reason** round out the admin niceties._
