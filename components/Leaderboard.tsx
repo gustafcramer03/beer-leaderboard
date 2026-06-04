@@ -28,20 +28,28 @@ export function Leaderboard({
   const [stateBusy, setStateBusy] = useState(false);
   const [showReveal, setShowReveal] = useState(false);
 
-  // Sticky "your position" chip: shown only while your own row is scrolled
-  // out of view. rootMargin trims the bottom so a row hidden behind the nav
-  // bar counts as off-screen.
+  // Sticky "your position" chip: a clone of your own row that pins to the top
+  // edge when your row has scrolled above the viewport, and to the bottom edge
+  // (above the nav) when it's below. Hidden while your real row is visible.
+  // rootMargin trims the bottom so a row hidden behind the nav counts as off.
   const meRef = useRef<HTMLLIElement>(null);
-  const [showChip, setShowChip] = useState(false);
+  const [chipPos, setChipPos] = useState<"top" | "bottom" | null>(null);
 
   useEffect(() => {
     const el = meRef.current;
     if (!el) {
-      setShowChip(false);
+      setChipPos(null);
       return;
     }
     const obs = new IntersectionObserver(
-      ([entry]) => setShowChip(!entry.isIntersecting),
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setChipPos(null);
+          return;
+        }
+        const aboveTop = entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0);
+        setChipPos(aboveTop ? "top" : "bottom");
+      },
       { root: null, rootMargin: "0px 0px -96px 0px", threshold: 0 },
     );
     obs.observe(el);
@@ -254,18 +262,26 @@ export function Leaderboard({
         <RevealShow standings={standings} onClose={() => setShowReveal(false)} />
       )}
 
-      {showChip && me && (
+      {chipPos && me && (
         <button
           onClick={() => meRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
-          className="fixed inset-x-0 bottom-24 z-30 mx-auto flex w-[calc(100%-2rem)] max-w-sm items-center justify-between rounded-full bg-amber-500 px-4 py-2.5 text-left text-white shadow-lg active:scale-[0.99]"
+          className={`fixed inset-x-0 z-30 mx-auto flex w-[calc(100%-2rem)] max-w-md items-center justify-between rounded-2xl border border-amber-300 bg-amber-100 px-4 py-3 text-left shadow-lg ring-1 ring-amber-400/40 transition active:scale-[0.99] dark:border-amber-700 dark:bg-amber-900/70 ${
+            chipPos === "top" ? "top-2" : "bottom-24"
+          }`}
         >
           <span className="flex items-center gap-3">
-            <span className="w-6 text-center font-bold">{MEDALS[meIndex] ?? `#${meIndex + 1}`}</span>
-            <span className="font-semibold">You</span>
+            <span className="w-6 text-center font-bold">{MEDALS[meIndex] ?? meIndex + 1}</span>
+            <span className="font-medium">
+              {me.display_name}
+              <span className="text-amber-600"> (you)</span>
+            </span>
           </span>
-          <span className="text-sm">
-            <span className="font-bold">{me.points}</span>
-            <span className="ml-1 text-amber-100">pts · {me.beer_count}🍺</span>
+          <span className="flex items-center gap-2 text-right">
+            <span>
+              <span className="text-lg font-bold">{me.points}</span>
+              <span className="ml-1 text-xs text-neutral-400">pts · {me.beer_count}🍺</span>
+            </span>
+            <span className="text-amber-500">{chipPos === "top" ? "↑" : "↓"}</span>
           </span>
         </button>
       )}
