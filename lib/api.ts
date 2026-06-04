@@ -187,6 +187,28 @@ export async function adminSetBeerScore(
   if (error) throw error;
 }
 
+// The caller's in-progress beer (start logged, empty not yet uploaded), if any.
+// Lets the Log tab resume after a reload/app switch instead of losing the start.
+// Only returns one whose full photo actually uploaded; takes the most recent.
+export async function getOpenBeer(holidayId: string): Promise<Beer | null> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return null;
+
+  const { data, error } = await supabase
+    .from("beers")
+    .select("*")
+    .eq("holiday_id", holidayId)
+    .eq("user_id", uid)
+    .eq("status", "open")
+    .not("full_photo_path", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Beer) ?? null;
+}
+
 // Challenged beers in this holiday (admin queue).
 export async function challengedBeers(holidayId: string): Promise<Beer[]> {
   const { data, error } = await supabase

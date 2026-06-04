@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CameraCapture } from "./CameraCapture";
 import { OfflineLogBeer } from "./OfflineLogBeer";
-import { startBeer, finishBeer, discardBeer } from "@/lib/api";
+import { startBeer, finishBeer, discardBeer, getOpenBeer, signedUrl } from "@/lib/api";
 
 type Step = "full" | "empty" | "done";
 
@@ -24,6 +24,36 @@ export function LogBeer({
   const [beerId, setBeerId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Resume an in-progress beer: if we logged a start earlier but never finished
+  // (reload / app switch), the open row still lives server-side. Jump straight
+  // to the empty step so the user can finish the same beer — keeping its
+  // original start time, so the chug clock stays honest.
+  const [resuming, setResuming] = useState(true);
+  const [resumedFullUrl, setResumedFullUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    getOpenBeer(holidayId)
+      .then(async (open) => {
+        if (!active || !open) return;
+        setBeerId(open.id);
+        setStep("empty");
+        if (open.full_photo_path) {
+          const url = await signedUrl(open.full_photo_path);
+          if (active) setResumedFullUrl(url);
+        }
+      })
+      .catch(() => {
+        /* best-effort; fall back to a fresh start */
+      })
+      .finally(() => {
+        if (active) setResuming(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [holidayId]);
 
   async function continueToEmpty() {
     if (!fullFile) return;
@@ -73,6 +103,10 @@ export function LogBeer({
         onCancel={() => setOffline(false)}
       />
     );
+  }
+
+  if (resuming) {
+    return <p className="p-6 text-center text-neutral-500">Checking for a beer in progress…</p>;
   }
 
   if (step === "done") {
@@ -129,6 +163,20 @@ export function LogBeer({
 
       {step === "empty" && (
         <>
+          {resumedFullUrl && (
+            <div className="flex w-full max-w-xs items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-3 text-left dark:border-amber-700 dark:bg-amber-900/30">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={resumedFullUrl}
+                alt="your full beer"
+                className="h-14 w-14 flex-none rounded-lg object-cover"
+              />
+              <div className="text-xs text-amber-700 dark:text-amber-300">
+                <p className="font-semibold">Picked up where you left off ✓</p>
+                <p>Your full beer is saved. Snap the empty to finish it.</p>
+              </div>
+            </div>
+          )}
           <CameraCapture label="empty beer" onCapture={setEmptyFile} disabled={busy} />
           <label className="flex items-center gap-2 text-sm">
             <input
