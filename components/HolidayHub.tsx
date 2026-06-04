@@ -11,7 +11,7 @@ import { AdminQueue } from "./AdminQueue";
 import { LogBeer } from "./LogBeer";
 import { HappyHourBanner } from "./HappyHourBanner";
 import { AchievementsCabinet } from "./AchievementsCabinet";
-import { LegendOfTheDay } from "./LegendOfTheDay";
+import { DailyRecapPopup, DailyRecapView } from "./DailyRecap";
 import { RuleBook } from "./RuleBook";
 import { TripStats } from "./TripStats";
 import { PaceBoard } from "./PaceBoard";
@@ -20,7 +20,15 @@ import { ActivityFeed } from "./ActivityFeed";
 import { Loading } from "./Loading";
 
 type Tab = "board" | "log" | "menu";
-type MenuView = "achievements" | "stats" | "pace" | "rivalry" | "activity" | "rules" | "rulings";
+type MenuView =
+  | "achievements"
+  | "stats"
+  | "pace"
+  | "rivalry"
+  | "activity"
+  | "recap"
+  | "rules"
+  | "rulings";
 
 export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: () => void }) {
   const { userId, profile, refreshProfile } = useSession();
@@ -126,7 +134,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
 
   return (
     <div className="flex flex-1 flex-col">
-      <LegendOfTheDay holidayId={holiday.id} />
+      <DailyRecapPopup holidayId={holiday.id} />
       <HappyHourBanner holidayId={holiday.id} />
       <Header holiday={holiday} onLeave={onLeave} />
 
@@ -187,6 +195,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
       {view === "activity" && (
         <ActivityFeed holidayId={holiday.id} timezone={holiday.timezone} onClose={() => setView(null)} />
       )}
+      {view === "recap" && <DailyRecapView holidayId={holiday.id} onClose={() => setView(null)} />}
       {view === "rules" && <RuleBook onClose={() => setView(null)} />}
       {view === "rulings" && isAdmin && (
         <RulingsView
@@ -229,6 +238,7 @@ function MenuPage({
         <MenuTile icon="🏅" label="Trophy cabinet" sub="Your achievements" onClick={() => onSelect("achievements")} />
         <MenuTile icon="📊" label="Trip stats" sub="Group highlights" onClick={() => onSelect("stats")} />
         <MenuTile icon="📰" label="What's happening" sub="Live activity feed" onClick={() => onSelect("activity")} />
+        <MenuTile icon="🌅" label="Daily recap" sub="Yesterday's wrap-up" onClick={() => onSelect("recap")} />
         <MenuTile icon="📈" label="Pace board" sub="Trends & projections" onClick={() => onSelect("pace")} />
         <MenuTile icon="⚔️" label="Head to head" sub="Compare two players" onClick={() => onSelect("rivalry")} />
         <MenuTile icon="📖" label="How to play" sub="Rules & scoring" onClick={() => onSelect("rules")} />

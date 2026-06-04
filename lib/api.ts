@@ -15,7 +15,7 @@ import type {
   HappyHourStatus,
   Achievements,
   PaceSeries,
-  LegendOfTheDay,
+  DailyRecap,
   HolidayMember,
   HeadToHead,
   ActivityFeed,
@@ -362,10 +362,10 @@ export async function avatarUrl(path: string): Promise<string | null> {
   return data?.signedUrl ?? null;
 }
 
-export async function getLegendOfTheDay(holidayId: string): Promise<LegendOfTheDay> {
-  const { data, error } = await supabase.rpc("legend_of_the_day", { p_holiday: holidayId });
+export async function getDailyRecap(holidayId: string): Promise<DailyRecap> {
+  const { data, error } = await supabase.rpc("daily_recap", { p_holiday: holidayId });
   if (error) throw error;
-  return data as LegendOfTheDay;
+  return data as DailyRecap;
 }
 
 // Roster for the head-to-head player picker (id, name, avatar).

@@ -83,8 +83,13 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   current day, and the client gates the popup once-per-day in localStorage on the server's `today`.
   Withheld during the dark finale so it doesn't leak the leader. (Distinct from the trophy of the
   same name in the cabinet.) `LegendOfTheDay.tsx`.
-- [ ] **Daily recap** 🌅 — once-a-day summary card on first open (yesterday's winner, total sunk,
-  Early Bird/Night Owl winners). _Reuses stats-style data; Legend of the Day is the first slice._
+- [x] **Daily recap** 🌅 — _SHIPPED_ (migration 0026). Once-a-day wrap-up of the beer-day that just
+  ended (07:00→07:00 in the trip tz): total beers sunk, the **Legend of the Day** champion, plus
+  Early Bird 🐦, Night Owl 🌙, Fastest Chug ⚡ and Longest Chain 🔥 honours. Auto-pops on first open
+  each day (confetti + gated in localStorage on the server's `today`) **and** lives in the Menu →
+  "Daily recap" for on-demand viewing. `daily_recap` RPC reuses the exact chug/chain/finisher logic
+  from `compute_standings`; withheld while the board is dark and null on dry days. Replaces the old
+  standalone Legend-of-the-Day popup (the cabinet trophy of the same name stays). `DailyRecap.tsx`.
 - [x] **Audit + rulings nudge badges** — _SHIPPED_. Red count bubbles on the 🔄 Audit beers tile
   (mates' beers waiting to swipe) and, for the admin, the ⚖️ Rulings tile (beers awaiting a
   ruling); the ☰ Menu bottom-nav tab shows the combined total. Polls every 60s and on window
@@ -103,7 +108,6 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 ---
 
 _What's left, by effort-to-payoff: **pull-to-refresh + optimistic board** and the **share card
-generator** are the cheap frontend wins. **Daily recap** is a natural next step now the activity
-feed exists (reuse its event data). **Push notifications** is the biggest retention lever but the
-heaviest lift (web-push keys, a subscription table, a sender). **Invite via QR / share link** and
-**admin "adjust score" with reason** round out the admin niceties._
+generator** are the cheap frontend wins. **Push notifications** is the biggest retention lever but
+the heaviest lift (web-push keys, a subscription table, a sender). **Invite via QR / share link**
+and **admin "adjust score" with reason** round out the admin niceties._

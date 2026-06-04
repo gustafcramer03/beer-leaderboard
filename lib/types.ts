@@ -112,6 +112,38 @@ export type LegendOfTheDay = {
   } | null;
 };
 
+// Daily recap: a summary of the beer-day that just wrapped (07:00 -> 07:00 in
+// the trip tz). `recap` is null when the board is dark or nobody drank that day.
+// `today` is the current beer-day (the client gates the once-per-day popup on
+// it); `date` is the recapped day. Each honour is null when nobody qualifies.
+export type DailyRecap = {
+  today: string;
+  date: string;
+  recap: {
+    total_beers: number;
+    champion: {
+      user_id: string;
+      display_name: string;
+      avatar_path: string | null;
+      beer_count: number;
+    };
+    early_bird: { user_id: string; display_name: string; avatar_path: string | null } | null;
+    night_owl: { user_id: string; display_name: string; avatar_path: string | null } | null;
+    fastest_chug: {
+      user_id: string;
+      display_name: string;
+      avatar_path: string | null;
+      seconds: number;
+    } | null;
+    longest_chain: {
+      user_id: string;
+      display_name: string;
+      avatar_path: string | null;
+      length: number;
+    } | null;
+  } | null;
+};
+
 // A trip member as shown in the head-to-head player picker.
 export type HolidayMember = {
   user_id: string;
