@@ -48,8 +48,15 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   **grand reveal** (champion unveiled) and the **Legend of the Day** popup. Haptics fire only on
   those two big moments (`vibrate([60,40,120])`); silently no-ops on iOS Safari. _Future picks left
   on the table: confetti/haptics on audit swipes and on overtaking someone (needs rank tracking)._
-- [ ] **Pull-to-refresh + optimistic board** — manual refresh gesture so people don't wait for
-  the hourly cron, plus an optimistic "+1" the moment a beer is logged. _Frontend-only._
+- [x] **Pull-to-refresh + optimistic board** — _SHIPPED_. Pull down on the board to force a fresh
+  snapshot (`refresh_snapshot` is member-callable) — a rubber-band 🍺 indicator damps the drag and
+  fires past a 60px threshold. Logging a beer now bumps your own row by **+1 beer / +1 pt instantly**
+  (pending beers already count in `compute_standings`), re-sorted with the board's exact ordering, then
+  a background `reconcile()` refreshes the snapshot and clears the overlay (a chug/chain may be worth
+  more, so the truth wins). The board stays mounted across tabs (hidden wrapper) so the optimistic
+  state survives, and re-activating the board tab quietly re-fetches without a skeleton flash.
+  `Leaderboard.tsx` (logSignal/refreshSignal/active props, `applyOptimistic`, `reconcile`) +
+  `HolidayHub.tsx` (touch handlers, signals). _Frontend-only._
 - [x] **"Your position" sticky chip** — _SHIPPED_. A clone of your own row styled like the amber
   highlighted row that pins to the top edge (`top-2`) when your row has scrolled above the
   viewport and to the bottom edge above the nav (`bottom-24`) when it's below; hidden while your
@@ -127,7 +134,6 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ---
 
-_What's left, by effort-to-payoff: **pull-to-refresh + optimistic board** is the cheap frontend win.
-**Push notifications** phase 1 (happy-hour start/end) is live; later phases (audit nudges,
-challenge alerts, grand-reveal) reuse the same pipeline. **Invite via QR / share link** is the
-last untouched admin nicety._
+_What's left, by effort-to-payoff: **Invite via QR / share link** is the last untouched admin
+nicety. **Push notifications** phase 1 (happy-hour start/end) is live; later phases (audit nudges,
+challenge alerts, grand-reveal) reuse the same pipeline._
