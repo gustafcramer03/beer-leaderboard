@@ -64,8 +64,14 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   head-to-head, rulings, holiday picker, hub gate, boot screen) swaps its bare "Loading…" for a
   context-specific witty line. Empty states already had warmth (e.g. "No beers logged yet. Be the
   first! 🍺"). _Frontend-only._
-- [ ] **Share card generator** 📲 — "Share my stats" button rendering a branded image (canvas)
-  of your rank/beers/best chug for the group chat. _Frontend (Web Share files API already wired)._
+- [x] **Share card generator** 📲 — _SHIPPED_ (migration 0027). Menu → "Share card": renders your
+  headline stats to a 1080×1920 (Instagram-story) canvas — avatar, trip name, big rank "#N of M",
+  beers + points, plus fastest-chug ⚡ / longest-chain 🔥 / active-days 🌅 chips on a warm amber→stout
+  gradient. "Share to story" hands the PNG to the native share sheet via the Web Share **files** API
+  (`navigator.canShare({files})`), so it drops straight into Instagram → Story; falls back to a
+  download on desktop. `share_card` RPC reuses the exact `compute_standings` scoring (rank ordered
+  like the board: points desc, beers desc) and is withheld while dark so the rank can't leak. Avatar
+  is loaded CORS-clean (initials fallback) to keep the canvas exportable. `ShareCard.tsx`.
 
 - [x] **Dark-mode reveal countdown** ⏳ — _SHIPPED_ (migration 0020). The "board has gone dark"
   screen now shows a live days/hrs/min/sec countdown to the grand reveal. `get_latest_standings`
@@ -107,7 +113,7 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ---
 
-_What's left, by effort-to-payoff: **pull-to-refresh + optimistic board** and the **share card
-generator** are the cheap frontend wins. **Push notifications** is the biggest retention lever but
-the heaviest lift (web-push keys, a subscription table, a sender). **Invite via QR / share link**
-and **admin "adjust score" with reason** round out the admin niceties._
+_What's left, by effort-to-payoff: **pull-to-refresh + optimistic board** is the cheap frontend win.
+**Push notifications** is the biggest retention lever but the heaviest lift (web-push keys, a
+subscription table, a sender). **Invite via QR / share link** and **admin "adjust score" with
+reason** round out the admin niceties._

@@ -16,6 +16,7 @@ import type {
   Achievements,
   PaceSeries,
   DailyRecap,
+  ShareCard,
   HolidayMember,
   HeadToHead,
   ActivityFeed,
@@ -366,6 +367,12 @@ export async function getDailyRecap(holidayId: string): Promise<DailyRecap> {
   const { data, error } = await supabase.rpc("daily_recap", { p_holiday: holidayId });
   if (error) throw error;
   return data as DailyRecap;
+}
+
+export async function getShareCard(holidayId: string): Promise<ShareCard> {
+  const { data, error } = await supabase.rpc("share_card", { p_holiday: holidayId });
+  if (error) throw error;
+  return data as ShareCard;
 }
 
 // Roster for the head-to-head player picker (id, name, avatar).

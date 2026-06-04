@@ -144,6 +144,29 @@ export type DailyRecap = {
   } | null;
 };
 
+// Share card: the caller's own headline stats for a branded, shareable image
+// (e.g. an Instagram story). `card` is null while the board is dark (the rank
+// would leak who's ahead). fastest_chug is seconds, or null if never chugged.
+export type ShareCard = {
+  state: "live" | "dark" | "reveal";
+  card: {
+    holiday_name: string;
+    display_name: string;
+    avatar_path: string | null;
+    rank: number;
+    players: number;
+    points: number;
+    beers: number;
+    chugs: number;
+    morning_beers: number;
+    fastest_chug: number | null;
+    longest_chain: number;
+    active_days: number;
+    early_birds: number;
+    night_owls: number;
+  } | null;
+};
+
 // A trip member as shown in the head-to-head player picker.
 export type HolidayMember = {
   user_id: string;
