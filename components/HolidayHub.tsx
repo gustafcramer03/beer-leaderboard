@@ -131,6 +131,9 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
         {tab === "board" && (
           <Leaderboard
             holidayId={holiday.id}
+            endDate={holiday.end_date}
+            endTime={holiday.end_time}
+            timezone={holiday.timezone}
             onOpenStats={() => setView("stats")}
             onOpenRules={() => setView("rules")}
           />

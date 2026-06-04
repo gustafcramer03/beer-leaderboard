@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { StandingsResult } from "@/lib/types";
-import { getStandings, refreshSnapshot, setHolidayState } from "@/lib/api";
+import { getStandings, refreshSnapshot, setHolidayState, setTripEnd } from "@/lib/api";
 import { useSession } from "./SessionProvider";
 import { PlayerLedger } from "./PlayerLedger";
 import { RevealShow } from "./RevealShow";
@@ -11,10 +11,16 @@ const MEDALS = ["🥇", "🥈", "🥉"];
 
 export function Leaderboard({
   holidayId,
+  endDate,
+  endTime,
+  timezone,
   onOpenStats,
   onOpenRules,
 }: {
   holidayId: string;
+  endDate: string;
+  endTime: string;
+  timezone: string;
   onOpenStats: () => void;
   onOpenRules: () => void;
 }) {
@@ -98,6 +104,18 @@ export function Leaderboard({
     }
   }
 
+  async function saveTripEnd(date: string, time: string) {
+    setStateBusy(true);
+    try {
+      await setTripEnd(holidayId, date, time);
+      await load();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setStateBusy(false);
+    }
+  }
+
   if (loading) return <p className="p-6 text-center text-neutral-500">Loading…</p>;
   if (!result) return <p className="p-6 text-center text-neutral-500">No data yet.</p>;
 
@@ -139,7 +157,15 @@ export function Leaderboard({
           </button>
         </div>
         {result.is_admin && (
-          <AdminTripControls state={result.state} busy={stateBusy} onChange={changeState} />
+          <AdminTripControls
+            state={result.state}
+            busy={stateBusy}
+            onChange={changeState}
+            endDate={endDate}
+            endTime={endTime}
+            timezone={timezone}
+            onSaveEnd={saveTripEnd}
+          />
         )}
       </div>
     );
@@ -243,7 +269,15 @@ export function Leaderboard({
           >
             {refreshing ? "Refreshing…" : "↻ Refresh now (admin)"}
           </button>
-          <AdminTripControls state={result.state} busy={stateBusy} onChange={changeState} />
+          <AdminTripControls
+            state={result.state}
+            busy={stateBusy}
+            onChange={changeState}
+            endDate={endDate}
+            endTime={endTime}
+            timezone={timezone}
+            onSaveEnd={saveTripEnd}
+          />
         </>
       )}
       <p className="text-center text-xs text-neutral-400">
@@ -354,16 +388,62 @@ function AdminTripControls({
   state,
   busy,
   onChange,
+  endDate,
+  endTime,
+  timezone,
+  onSaveEnd,
 }: {
   state: "live" | "dark" | "reveal";
   busy: boolean;
   onChange: (s: "live" | "dark" | "reveal" | "auto") => void;
+  endDate: string;
+  endTime: string;
+  timezone: string;
+  onSaveEnd: (date: string, time: string) => void;
 }) {
+  // end_time arrives as a Postgres time ("HH:MM:SS"); inputs want "HH:MM".
+  const [date, setDate] = useState(endDate);
+  const [time, setTime] = useState(endTime.slice(0, 5));
+  const dirty = date !== endDate || time !== endTime.slice(0, 5);
+
   return (
     <div className="mt-3 flex flex-col gap-2 rounded-2xl border border-neutral-200 p-3 dark:border-neutral-700">
       <span className="text-center text-xs font-semibold uppercase tracking-wide text-neutral-400">
         Admin controls
       </span>
+
+      <div className="flex flex-col gap-2 rounded-xl bg-neutral-50 p-3 dark:bg-neutral-800/60">
+        <span className="text-xs font-medium text-neutral-500">
+          Scheduled end {timezone ? `(${timezone})` : ""}
+        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            disabled={busy}
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-900"
+          />
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            disabled={busy}
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-900"
+          />
+          <button
+            onClick={() => onSaveEnd(date, time)}
+            disabled={busy || !dirty || !date || !time}
+            className="rounded-full bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+          >
+            Save end
+          </button>
+        </div>
+        <span className="text-[11px] text-neutral-400">
+          The board reveals at this moment; it goes dark the configured number of days before.
+        </span>
+      </div>
+
       <div className="flex flex-wrap justify-center gap-2">
         {state !== "dark" ? (
           <button

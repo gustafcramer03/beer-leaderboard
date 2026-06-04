@@ -124,6 +124,21 @@ export async function setHolidayState(
   if (error) throw error;
 }
 
+// Admin reschedules the trip end (date + time, in the trip's timezone). Re-snapshots
+// server-side so the board reflects any resulting state change immediately.
+export async function setTripEnd(
+  holidayId: string,
+  endDate: string, // YYYY-MM-DD
+  endTime: string, // HH:MM
+): Promise<void> {
+  const { error } = await supabase.rpc("set_trip_end", {
+    p_holiday: holidayId,
+    p_end_date: endDate,
+    p_end_time: endTime,
+  });
+  if (error) throw error;
+}
+
 // Is it happy hour right now for this holiday? Drives the load-time banner.
 export async function happyHourNow(holidayId: string): Promise<HappyHourStatus> {
   const { data, error } = await supabase.rpc("happy_hour_now", { p_holiday: holidayId });

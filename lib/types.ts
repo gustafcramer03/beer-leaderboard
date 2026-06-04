@@ -3,6 +3,7 @@ export type Holiday = {
   name: string;
   start_date: string;
   end_date: string;
+  end_time: string;
   dark_days: number;
   admin_id: string;
   invite_code: string;
