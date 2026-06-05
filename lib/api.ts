@@ -23,6 +23,7 @@ import type {
   ChallengedBeer,
   AdminBeer,
   RevealMedia,
+  Heatmap,
 } from "@/lib/types";
 
 export async function myHolidays(): Promise<Holiday[]> {
@@ -111,6 +112,13 @@ export async function getPaceSeries(holidayId: string): Promise<PaceSeries> {
   const { data, error } = await supabase.rpc("pace_series", { p_holiday: holidayId });
   if (error) throw error;
   return data as PaceSeries;
+}
+
+// Day x hour drinking heatmap (group aggregate). Returned even while dark.
+export async function getHeatmap(holidayId: string): Promise<Heatmap> {
+  const { data, error } = await supabase.rpc("heatmap_data", { p_holiday: holidayId });
+  if (error) throw error;
+  return data as Heatmap;
 }
 
 export async function refreshSnapshot(holidayId: string): Promise<void> {

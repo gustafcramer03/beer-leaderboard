@@ -339,3 +339,15 @@ export type TripStats = {
   longest_chain: { length: number; name: string | null } | null;
   top_drinker: { name: string; count: number } | null;
 };
+
+// Drinking heatmap: a day x hour grid of beer counts (local tz), keyed on when
+// each beer was cracked. Pure group aggregate — returned even while dark.
+export type Heatmap = {
+  tz: string;
+  state: "live" | "dark" | "reveal";
+  total: number;
+  max: number;
+  days: { date: string; counts: number[] }[]; // counts is always length 24 (hours 0–23)
+  by_hour: number[]; // length 24 — column totals across all days
+  peak: { date: string; hour: number; count: number } | null;
+};
