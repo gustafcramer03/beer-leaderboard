@@ -62,11 +62,11 @@ function badges(e: LedgerEntry): { label: string; cls: string }[] {
   if (e.streak_position >= 3 && e.streak_position > chugVal) {
     out.push({ label: `Chain ×${e.streak_position}`, cls: "bg-purple-100 text-purple-700" });
   } else if (e.is_chug) {
-    out.push({ label: "Chug 🍺×2", cls: "bg-amber-100 text-amber-700" });
+    out.push({ label: "Chug 🍺×2", cls: "bg-accent-soft text-accent-strong" });
   } else if (e.streak_position >= 2) {
     out.push({ label: `Chain ×${e.streak_position}`, cls: "bg-purple-100 text-purple-700" });
   } else {
-    out.push({ label: "Normal", cls: "bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300" });
+    out.push({ label: "Normal", cls: "bg-surface-muted text-muted" });
   }
   if (e.is_morning) {
     out.push({ label: "Morning +1", cls: "bg-sky-100 text-sky-700" });
@@ -133,17 +133,17 @@ export function PlayerLedger({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <div>
           <h2 className="text-lg font-bold">{displayName}</h2>
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-muted">
             {entries ? `${entries.length} beer${entries.length === 1 ? "" : "s"} · ${total} pts` : "Loading…"}
           </p>
         </div>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -156,7 +156,7 @@ export function PlayerLedger({
           </p>
         )}
         {!error && entries && entries.length === 0 && (
-          <p className="p-6 text-center text-neutral-500">No beers logged yet. 🍺</p>
+          <p className="p-6 text-center text-muted">No beers logged yet. 🍺</p>
         )}
         <ul className="flex flex-col gap-2">
           {entries?.map((e) => {
@@ -164,10 +164,10 @@ export function PlayerLedger({
             return (
               <li
                 key={e.beer_id}
-                className={`overflow-hidden rounded-2xl shadow-sm ${
+                className={`overflow-hidden rounded-card shadow-card ${
                   e.is_offline
-                    ? "bg-amber-50 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50"
-                    : "bg-white dark:bg-neutral-800"
+                    ? "bg-accent-soft ring-1 ring-accent/30"
+                    : "bg-surface"
                 }`}
               >
                 <button
@@ -175,7 +175,7 @@ export function PlayerLedger({
                   className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
                 >
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-neutral-500">
+                    <span className="text-xs text-muted">
                       {fmtDate(e.full_taken_at)} · {fmtTime(e.full_taken_at)}
                     </span>
                     <span className="flex flex-wrap gap-1">
@@ -191,22 +191,22 @@ export function PlayerLedger({
                       )}
                     </span>
                     {e.reviews_total > 0 && (
-                      <span className="text-[11px] text-neutral-400">
+                      <span className="text-[11px] text-faint">
                         {e.reviews_challenged}/{e.reviews_total} challenged
                         {e.status === "confirmed" && e.reviews_challenged > 0 && " · admin confirmed"}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-lg font-bold ${e.points === 0 ? "text-neutral-400 line-through" : ""}`}>
+                    <span className={`text-lg font-bold ${e.points === 0 ? "text-faint line-through" : ""}`}>
                       {e.points}
                     </span>
-                    <span className="text-xs text-neutral-400">pts</span>
-                    <span className="text-neutral-300">{open ? "▲" : "▼"}</span>
+                    <span className="text-xs text-faint">pts</span>
+                    <span className="text-faint">{open ? "▲" : "▼"}</span>
                   </div>
                 </button>
                 {e.caption && (
-                  <p className="-mt-1 px-4 pb-2 text-sm italic text-neutral-600 dark:text-neutral-300">
+                  <p className="-mt-1 px-4 pb-2 text-sm italic text-muted">
                     &ldquo;{e.caption}&rdquo;
                   </p>
                 )}
@@ -214,7 +214,7 @@ export function PlayerLedger({
                 {open && (
                   <>
                     {e.override_reason && (
-                      <p className="border-t border-neutral-100 px-4 py-2 text-[11px] leading-snug text-indigo-700 dark:border-neutral-700 dark:text-indigo-300">
+                      <p className="border-t border-line px-4 py-2 text-[11px] leading-snug text-indigo-700 dark:text-indigo-300">
                         <span className="font-semibold">
                           {e.score_override !== null
                             ? "Adjusted ✎"
@@ -258,21 +258,21 @@ function ReactionBar({
           <button
             key={emoji}
             onClick={() => onReact(entry.beer_id, emoji)}
-            className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-sm transition active:scale-95 ${
+            className={`press flex items-center gap-1 rounded-full px-2 py-0.5 text-sm transition ${
               mine
-                ? "bg-amber-100 ring-1 ring-amber-400 dark:bg-amber-900/40"
-                : "bg-neutral-100 dark:bg-neutral-700"
+                ? "bg-accent-soft ring-1 ring-accent"
+                : "bg-surface-muted"
             }`}
           >
             <span>{emoji}</span>
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-300">{n}</span>
+            <span className="text-xs font-semibold text-muted">{n}</span>
           </button>
         );
       })}
 
       <button
         onClick={() => setPicking((p) => !p)}
-        className="flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-sm text-neutral-500 transition active:scale-95 dark:bg-neutral-700 dark:text-neutral-300"
+        className="press flex items-center gap-1 rounded-full bg-surface-muted px-2 py-0.5 text-sm text-muted transition"
         aria-label="React to this beer"
       >
         🙂<span className="text-xs font-bold">+</span>
@@ -286,7 +286,7 @@ function ReactionBar({
             aria-label="Close reactions"
             onClick={() => setPicking(false)}
           />
-          <div className="absolute bottom-9 left-4 z-20 flex gap-1 rounded-full border border-neutral-200 bg-white p-1.5 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
+          <div className="absolute bottom-9 left-4 z-20 flex gap-1 rounded-full border border-line bg-surface p-1.5 shadow-raise">
             {REACTION_EMOJIS.map((emoji) => (
               <button
                 key={emoji}
@@ -294,8 +294,8 @@ function ReactionBar({
                   onReact(entry.beer_id, emoji);
                   setPicking(false);
                 }}
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-xl transition active:scale-90 ${
-                  entry.my_reaction === emoji ? "bg-amber-100 dark:bg-amber-900/40" : "hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                className={`press flex h-9 w-9 items-center justify-center rounded-full text-xl transition ${
+                  entry.my_reaction === emoji ? "bg-accent-soft" : "hover:bg-surface-muted"
                 }`}
               >
                 {emoji}
@@ -326,7 +326,7 @@ function LedgerPhotos({ entry }: { entry: LedgerEntry }) {
   }, [entry]);
 
   return (
-    <div className="grid grid-cols-2 gap-2 border-t border-neutral-100 px-4 py-3 dark:border-neutral-700">
+    <div className="grid grid-cols-2 gap-2 border-t border-line px-4 py-3">
       <Photo url={urls?.full ?? null} label="FULL" time={fmtTime(entry.full_taken_at)} brand={entry.brand} />
       <Photo url={urls?.empty ?? null} label="EMPTY" time={fmtTime(entry.empty_taken_at)} />
     </div>
@@ -408,7 +408,7 @@ function Photo({
 
   return (
     <div
-      className="relative aspect-square overflow-hidden rounded-xl bg-neutral-200 dark:bg-neutral-700"
+      className="relative aspect-square overflow-hidden rounded-xl bg-surface-muted"
       onPointerDown={startPress}
       onPointerUp={endPress}
       onPointerMove={movePress}
@@ -430,7 +430,7 @@ function Photo({
           style={{ WebkitTouchCallout: "none" }}
         />
       ) : (
-        <div className="flex h-full items-center justify-center text-neutral-400">…</div>
+        <div className="flex h-full items-center justify-center text-faint">…</div>
       )}
       <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[10px] font-bold text-white">
         {label}
@@ -460,7 +460,7 @@ function Photo({
               save();
             }}
             disabled={saving}
-            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-neutral-900 shadow active:scale-95 disabled:opacity-60"
+            className="press rounded-full bg-white px-4 py-2 text-sm font-semibold text-neutral-900 shadow disabled:opacity-60"
           >
             {saving ? "Saving…" : "📷 Save to Photos"}
           </button>

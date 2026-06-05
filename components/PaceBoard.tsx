@@ -138,7 +138,7 @@ function LineChart({
         </svg>
 
         {/* axis date labels */}
-        <div className="flex justify-between px-1 text-[10px] text-neutral-400">
+        <div className="flex justify-between px-1 text-[10px] text-faint">
           <span>{fmtDay(startMs)}</span>
           {hasProjection && <span>now</span>}
           <span>{fmtDay(endMs)}</span>
@@ -167,7 +167,7 @@ function LineChart({
             <span key={s.key} className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} />
               <span className="font-medium">{s.label}:</span>
-              <span className="tabular-nums text-neutral-500">
+              <span className="tabular-nums text-muted">
                 {lastV}{hasProjection && <> → ~{Math.round(vEnd)}</>}
               </span>
             </span>
@@ -179,10 +179,10 @@ function LineChart({
             <button
               key={s.key}
               onClick={() => setSelected((cur) => (cur === s.key ? null : s.key))}
-              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition ${
+              className={`press flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition ${
                 selected === s.key
-                  ? "bg-neutral-200 font-semibold dark:bg-neutral-700"
-                  : "bg-neutral-100 dark:bg-neutral-800"
+                  ? "bg-surface-raised font-semibold shadow-raise"
+                  : "bg-surface-muted"
               }`}
             >
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} />
@@ -242,12 +242,12 @@ export function PaceBoard({ holidayId, onClose }: { holidayId: string; onClose: 
   const noData = data && data.group_events.length === 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <h2 className="text-lg font-bold">📈 Pace projection</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -256,7 +256,7 @@ export function PaceBoard({ holidayId, onClose }: { holidayId: string; onClose: 
       <div className="flex-1 overflow-y-auto p-4">
         <div className="mx-auto flex max-w-md flex-col gap-6">
           {error ? (
-            <p className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-center text-sm text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+            <p className="rounded-2xl border border-accent/40 bg-accent-soft p-4 text-center text-sm text-accent-strong">
               {error === "board is dark"
                 ? "🌑 The board is dark — pace projections are hidden until the grand reveal."
                 : error}
@@ -264,39 +264,39 @@ export function PaceBoard({ holidayId, onClose }: { holidayId: string; onClose: 
           ) : !data ? (
             <Loading label="Plotting the trajectory…" />
           ) : noData ? (
-            <div className="p-8 text-center text-neutral-500">
+            <div className="p-8 text-center text-muted">
               <div className="mb-2 text-5xl">📈</div>
               No beers logged yet — the pace board fills in as the trip gets going. 🍻
             </div>
           ) : (
             <>
-              <section className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-800">
+              <section className="card flex flex-col gap-3 p-4">
                 <h3 className="text-base font-bold">Group pace</h3>
-                <p className="-mt-1 text-xs text-neutral-400">
+                <p className="-mt-1 text-xs text-faint">
                   Cumulative across everyone, stepping up at each beer. Solid = so far, dotted = projected to the final day.
                 </p>
                 <LineChart series={groupSeries} startMs={data.start} endMs={data.end} nowMs={data.now} mode="summary" />
               </section>
 
-              <section className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-800">
+              <section className="card flex flex-col gap-3 p-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold">Player pace</h3>
-                  <div className="flex rounded-full bg-neutral-100 p-0.5 text-xs font-medium dark:bg-neutral-700">
+                  <div className="flex rounded-full bg-surface-muted p-0.5 text-xs font-medium">
                     <button
                       onClick={() => setMetric("beers")}
-                      className={`rounded-full px-3 py-1 ${metric === "beers" ? "bg-white shadow dark:bg-neutral-900" : "text-neutral-500"}`}
+                      className={`press rounded-full px-3 py-1 ${metric === "beers" ? "bg-surface-raised shadow-raise" : "text-muted"}`}
                     >
                       🍺 Beers
                     </button>
                     <button
                       onClick={() => setMetric("points")}
-                      className={`rounded-full px-3 py-1 ${metric === "points" ? "bg-white shadow dark:bg-neutral-900" : "text-neutral-500"}`}
+                      className={`press rounded-full px-3 py-1 ${metric === "points" ? "bg-surface-raised shadow-raise" : "text-muted"}`}
                     >
                       🎯 Points
                     </button>
                   </div>
                 </div>
-                <p className="-mt-1 text-xs text-neutral-400">
+                <p className="-mt-1 text-xs text-faint">
                   Tap a line or a name to see its current and projected total.
                 </p>
                 <LineChart

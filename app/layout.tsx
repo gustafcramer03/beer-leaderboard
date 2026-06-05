@@ -1,6 +1,22 @@
 import type { Metadata, Viewport } from "next";
+import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { RegisterSW } from "@/components/RegisterSW";
+
+const display = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display-face",
+  display: "swap",
+  axes: ["opsz"],
+  weight: "variable",
+});
+
+const body = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "Beer League",
@@ -35,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className={`h-full antialiased ${display.variable} ${body.variable}`}>
       <body className="min-h-dvh flex flex-col">
         {children}
         <RegisterSW />

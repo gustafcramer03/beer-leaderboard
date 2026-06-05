@@ -84,12 +84,12 @@ export function RivalryCard({ holidayId, onClose }: { holidayId: string; onClose
   }, [players]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <h2 className="text-lg font-bold">⚔️ Head to head</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -100,7 +100,7 @@ export function RivalryCard({ holidayId, onClose }: { holidayId: string; onClose
           {/* Player slots */}
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
             <PlayerSlot member={aMember} onClick={() => setPicking("a")} />
-            <span className="text-2xl font-black text-neutral-300">VS</span>
+            <span className="text-2xl font-black text-faint">VS</span>
             <PlayerSlot member={bMember} onClick={() => setPicking("b")} />
           </div>
 
@@ -122,20 +122,20 @@ export function RivalryCard({ holidayId, onClose }: { holidayId: string; onClose
           {error && <p className="p-6 text-center text-sm text-red-600">{error}</p>}
 
           {!loading && !error && (!aId || !bId) && (
-            <p className="p-8 text-center text-sm text-neutral-500">
+            <p className="p-8 text-center text-sm text-muted">
               Pick two players to see how they stack up. ⚔️
             </p>
           )}
 
           {!loading && !error && aId && bId && data && data.players === null && (
-            <p className="p-8 text-center text-sm text-neutral-500">
+            <p className="p-8 text-center text-sm text-muted">
               🌑 The board is dark — head-to-head is hidden until the reveal.
             </p>
           )}
 
           {/* Comparison rows */}
           {players && (
-            <div className="overflow-hidden rounded-2xl bg-white shadow-sm dark:bg-neutral-800">
+            <div className="card overflow-hidden">
               {METRICS.map((m, i) => {
                 const av = players[0][m.key];
                 const bv = players[1][m.key];
@@ -144,7 +144,7 @@ export function RivalryCard({ holidayId, onClose }: { holidayId: string; onClose
                   <div
                     key={m.key}
                     className={`grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3 ${
-                      i > 0 ? "border-t border-neutral-100 dark:border-neutral-700" : ""
+                      i > 0 ? "border-t border-line" : ""
                     }`}
                   >
                     <span className={`text-right text-lg tabular-nums ${sideClass(w === "a", w === "b")}`}>
@@ -152,7 +152,7 @@ export function RivalryCard({ holidayId, onClose }: { holidayId: string; onClose
                     </span>
                     <span className="flex flex-col items-center px-1 text-center">
                       <span className="text-base">{m.icon}</span>
-                      <span className="text-[10px] uppercase leading-tight tracking-wide text-neutral-400">
+                      <span className="text-[10px] uppercase leading-tight tracking-wide text-faint">
                         {m.label}
                       </span>
                     </span>
@@ -175,7 +175,7 @@ export function RivalryCard({ holidayId, onClose }: { holidayId: string; onClose
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[70vh] w-full overflow-y-auto rounded-t-3xl bg-white p-4 dark:bg-neutral-800 sm:max-w-sm sm:rounded-3xl"
+            className="max-h-[70vh] w-full overflow-y-auto rounded-t-3xl bg-surface p-4 sm:max-w-sm sm:rounded-3xl"
           >
             <h3 className="mb-3 text-center font-bold">
               Choose {picking === "a" ? "the first" : "the second"} player
@@ -192,16 +192,16 @@ export function RivalryCard({ holidayId, onClose }: { holidayId: string; onClose
                       else setBId(m.user_id);
                       setPicking(null);
                     }}
-                    className="flex items-center gap-3 rounded-xl p-2 text-left transition active:scale-[0.99] disabled:opacity-30 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                    className="press flex items-center gap-3 rounded-xl p-2 text-left transition disabled:opacity-30 hover:bg-surface-muted"
                   >
                     <Avatar path={m.avatar_path} size={40} />
                     <span className="font-medium">{m.display_name}</span>
-                    {takenByOther && <span className="ml-auto text-xs text-neutral-400">already picked</span>}
+                    {takenByOther && <span className="ml-auto text-xs text-faint">already picked</span>}
                   </button>
                 );
               })}
               {members && members.length === 0 && (
-                <p className="p-4 text-center text-sm text-neutral-500">No members found.</p>
+                <p className="p-4 text-center text-sm text-muted">No members found.</p>
               )}
             </div>
           </div>
@@ -215,20 +215,20 @@ function PlayerSlot({ member, onClick }: { member: HolidayMember | null; onClick
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-2 rounded-2xl bg-white p-3 shadow-sm transition active:scale-[0.98] dark:bg-neutral-800"
+      className="card press flex flex-col items-center gap-2 p-3 transition"
     >
       {member ? (
         <>
           <Avatar path={member.avatar_path} size={72} />
           <span className="max-w-full truncate text-sm font-bold">{member.display_name}</span>
-          <span className="text-[11px] text-amber-600">Change</span>
+          <span className="text-[11px] text-accent">Change</span>
         </>
       ) : (
         <>
-          <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full border-2 border-dashed border-neutral-300 text-3xl text-neutral-300 dark:border-neutral-600">
+          <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full border-2 border-dashed border-line text-3xl text-faint">
             +
           </span>
-          <span className="text-sm font-medium text-neutral-400">Choose player</span>
+          <span className="text-sm font-medium text-faint">Choose player</span>
         </>
       )}
     </button>
@@ -246,9 +246,9 @@ function winner(a: number | null, b: number | null, lowerBetter?: boolean): "a" 
 }
 
 function sideClass(win: boolean, lose: boolean): string {
-  if (win) return "font-bold text-green-600 dark:text-green-400";
-  if (lose) return "text-red-500 dark:text-red-400";
-  return "text-neutral-500";
+  if (win) return "font-bold text-good";
+  if (lose) return "text-bad";
+  return "text-muted";
 }
 
 function format(key: MetricKey, value: number | null): string {

@@ -55,12 +55,12 @@ export function ActivityFeed({
   }, [load]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <h2 className="text-lg font-bold">📰 What&apos;s happening</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -73,13 +73,13 @@ export function ActivityFeed({
           {error && <p className="p-6 text-center text-sm text-red-600">{error}</p>}
 
           {dark && (
-            <p className="p-8 text-center text-sm text-neutral-500">
+            <p className="p-8 text-center text-sm text-muted">
               🌑 The board is dark — the feed is hidden until the reveal.
             </p>
           )}
 
           {!dark && !error && events && events.length === 0 && (
-            <p className="p-8 text-center text-sm text-neutral-500">
+            <p className="p-8 text-center text-sm text-muted">
               Nothing big yet — go make some history. 🍺
             </p>
           )}
@@ -107,7 +107,7 @@ function FeedRow({ e, tz }: { e: ActivityEvent; tz: string }) {
         className={`flex items-center gap-3 rounded-2xl p-3 shadow-sm ${
           live
             ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-white"
-            : "bg-amber-50 dark:bg-amber-950/40"
+            : "bg-accent-soft"
         }`}
       >
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/25 text-2xl">
@@ -115,7 +115,7 @@ function FeedRow({ e, tz }: { e: ActivityEvent; tz: string }) {
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold leading-snug">{text}</p>
-          <p className={`text-[11px] ${live ? "text-amber-50/80" : "text-neutral-400"}`}>
+          <p className={`text-[11px] ${live ? "text-amber-50/80" : "text-faint"}`}>
             {relativeTime(e.at)}
           </p>
         </div>
@@ -124,7 +124,7 @@ function FeedRow({ e, tz }: { e: ActivityEvent; tz: string }) {
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm dark:bg-neutral-800">
+    <div className="card flex items-center gap-3 p-3">
       <div className="relative shrink-0">
         <Avatar path={e.avatar_path} size={44} />
         <span className="absolute -bottom-1 -right-1 text-lg drop-shadow-sm">{emoji}</span>
@@ -133,7 +133,7 @@ function FeedRow({ e, tz }: { e: ActivityEvent; tz: string }) {
         <p className="text-sm leading-snug">
           <span className="font-bold">{e.display_name}</span> {text}
         </p>
-        <p className="text-[11px] text-neutral-400">{relativeTime(e.at)}</p>
+        <p className="text-[11px] text-faint">{relativeTime(e.at)}</p>
       </div>
     </div>
   );

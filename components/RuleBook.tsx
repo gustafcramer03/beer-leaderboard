@@ -6,8 +6,8 @@
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="text-base font-bold text-amber-600">{title}</h3>
-      <div className="flex flex-col gap-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+      <h3 className="text-base font-bold text-accent">{title}</h3>
+      <div className="flex flex-col gap-2 text-sm leading-relaxed text-muted">
         {children}
       </div>
     </section>
@@ -22,12 +22,12 @@ function Badge({ label, cls }: { label: string; cls: string }) {
 
 export function RuleBook({ onClose }: { onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <h2 className="text-lg font-bold">📖 How the game works</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -120,11 +120,11 @@ export function RuleBook({ onClose }: { onClose: () => void }) {
             <p>Each beer is worth points like so:</p>
             <ul className="ml-4 list-disc space-y-1">
               <li>
-                <Badge label="Normal" cls="bg-neutral-200 text-neutral-700" /> A standard beer is
+                <Badge label="Normal" cls="bg-surface-muted text-muted" /> A standard beer is
                 worth <span className="font-semibold">1 point</span>.
               </li>
               <li>
-                <Badge label="Chug 🍺×2" cls="bg-amber-100 text-amber-700" /> Chug it — empty within
+                <Badge label="Chug 🍺×2" cls="bg-accent-soft text-accent-strong" /> Chug it — empty within
                 60 seconds of the full photo, or you ticked &quot;I chugged it&quot; — and it&apos;s
                 worth <span className="font-semibold">2 points</span>.
               </li>
@@ -175,7 +175,7 @@ export function RuleBook({ onClose }: { onClose: () => void }) {
               whichever is higher. Morning, happy hour, early bird and night owl are all bonuses{" "}
               <span className="font-semibold">added on top</span>, and they stack with each other.
             </p>
-            <p className="rounded-xl bg-neutral-100 p-3 text-xs dark:bg-neutral-800">
+            <p className="rounded-xl bg-surface-muted p-3 text-xs">
               <span className="font-semibold">Example:</span> a chug at 08:30 = 2 (chug) + 1
               (morning) = <span className="font-semibold">3 points</span>. The 4th beer in a chain at
               09:00 = 4 (chain) + 1 (morning) = <span className="font-semibold">5 points</span>. A
@@ -197,7 +197,7 @@ export function RuleBook({ onClose }: { onClose: () => void }) {
             </p>
           </Section>
 
-          <p className="pb-2 text-center text-xs text-neutral-400">Drink responsibly. 🍺</p>
+          <p className="pb-2 text-center text-xs text-faint">Drink responsibly. 🍺</p>
         </div>
       </div>
     </div>

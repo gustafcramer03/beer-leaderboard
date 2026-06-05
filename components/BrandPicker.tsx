@@ -36,10 +36,10 @@ export function BrandPicker({
         type="button"
         disabled={disabled}
         onClick={() => onChange(on ? null : slug)}
-        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:opacity-40 ${
+        className={`press rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:opacity-40 ${
           on
             ? "border-transparent text-white shadow-sm"
-            : "border-neutral-300 bg-white text-neutral-700 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200"
+            : "border-line bg-surface text-muted"
         }`}
         style={on ? { backgroundColor: colour } : undefined}
       >
@@ -51,16 +51,16 @@ export function BrandPicker({
   return (
     <div className="flex w-full max-w-xs flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
+        <span className="text-sm font-medium text-muted">
           🏷️ Tag the beer{" "}
-          <span className="font-normal text-neutral-400">(optional)</span>
+          <span className="font-normal text-faint">(optional)</span>
         </span>
         {selected && (
           <button
             type="button"
             onClick={() => onChange(null)}
             disabled={disabled}
-            className="text-[11px] font-medium text-amber-600 underline disabled:opacity-40 dark:text-amber-400"
+            className="text-[11px] font-medium text-accent underline disabled:opacity-40"
           >
             clear
           </button>
@@ -73,12 +73,12 @@ export function BrandPicker({
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search beers…"
         disabled={disabled}
-        className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+        className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
       />
 
       {matches ? (
         matches.length === 0 ? (
-          <p className="text-center text-xs text-neutral-400">
+          <p className="text-center text-xs text-faint">
             No match. Pick “Other / unknown”, or leave it untagged.
           </p>
         ) : (
@@ -90,7 +90,7 @@ export function BrandPicker({
         <div className="flex max-h-48 flex-col gap-2 overflow-y-auto">
           {BRANDS_BY_COUNTRY.map(({ country, brands }) => (
             <div key={country} className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-faint">
                 {country}
               </span>
               <div className="flex flex-wrap gap-1.5">

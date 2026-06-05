@@ -40,10 +40,10 @@ export function CameraCapture({ label, onCapture, disabled, fromGallery }: Props
         <img
           src={preview}
           alt={label}
-          className="h-48 w-48 rounded-2xl object-cover ring-2 ring-amber-400"
+          className="h-48 w-48 rounded-2xl object-cover ring-2 ring-accent"
         />
       ) : (
-        <div className="flex h-48 w-48 items-center justify-center rounded-2xl border-2 border-dashed border-amber-300 text-5xl">
+        <div className="flex h-48 w-48 items-center justify-center rounded-2xl border-2 border-dashed border-accent/40 text-5xl">
           📷
         </div>
       )}
@@ -51,7 +51,7 @@ export function CameraCapture({ label, onCapture, disabled, fromGallery }: Props
         type="button"
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
-        className="rounded-full bg-amber-500 px-6 py-3 font-semibold text-white shadow active:scale-95 disabled:opacity-40"
+        className="press rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast shadow disabled:opacity-40"
       >
         {preview ? `Retake ${label}` : `📸 ${label}`}
       </button>

@@ -58,7 +58,7 @@ export function Avatar({
       height={size}
       style={{ width: size, height: size }}
       onError={() => setBroken(true)}
-      className={`shrink-0 rounded-full bg-amber-100 dark:bg-amber-900/40 ${
+      className={`shrink-0 rounded-full bg-accent-soft ${
         url ? "object-cover" : "object-contain"
       } ${className}`}
     />

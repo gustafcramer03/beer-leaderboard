@@ -227,21 +227,21 @@ export function Leaderboard({
     return (
       <div className="flex flex-col gap-3 p-4">
         <div className="flex items-center justify-between">
-          <span className="h-5 w-28 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
-          <span className="h-5 w-20 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+          <span className="h-5 w-28 animate-pulse rounded bg-surface-muted" />
+          <span className="h-5 w-20 animate-pulse rounded bg-surface-muted" />
         </div>
         <SkeletonRows count={6} />
       </div>
     );
   }
-  if (!result) return <p className="p-6 text-center text-neutral-500">No data yet.</p>;
+  if (!result) return <p className="p-6 text-center text-muted">No data yet.</p>;
 
   if (result.state === "dark" && result.standings === null) {
     return (
       <div className="flex flex-col items-center gap-4 p-8 text-center">
         <div className="text-7xl">🌑</div>
-        <h2 className="text-xl font-bold">The board has gone dark</h2>
-        <p className="max-w-xs text-sm text-neutral-500">
+        <h2 className="font-display text-xl font-bold">The board has gone dark</h2>
+        <p className="max-w-xs text-sm text-muted">
           Keep drinking and logging — scores are hidden for the final stretch. The winner is
           revealed on the last day. 🍻
         </p>
@@ -255,7 +255,7 @@ export function Leaderboard({
               setPeeking(false);
             }}
             disabled={peeking}
-            className="mt-2 rounded-full border border-amber-400 px-4 py-2 text-sm text-amber-600 disabled:opacity-40"
+            className="press mt-2 rounded-full border border-accent px-4 py-2 text-sm text-accent disabled:opacity-40"
           >
             {peeking ? "Peeking…" : "👁️ Peek at standings (admin)"}
           </button>
@@ -263,13 +263,13 @@ export function Leaderboard({
         <div className="flex gap-2">
           <button
             onClick={onOpenStats}
-            className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+            className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
           >
             📊 Stats
           </button>
           <button
             onClick={onOpenRules}
-            className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+            className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
           >
             📖 Rules
           </button>
@@ -300,8 +300,8 @@ export function Leaderboard({
       <div className="flex min-h-full flex-col items-center justify-center gap-6 p-8 text-center">
         <div className="text-7xl">🍺🥁</div>
         <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-black">The trip&apos;s over!</h2>
-          <p className="max-w-xs text-sm text-neutral-500">
+          <h2 className="font-display text-2xl font-black">The trip&apos;s over!</h2>
+          <p className="max-w-xs text-sm text-muted">
             The final table is under wraps. No peeking — the standings stay hidden until
             you&apos;ve been through the grand reveal.
           </p>
@@ -314,7 +314,7 @@ export function Leaderboard({
         </button>
         <button
           onClick={() => setShowReveal(true)}
-          className="text-xs text-neutral-400 underline"
+          className="text-xs text-faint underline"
         >
           Tap to start the countdown from last place
         </button>
@@ -329,13 +329,13 @@ export function Leaderboard({
   return (
     <div className="flex flex-col gap-3 p-4">
       {result.state === "dark" && (
-        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-center text-xs text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+        <div className="rounded-card border border-accent/40 bg-accent-soft p-3 text-center text-xs text-accent-strong">
           👁️ Admin peek — the board is dark for everyone else until the reveal.
         </div>
       )}
 
       {result.state === "reveal" && (
-        <div className="rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 p-4 text-center text-white shadow">
+        <div className="rounded-card bg-gradient-to-r from-amber-400 to-yellow-500 p-4 text-center text-white shadow-raise">
           <div className="text-3xl">🏆 GRAND REVEAL 🏆</div>
           <p className="mt-1 text-sm font-medium text-white/90">The trip is done — final standings below.</p>
           {standings.length > 0 && (
@@ -350,24 +350,24 @@ export function Leaderboard({
       )}
 
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold">League table</h2>
+        <h2 className="font-display text-lg font-bold">League table</h2>
         <div className="flex items-center gap-3">
           {result.generated_at && (
-            <span className="text-xs text-neutral-400">
+            <span className="text-xs text-faint">
               updated {new Date(result.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
           <button
             onClick={onOpenStats}
             aria-label="Trip stats"
-            className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium dark:bg-neutral-700"
+            className="press rounded-full bg-surface-muted px-3 py-1.5 text-sm font-medium"
           >
             📊 Stats
           </button>
           <button
             onClick={onOpenRules}
             aria-label="How the game works"
-            className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium dark:bg-neutral-700"
+            className="press rounded-full bg-surface-muted px-3 py-1.5 text-sm font-medium"
           >
             📖 Rules
           </button>
@@ -379,31 +379,29 @@ export function Leaderboard({
           <li key={s.user_id} ref={s.user_id === userId ? meRef : null}>
             <button
               onClick={() => setLedgerFor({ id: s.user_id, name: s.display_name })}
-              className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left shadow-sm transition active:scale-[0.99] ${
-                s.user_id === userId
-                  ? "bg-amber-100 dark:bg-amber-900/40"
-                  : "bg-white dark:bg-neutral-800"
+              className={`press flex w-full items-center justify-between rounded-card border border-line px-4 py-3 text-left shadow-card ${
+                s.user_id === userId ? "bg-accent-soft" : "bg-surface"
               }`}
             >
               <span className="flex items-center gap-3">
                 <span className="w-6 text-center font-bold">{MEDALS[i] ?? i + 1}</span>
                 <span className="font-medium">
                   {s.display_name}
-                  {s.user_id === userId && <span className="text-amber-600"> (you)</span>}
+                  {s.user_id === userId && <span className="text-accent"> (you)</span>}
                 </span>
               </span>
               <span className="flex items-center gap-2 text-right">
                 <span>
                   <span className="text-lg font-bold">{s.points}</span>
-                  <span className="ml-1 text-xs text-neutral-400">pts · {s.beer_count}🍺</span>
+                  <span className="ml-1 text-xs text-faint">pts · {s.beer_count}🍺</span>
                 </span>
-                <span className="text-neutral-300">›</span>
+                <span className="text-faint">›</span>
               </span>
             </button>
           </li>
         ))}
         {standings.length === 0 && (
-          <li className="p-6 text-center text-neutral-500">No beers logged yet. Be the first! 🍺</li>
+          <li className="p-6 text-center text-muted">No beers logged yet. Be the first! 🍺</li>
         )}
       </ul>
 
@@ -412,7 +410,7 @@ export function Leaderboard({
           <button
             onClick={adminRefresh}
             disabled={refreshing}
-            className="mt-2 self-center rounded-full border border-amber-400 px-4 py-2 text-sm text-amber-600 disabled:opacity-40"
+            className="press mt-2 self-center rounded-full border border-accent px-4 py-2 text-sm text-accent disabled:opacity-40"
           >
             {refreshing ? "Refreshing…" : "↻ Refresh now (admin)"}
           </button>
@@ -427,7 +425,7 @@ export function Leaderboard({
           />
         </>
       )}
-      <p className="text-center text-xs text-neutral-400">
+      <p className="text-center text-xs text-faint">
         {refreshing ? "Syncing the latest scores…" : "Pull down to refresh. Tap a player to see their beers."}
       </p>
 
@@ -447,7 +445,7 @@ export function Leaderboard({
       {chipPos && me && (
         <button
           onClick={() => meRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
-          className={`fixed inset-x-0 z-30 mx-auto flex w-[calc(100%-2rem)] max-w-md items-center justify-between rounded-2xl border border-amber-300 bg-amber-100 px-4 py-3 text-left shadow-lg ring-1 ring-amber-400/40 transition active:scale-[0.99] dark:border-amber-700 dark:bg-amber-900/70 ${
+          className={`press fixed inset-x-0 z-30 mx-auto flex w-[calc(100%-2rem)] max-w-md items-center justify-between rounded-card border border-accent/40 bg-accent-soft px-4 py-3 text-left shadow-raise ring-1 ring-accent/30 ${
             chipPos === "top" ? "top-2" : "bottom-24"
           }`}
         >
@@ -455,15 +453,15 @@ export function Leaderboard({
             <span className="w-6 text-center font-bold">{MEDALS[meIndex] ?? meIndex + 1}</span>
             <span className="font-medium">
               {me.display_name}
-              <span className="text-amber-600"> (you)</span>
+              <span className="text-accent"> (you)</span>
             </span>
           </span>
           <span className="flex items-center gap-2 text-right">
             <span>
               <span className="text-lg font-bold">{me.points}</span>
-              <span className="ml-1 text-xs text-neutral-400">pts · {me.beer_count}🍺</span>
+              <span className="ml-1 text-xs text-faint">pts · {me.beer_count}🍺</span>
             </span>
-            <span className="text-amber-500">{chipPos === "top" ? "↑" : "↓"}</span>
+            <span className="text-accent">{chipPos === "top" ? "↑" : "↓"}</span>
           </span>
         </button>
       )}
@@ -488,7 +486,7 @@ function RevealCountdown({ revealAt }: { revealAt: string }) {
 
   if (remaining <= 0) {
     return (
-      <div className="mt-2 rounded-2xl border border-amber-300 bg-amber-50 px-5 py-3 text-center text-sm font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+      <div className="mt-2 rounded-card border border-accent/40 bg-accent-soft px-5 py-3 text-center text-sm font-semibold text-accent-strong">
         🏆 The reveal is imminent…
       </div>
     );
@@ -509,19 +507,19 @@ function RevealCountdown({ revealAt }: { revealAt: string }) {
 
   return (
     <div className="mt-2 flex flex-col items-center gap-2">
-      <span className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+      <span className="text-xs font-semibold uppercase tracking-wide text-faint">
         Grand reveal in
       </span>
       <div className="flex gap-2">
         {units.map((u) => (
           <div
             key={u.label}
-            className="flex min-w-14 flex-col items-center rounded-xl bg-neutral-100 px-3 py-2 dark:bg-neutral-800"
+            className="flex min-w-14 flex-col items-center rounded-xl bg-surface-muted px-3 py-2"
           >
             <span className="text-2xl font-bold tabular-nums">
               {String(u.value).padStart(2, "0")}
             </span>
-            <span className="text-[10px] uppercase tracking-wide text-neutral-400">{u.label}</span>
+            <span className="text-[10px] uppercase tracking-wide text-faint">{u.label}</span>
           </div>
         ))}
       </div>
@@ -554,13 +552,13 @@ function AdminTripControls({
   const dirty = date !== endDate || time !== endTime.slice(0, 5);
 
   return (
-    <div className="mt-3 flex flex-col gap-2 rounded-2xl border border-neutral-200 p-3 dark:border-neutral-700">
-      <span className="text-center text-xs font-semibold uppercase tracking-wide text-neutral-400">
+    <div className="mt-3 flex flex-col gap-2 rounded-card border border-line p-3">
+      <span className="text-center text-xs font-semibold uppercase tracking-wide text-faint">
         Admin controls
       </span>
 
-      <div className="flex flex-col gap-2 rounded-xl bg-neutral-50 p-3 dark:bg-neutral-800/60">
-        <span className="text-xs font-medium text-neutral-500">
+      <div className="flex flex-col gap-2 rounded-xl bg-surface-muted p-3">
+        <span className="text-xs font-medium text-muted">
           Scheduled end {timezone ? `(${timezone})` : ""}
         </span>
         <div className="flex flex-wrap items-center gap-2">
@@ -569,24 +567,24 @@ function AdminTripControls({
             value={date}
             onChange={(e) => setDate(e.target.value)}
             disabled={busy}
-            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-900"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm"
           />
           <input
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
             disabled={busy}
-            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-900"
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm"
           />
           <button
             onClick={() => onSaveEnd(date, time)}
             disabled={busy || !dirty || !date || !time}
-            className="rounded-full bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+            className="press rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-contrast disabled:opacity-40"
           >
             Save end
           </button>
         </div>
-        <span className="text-[11px] text-neutral-400">
+        <span className="text-[11px] text-faint">
           The board reveals at this moment; it goes dark the configured number of days before.
         </span>
       </div>
@@ -596,7 +594,7 @@ function AdminTripControls({
           <button
             onClick={() => onChange("dark")}
             disabled={busy}
-            className="rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-40 dark:bg-neutral-200 dark:text-neutral-900"
+            className="press rounded-full bg-text px-4 py-2 text-sm font-medium text-surface disabled:opacity-40"
           >
             🌑 Go dark
           </button>
@@ -604,7 +602,7 @@ function AdminTripControls({
           <button
             onClick={() => onChange("live")}
             disabled={busy}
-            className="rounded-full bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+            className="press rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-contrast disabled:opacity-40"
           >
             ☀️ Lift the dark
           </button>
@@ -614,7 +612,7 @@ function AdminTripControls({
           <button
             onClick={() => onChange("reveal")}
             disabled={busy}
-            className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
+            className="press rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
           >
             🏆 End trip & reveal
           </button>
@@ -622,7 +620,7 @@ function AdminTripControls({
           <button
             onClick={() => onChange("live")}
             disabled={busy}
-            className="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium disabled:opacity-40 dark:border-neutral-600"
+            className="press rounded-full border border-line px-4 py-2 text-sm font-medium disabled:opacity-40"
           >
             ↩️ Reopen the board
           </button>
@@ -631,12 +629,12 @@ function AdminTripControls({
         <button
           onClick={() => onChange("auto")}
           disabled={busy}
-          className="rounded-full border border-neutral-300 px-4 py-2 text-sm text-neutral-500 disabled:opacity-40 dark:border-neutral-600"
+          className="press rounded-full border border-line px-4 py-2 text-sm text-muted disabled:opacity-40"
         >
           🗓️ Auto (by date)
         </button>
       </div>
-      {busy && <span className="text-center text-xs text-neutral-400">Updating…</span>}
+      {busy && <span className="text-center text-xs text-faint">Updating…</span>}
     </div>
   );
 }

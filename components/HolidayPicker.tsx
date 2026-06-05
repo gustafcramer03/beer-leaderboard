@@ -42,17 +42,17 @@ export function HolidayPicker({ onPick }: { onPick: (h: Holiday) => void }) {
               <li key={h.id}>
                 <button
                   onClick={() => onPick(h)}
-                  className="w-full rounded-2xl bg-white p-4 text-left shadow dark:bg-neutral-800"
+                  className="card press w-full p-4 text-left"
                 >
                   <div className="font-bold">{h.name}</div>
-                  <div className="text-xs text-neutral-500">
+                  <div className="text-xs text-muted">
                     {h.start_date} → {h.end_date} · code {h.invite_code}
                   </div>
                 </button>
               </li>
             ))}
             {holidays.length === 0 && (
-              <li className="rounded-2xl bg-neutral-100 p-6 text-center text-sm text-neutral-500 dark:bg-neutral-800">
+              <li className="rounded-2xl bg-surface-muted p-6 text-center text-sm text-muted">
                 No holidays yet. Create one or join with a code.
               </li>
             )}
@@ -60,13 +60,13 @@ export function HolidayPicker({ onPick }: { onPick: (h: Holiday) => void }) {
           <div className="flex gap-3">
             <button
               onClick={() => setMode("create")}
-              className="flex-1 rounded-full bg-amber-500 py-3 font-semibold text-white"
+              className="flex-1 rounded-full bg-accent py-3 font-semibold text-accent-contrast"
             >
               + Create
             </button>
             <button
               onClick={() => setMode("join")}
-              className="flex-1 rounded-full border border-amber-400 py-3 font-semibold text-amber-600"
+              className="flex-1 rounded-full border border-accent py-3 font-semibold text-accent"
             >
               Join by code
             </button>
@@ -78,7 +78,7 @@ export function HolidayPicker({ onPick }: { onPick: (h: Holiday) => void }) {
       {mode === "join" && <JoinForm onDone={onPick} onBack={() => setMode("list")} />}
 
       {mode === "list" && profile && (
-        <p className="mt-2 text-center text-xs text-neutral-400">
+        <p className="mt-2 text-center text-xs text-faint">
           Signed in as <span className="font-medium">{profile.display_name}</span> ·{" "}
           <button onClick={() => signOut()} className="underline">
             Log out
@@ -89,7 +89,7 @@ export function HolidayPicker({ onPick }: { onPick: (h: Holiday) => void }) {
       {mode === "list" && (
         <button
           onClick={() => setShowDbAdmin(true)}
-          className="mx-auto text-xs text-neutral-400 underline"
+          className="mx-auto text-xs text-faint underline"
         >
           🗄️ DB Management
         </button>
@@ -159,7 +159,7 @@ function CreateForm({ onDone, onBack }: { onDone: (h: Holiday) => void; onBack: 
         <input type="number" min={0} max={14} className={inputCls} value={darkDays}
           onChange={(e) => setDarkDays(parseInt(e.target.value || "0", 10))} />
       </Field>
-      <p className="text-xs text-neutral-400">
+      <p className="text-xs text-faint">
         The leaderboard hides for the last {darkDays} day{darkDays === 1 ? "" : "s"} and is revealed on the final day.
       </p>
       <Field label="Holiday timezone (for the 7–11am morning bonus)">
@@ -169,14 +169,14 @@ function CreateForm({ onDone, onBack }: { onDone: (h: Holiday) => void; onBack: 
           ))}
         </select>
       </Field>
-      <p className="text-xs text-neutral-400">
+      <p className="text-xs text-faint">
         Beers logged 7:00–10:59 local time earn +1 bonus point. Defaulted to this device&apos;s timezone.
       </p>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-bad">{error}</p>}
       <div className="flex gap-3">
         <button onClick={onBack} className="flex-1 rounded-full border py-3">Back</button>
         <button onClick={submit} disabled={busy || !name.trim()}
-          className="flex-1 rounded-full bg-amber-500 py-3 font-semibold text-white disabled:opacity-40">
+          className="flex-1 rounded-full bg-accent py-3 font-semibold text-accent-contrast disabled:opacity-40">
           {busy ? "Creating…" : "Create"}
         </button>
       </div>
@@ -208,11 +208,11 @@ function JoinForm({ onDone, onBack }: { onDone: (h: Holiday) => void; onBack: ()
           value={code} maxLength={6}
           onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ABC123" />
       </Field>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-bad">{error}</p>}
       <div className="flex gap-3">
         <button onClick={onBack} className="flex-1 rounded-full border py-3">Back</button>
         <button onClick={submit} disabled={busy || !code.trim()}
-          className="flex-1 rounded-full bg-amber-500 py-3 font-semibold text-white disabled:opacity-40">
+          className="flex-1 rounded-full bg-accent py-3 font-semibold text-accent-contrast disabled:opacity-40">
           {busy ? "Joining…" : "Join"}
         </button>
       </div>
@@ -220,12 +220,12 @@ function JoinForm({ onDone, onBack }: { onDone: (h: Holiday) => void; onBack: ()
   );
 }
 
-const inputCls = "w-full rounded-xl border border-neutral-300 px-4 py-3 dark:bg-neutral-800";
+const inputCls = "w-full rounded-xl border border-line bg-surface px-4 py-3";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-1 flex-col gap-1">
-      <span className="text-xs font-medium text-neutral-500">{label}</span>
+      <span className="text-xs font-medium text-muted">{label}</span>
       {children}
     </label>
   );

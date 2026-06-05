@@ -81,12 +81,12 @@ export function OfflineLogBeer({
       <div className="flex flex-col items-center gap-4 p-6 text-center">
         <div className="text-6xl">🛜🍺</div>
         <h2 className="text-xl font-bold">Offline beer logged!</h2>
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-muted">
           It&apos;s in the audit queue, tagged as logged offline. Scores update hourly.
         </p>
         <button
           onClick={onDone}
-          className="rounded-full bg-amber-500 px-6 py-3 font-semibold text-white"
+          className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast"
         >
           Done
         </button>
@@ -97,7 +97,7 @@ export function OfflineLogBeer({
   return (
     <div className="flex flex-col items-center gap-5 p-6">
       <h2 className="text-xl font-bold">Log an offline beer</h2>
-      <p className="max-w-xs text-center text-sm text-neutral-500">
+      <p className="max-w-xs text-center text-sm text-muted">
         No signal at the time? Pick the full and empty shots from your camera roll. We read the
         time each photo was taken for scoring.
       </p>
@@ -123,10 +123,10 @@ export function OfflineLogBeer({
           placeholder="Add a caption… (optional)"
           maxLength={140}
           disabled={busy}
-          className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+          className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
         />
         {caption.length > 0 && (
-          <span className="self-end text-[11px] text-neutral-400">{caption.length}/140</span>
+          <span className="self-end text-[11px] text-faint">{caption.length}/140</span>
         )}
       </div>
 
@@ -135,13 +135,13 @@ export function OfflineLogBeer({
       <button
         disabled={!canSubmit}
         onClick={submit}
-        className="rounded-full bg-amber-600 px-6 py-3 font-semibold text-white disabled:opacity-40"
+        className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast disabled:opacity-40"
       >
         {busy ? "Uploading…" : "Log offline beer 🍺"}
       </button>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button onClick={onCancel} className="text-sm text-neutral-400 underline">
+      <button onClick={onCancel} className="text-sm text-faint underline">
         Cancel
       </button>
     </div>
@@ -162,18 +162,18 @@ function Slot({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex w-full max-w-xs flex-col items-center gap-2 rounded-2xl border border-neutral-200 p-4 dark:border-neutral-700">
+    <div className="flex w-full max-w-xs flex-col items-center gap-2 rounded-2xl border border-line p-4">
       <CameraCapture label={label} onCapture={onPick} disabled={disabled} fromGallery />
       {state.file && (
         <div className="flex w-full flex-col gap-1">
-          <label className="text-xs text-neutral-500">Time taken</label>
+          <label className="text-xs text-muted">Time taken</label>
           <input
             type="datetime-local"
             value={state.time}
             onChange={(e) => onTime(e.target.value)}
-            className="rounded-lg border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+            className="rounded-lg border border-line bg-surface px-2 py-1 text-sm"
           />
-          <span className="text-[11px] text-neutral-400">
+          <span className="text-[11px] text-faint">
             {state.source === "exif"
               ? "✓ read from the photo's metadata"
               : "⚠ no time in this photo — using file date, please check"}

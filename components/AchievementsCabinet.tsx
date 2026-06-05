@@ -35,22 +35,22 @@ function TrophyTile({
   const won = count > 0;
   return (
     <div
-      className={`relative flex flex-col items-center gap-1 rounded-2xl p-3 text-center shadow-sm transition ${
+      className={`relative flex flex-col items-center gap-1 rounded-card border border-line p-3 text-center shadow-card transition ${
         won
-          ? "bg-white dark:bg-neutral-800"
-          : "bg-neutral-100 dark:bg-neutral-800/40"
+          ? "bg-surface"
+          : "bg-surface-muted"
       }`}
     >
       {won && (
-        <span className="absolute right-1.5 top-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[11px] font-bold text-white">
+        <span className="absolute right-1.5 top-1.5 rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-bold text-accent-contrast">
           {count}×
         </span>
       )}
       <span className={`text-4xl ${won ? "" : "opacity-25 grayscale"}`}>{emoji}</span>
-      <span className={`text-xs font-bold leading-tight ${won ? "" : "text-neutral-400"}`}>
+      <span className={`text-xs font-bold leading-tight ${won ? "" : "text-faint"}`}>
         {label}
       </span>
-      <span className="text-[10px] leading-tight text-neutral-400">{how}</span>
+      <span className="text-[10px] leading-tight text-faint">{how}</span>
     </div>
   );
 }
@@ -87,12 +87,12 @@ export function AchievementsCabinet({
     : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <h2 className="text-lg font-bold">🏅 Trophy cabinet</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -128,7 +128,7 @@ export function AchievementsCabinet({
                 ))}
               </div>
 
-              <p className="text-center text-xs text-neutral-400">
+              <p className="text-center text-xs text-faint">
                 Trophies count audited beers and update as the trip goes on. 🍻
               </p>
             </>

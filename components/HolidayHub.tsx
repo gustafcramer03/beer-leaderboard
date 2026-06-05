@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { Holiday, AuditItem } from "@/lib/types";
+import { tabVariants, sheetVariants } from "@/lib/motion";
 import { getAuditQueue, challengedBeers, uploadAvatar } from "@/lib/api";
 import { useSession } from "./SessionProvider";
 import { Avatar } from "./Avatar";
@@ -162,7 +164,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
         <HappyHourBanner holidayId={holiday.id} />
         <Header holiday={holiday} onLeave={onLeave} />
         <div className="flex flex-1 flex-col items-center justify-start p-4 pt-2">
-          <p className="mb-3 max-w-xs text-center text-sm text-neutral-500">
+          <p className="mb-3 max-w-xs text-center text-sm text-muted">
             Before you can log your own, audit your mates&apos; beers. Be fair! 🍻
           </p>
           <AuditDeck
@@ -220,7 +222,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
           className={tab === "board" ? "" : "hidden"}
           style={
             tab === "board" && (pull > 0 || pullRefreshing)
-              ? { transform: `translateY(${pullRefreshing ? 44 : pull}px)`, transition: startY.current === null ? "transform 0.2s" : "none" }
+              ? { transform: `translateY(${pullRefreshing ? 44 : pull}px)`, transition: startY.current === null ? "transform 0.2s" : "none", willChange: "transform" }
               : undefined
           }
         >
@@ -237,35 +239,41 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
             onOpenRules={() => setView("rules")}
           />
         </div>
-        {tab === "log" && (
-          <LogBeer
-            holidayId={holiday.id}
-            onDone={() => {
-              setLogSignal((n) => n + 1);
-              setTab("board");
-            }}
-            onCancel={() => setTab("board")}
-          />
-        )}
-        {tab === "menu" && (
-          <MenuPage
-            isAdmin={isAdmin}
-            onSelect={openView}
-            onRecheckAudit={recheckAudit}
-            auditCount={auditCount}
-            rulingCount={rulingCount}
-            displayName={profile?.display_name ?? "You"}
-            avatarPath={profile?.avatar_path ?? null}
-            onChangeAvatar={changeAvatar}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {tab === "log" && (
+            <motion.div key="log" variants={tabVariants} initial="initial" animate="enter" exit="exit">
+              <LogBeer
+                holidayId={holiday.id}
+                onDone={() => {
+                  setLogSignal((n) => n + 1);
+                  setTab("board");
+                }}
+                onCancel={() => setTab("board")}
+              />
+            </motion.div>
+          )}
+          {tab === "menu" && (
+            <motion.div key="menu" variants={tabVariants} initial="initial" animate="enter" exit="exit">
+              <MenuPage
+                isAdmin={isAdmin}
+                onSelect={openView}
+                onRecheckAudit={recheckAudit}
+                auditCount={auditCount}
+                rulingCount={rulingCount}
+                displayName={profile?.display_name ?? "You"}
+                avatarPath={profile?.avatar_path ?? null}
+                onChangeAvatar={changeAvatar}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-center justify-around border-t border-neutral-200 bg-white pt-2 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] dark:border-neutral-700 dark:bg-neutral-900">
+      <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-center justify-around border-t border-line bg-surface pt-2 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-nav">
         <TabButton active={tab === "board"} onClick={() => setTab("board")} icon="🏆" label="Board" />
         <button
           onClick={() => setTab("log")}
-          className="flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full bg-amber-500 text-2xl text-white shadow-lg"
+          className="press flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full bg-accent text-2xl text-accent-contrast shadow-lg"
           aria-label="Log a beer"
         >
           🍺
@@ -273,48 +281,60 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
         <TabButton active={tab === "menu"} onClick={() => setTab("menu")} icon="☰" label="Menu" badge={auditCount + rulingCount} />
       </nav>
 
-      {view === "achievements" && userId && (
-        <AchievementsCabinet
-          holidayId={holiday.id}
-          userId={userId}
-          onClose={() => setView(null)}
-        />
-      )}
-      {view === "stats" && <StatsView holidayId={holiday.id} onClose={() => setView(null)} />}
-      {view === "pace" && <PaceBoard holidayId={holiday.id} onClose={() => setView(null)} />}
-      {view === "heatmap" && (
-        <DrinkingHeatmap holidayId={holiday.id} onClose={() => setView(null)} />
-      )}
-      {view === "insights" && (
-        <BeerInsights holidayId={holiday.id} onClose={() => setView(null)} />
-      )}
-      {view === "rivalry" && <RivalryCard holidayId={holiday.id} onClose={() => setView(null)} />}
-      {view === "activity" && (
-        <ActivityFeed holidayId={holiday.id} timezone={holiday.timezone} onClose={() => setView(null)} />
-      )}
-      {view === "recap" && <DailyRecapView holidayId={holiday.id} onClose={() => setView(null)} />}
-      {view === "share" && <ShareCardView holidayId={holiday.id} onClose={() => setView(null)} />}
-      {view === "rules" && <RuleBook onClose={() => setView(null)} />}
-      {view === "rulings" && isAdmin && (
-        <RulingsView
-          holidayId={holiday.id}
-          onClose={() => {
-            setView(null);
-            refreshBadges();
-          }}
-        />
-      )}
-      {view === "manage" && isAdmin && (
-        <ManageView
-          holidayId={holiday.id}
-          onClose={() => {
-            setView(null);
-            refreshBadges();
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {view && (
+          <motion.div
+            key={view}
+            className="fixed inset-0 z-50"
+            variants={sheetVariants}
+            initial="initial"
+            animate="enter"
+            exit="exit"
+          >
+            {renderView()}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
+
+  function renderView() {
+    const close = () => setView(null);
+    const closeAndRefresh = () => {
+      setView(null);
+      refreshBadges();
+    };
+    switch (view) {
+      case "achievements":
+        return userId ? (
+          <AchievementsCabinet holidayId={holiday.id} userId={userId} onClose={close} />
+        ) : null;
+      case "stats":
+        return <StatsView holidayId={holiday.id} onClose={close} />;
+      case "pace":
+        return <PaceBoard holidayId={holiday.id} onClose={close} />;
+      case "heatmap":
+        return <DrinkingHeatmap holidayId={holiday.id} onClose={close} />;
+      case "insights":
+        return <BeerInsights holidayId={holiday.id} onClose={close} />;
+      case "rivalry":
+        return <RivalryCard holidayId={holiday.id} onClose={close} />;
+      case "activity":
+        return <ActivityFeed holidayId={holiday.id} timezone={holiday.timezone} onClose={close} />;
+      case "recap":
+        return <DailyRecapView holidayId={holiday.id} onClose={close} />;
+      case "share":
+        return <ShareCardView holidayId={holiday.id} onClose={close} />;
+      case "rules":
+        return <RuleBook onClose={close} />;
+      case "rulings":
+        return isAdmin ? <RulingsView holidayId={holiday.id} onClose={closeAndRefresh} /> : null;
+      case "manage":
+        return isAdmin ? <ManageView holidayId={holiday.id} onClose={closeAndRefresh} /> : null;
+      default:
+        return null;
+    }
+  }
 }
 
 // The Menu page: every secondary page laid out as a grid of tiles.
@@ -339,7 +359,7 @@ function MenuPage({
 }) {
   return (
     <div className="mx-auto flex max-w-md flex-col gap-4 p-4">
-      <h2 className="text-lg font-bold">Menu</h2>
+      <h2 className="font-display text-2xl font-bold">Menu</h2>
       <ProfileCard displayName={displayName} avatarPath={avatarPath} onChangeAvatar={onChangeAvatar} />
       <PushToggle />
       <div className="grid grid-cols-2 gap-3">
@@ -409,7 +429,7 @@ function ProfileCard({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-800">
+    <div className="card flex items-center gap-3 p-4">
       <input
         ref={fileRef}
         type="file"
@@ -424,7 +444,7 @@ function ProfileCard({
         aria-label="Change profile photo"
       >
         <Avatar path={avatarPath} size={56} />
-        <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs text-white shadow">
+        <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs text-accent-contrast shadow">
           📷
         </span>
       </button>
@@ -433,7 +453,7 @@ function ProfileCard({
         <button
           onClick={() => fileRef.current?.click()}
           disabled={busy}
-          className="text-xs font-medium text-amber-600 disabled:opacity-50"
+          className="text-xs font-medium text-accent disabled:opacity-50"
         >
           {busy ? "Uploading…" : avatarPath ? "Change photo" : "Add a profile photo"}
         </button>
@@ -458,12 +478,12 @@ function MenuTile({
   return (
     <button
       onClick={onClick}
-      className="relative flex flex-col items-center gap-1 rounded-2xl bg-white p-5 text-center shadow-sm transition active:scale-[0.98] dark:bg-neutral-800"
+      className="press card relative flex flex-col items-center gap-1 p-5 text-center"
     >
       {badge > 0 && <CountBubble count={badge} className="right-2 top-2" />}
       <span className="text-4xl">{icon}</span>
       <span className="mt-1 text-sm font-bold leading-tight">{label}</span>
-      <span className="text-[11px] leading-tight text-neutral-400">{sub}</span>
+      <span className="text-[11px] leading-tight text-faint">{sub}</span>
     </button>
   );
 }
@@ -483,12 +503,12 @@ function CountBubble({ count, className = "" }: { count: number; className?: str
 // Full-screen wrapper around the trip stats view (lives in the Menu now).
 function StatsView({ holidayId, onClose }: { holidayId: string; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
-        <h2 className="text-lg font-bold">📊 Trip stats</h2>
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
+        <h2 className="font-display text-xl font-bold">📊 Trip stats</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -505,12 +525,12 @@ function StatsView({ holidayId, onClose }: { holidayId: string; onClose: () => v
 // Full-screen wrapper around the admin rulings queue (moved into the Menu).
 function RulingsView({ holidayId, onClose }: { holidayId: string; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
-        <h2 className="text-lg font-bold">⚖️ Rulings</h2>
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
+        <h2 className="font-display text-xl font-bold">⚖️ Rulings</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -528,12 +548,12 @@ function RulingsView({ holidayId, onClose }: { holidayId: string; onClose: () =>
 // the score/status of any beer in the trip after the initial ruling.
 function ManageView({ holidayId, onClose }: { holidayId: string; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
-        <h2 className="text-lg font-bold">🛠️ Manage beers</h2>
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
+        <h2 className="font-display text-xl font-bold">🛠️ Manage beers</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -559,10 +579,10 @@ function Header({ holiday, onLeave }: { holiday: Holiday; onLeave: () => void })
     }
   }
   return (
-    <header className="flex items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-700">
-      <button onClick={onLeave} className="text-sm text-neutral-400">← Holidays</button>
-      <h1 className="truncate px-2 font-bold">{holiday.name}</h1>
-      <button onClick={copy} className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-mono dark:bg-neutral-800">
+    <header className="flex items-center justify-between border-b border-line p-4">
+      <button onClick={onLeave} className="text-sm text-faint">← Holidays</button>
+      <h1 className="truncate px-2 font-display text-lg font-bold">{holiday.name}</h1>
+      <button onClick={copy} className="press rounded-full bg-surface-muted px-3 py-1 text-xs font-mono">
         {copied ? "copied!" : `🔗 ${holiday.invite_code}`}
       </button>
     </header>
@@ -586,7 +606,7 @@ function TabButton({
     <button
       onClick={onClick}
       className={`relative flex flex-col items-center gap-0.5 px-4 text-xs ${
-        active ? "text-amber-600" : "text-neutral-400"
+        active ? "text-accent" : "text-faint"
       }`}
     >
       {badge > 0 && <CountBubble count={badge} className="right-1 -top-1" />}

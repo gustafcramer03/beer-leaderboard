@@ -58,13 +58,13 @@ export function DailyRecapPopup({ holidayId }: { holidayId: string }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-xs overflow-y-auto rounded-3xl bg-white shadow-2xl dark:bg-neutral-800"
+        className="max-h-[90vh] w-full max-w-xs overflow-y-auto rounded-3xl bg-surface shadow-2xl"
       >
         <RecapBody recap={data.recap} date={data.date} />
         <div className="px-5 pb-5">
           <button
             onClick={dismiss}
-            className="w-full rounded-full bg-amber-500 py-3 font-semibold text-white active:scale-[0.99]"
+            className="press w-full rounded-full bg-accent py-3 font-semibold text-accent-contrast"
           >
             Cheers! 🍻
           </button>
@@ -103,12 +103,12 @@ export function DailyRecapView({
   }, [load]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <h2 className="text-lg font-bold">🌅 Daily recap</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -118,10 +118,10 @@ export function DailyRecapView({
         <div className="mx-auto max-w-sm p-4">
           {loading && <Loading label="Pouring over yesterday…" />}
 
-          {error && <p className="p-6 text-center text-sm text-red-600">{error}</p>}
+          {error && <p className="p-6 text-center text-sm text-bad">{error}</p>}
 
           {!loading && !error && data && data.recap === null && (
-            <p className="p-8 text-center text-sm text-neutral-500">
+            <p className="p-8 text-center text-sm text-muted">
               {data.today
                 ? "Nothing to recap yet — yesterday was a dry day, or the board's still under wraps. 🍺"
                 : "Nothing to recap yet. 🍺"}
@@ -129,7 +129,7 @@ export function DailyRecapView({
           )}
 
           {!loading && !error && data?.recap && (
-            <div className="overflow-hidden rounded-3xl bg-white shadow-sm dark:bg-neutral-800">
+            <div className="overflow-hidden rounded-3xl bg-surface shadow-card">
               <RecapBody recap={data.recap} date={data.date} />
             </div>
           )}
@@ -159,17 +159,17 @@ function RecapBody({ recap, date }: { recap: NonNullable<RecapData["recap"]>; da
 
       <div className="flex flex-col gap-3 px-5 py-5">
         {/* Champion */}
-        <div className="flex items-center gap-3 rounded-2xl bg-amber-50 p-3 dark:bg-amber-950/40">
+        <div className="flex items-center gap-3 rounded-2xl bg-accent-soft p-3">
           <div className="relative shrink-0">
-            <Avatar path={c.avatar_path} size={52} className="ring-2 ring-amber-300" />
+            <Avatar path={c.avatar_path} size={52} className="ring-2 ring-accent/40" />
             <span className="absolute -bottom-1 -right-1 text-xl drop-shadow-sm">👑</span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-accent">
               Legend of the Day
             </p>
             <p className="truncate font-bold">{c.display_name}</p>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted">
               {c.beer_count} beer{c.beer_count === 1 ? "" : "s"}
             </p>
           </div>
@@ -235,25 +235,25 @@ function Honour({
   sub?: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl bg-neutral-50 p-3 text-center dark:bg-neutral-900/50">
+    <div className="flex flex-col items-center gap-1 rounded-2xl bg-surface-muted p-3 text-center">
       <div className="relative">
         {has ? (
           <Avatar path={avatar} size={40} />
         ) : (
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-neutral-200 text-lg dark:bg-neutral-700">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-surface-muted text-lg">
             —
           </span>
         )}
         <span className="absolute -bottom-1 -right-1 text-base drop-shadow-sm">{emoji}</span>
       </div>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-faint">{label}</p>
       {has ? (
         <>
           <p className="w-full truncate text-sm font-bold leading-tight">{name}</p>
-          {sub && <p className="text-[11px] text-neutral-500">{sub}</p>}
+          {sub && <p className="text-[11px] text-muted">{sub}</p>}
         </>
       ) : (
-        <p className="text-xs text-neutral-400">nobody</p>
+        <p className="text-xs text-faint">nobody</p>
       )}
     </div>
   );

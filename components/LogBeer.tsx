@@ -112,7 +112,7 @@ export function LogBeer({
   }
 
   if (resuming) {
-    return <p className="p-6 text-center text-neutral-500">Checking for a beer in progress…</p>;
+    return <p className="p-6 text-center text-muted">Checking for a beer in progress…</p>;
   }
 
   if (step === "done") {
@@ -120,12 +120,12 @@ export function LogBeer({
       <div className="flex flex-col items-center gap-4 p-6 text-center">
         <div className="text-6xl">🍺</div>
         <h2 className="text-xl font-bold">Beer logged!</h2>
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-muted">
           It&apos;s now in the audit queue for your mates to verify. Scores update hourly.
         </p>
         <button
           onClick={onDone}
-          className="rounded-full bg-amber-500 px-6 py-3 font-semibold text-white"
+          className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast"
         >
           Done
         </button>
@@ -138,7 +138,7 @@ export function LogBeer({
       <h2 className="text-xl font-bold">
         {step === "full" ? "Step 1: your full beer" : "Step 2: your empty beer"}
       </h2>
-      <p className="max-w-xs text-center text-sm text-neutral-500">
+      <p className="max-w-xs text-center text-sm text-muted">
         {step === "full"
           ? "Snap your full pint to start. The clock starts now (server time)."
           : "Drink up, then snap the empty glass to finish. A gap under 60s counts as a chug (🍺×2)."}
@@ -150,18 +150,18 @@ export function LogBeer({
           <button
             disabled={!fullFile || busy}
             onClick={continueToEmpty}
-            className="rounded-full bg-amber-600 px-6 py-3 font-semibold text-white disabled:opacity-40"
+            className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast disabled:opacity-40"
           >
             {busy ? "Saving…" : "Continue →"}
           </button>
           <button
             onClick={() => setOffline(true)}
             disabled={busy}
-            className="rounded-full border border-neutral-300 px-5 py-2 text-sm text-neutral-600 disabled:opacity-40 dark:border-neutral-600 dark:text-neutral-300"
+            className="rounded-full border border-line px-5 py-2 text-sm text-muted disabled:opacity-40"
           >
             🛜 Log offline beer
           </button>
-          <p className="max-w-xs text-center text-[11px] text-neutral-400">
+          <p className="max-w-xs text-center text-[11px] text-faint">
             Drank one with no signal (plane, ferry)? Log it later from photos in your camera roll.
           </p>
         </>
@@ -170,14 +170,14 @@ export function LogBeer({
       {step === "empty" && (
         <>
           {resumedFullUrl && (
-            <div className="flex w-full max-w-xs items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-3 text-left dark:border-amber-700 dark:bg-amber-900/30">
+            <div className="flex w-full max-w-xs items-center gap-3 rounded-2xl border border-accent/40 bg-accent-soft p-3 text-left">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={resumedFullUrl}
                 alt="your full beer"
                 className="h-14 w-14 flex-none rounded-lg object-cover"
               />
-              <div className="text-xs text-amber-700 dark:text-amber-300">
+              <div className="text-xs text-accent-strong">
                 <p className="font-semibold">Picked up where you left off ✓</p>
                 <p>Your full beer is saved. Snap the empty to finish it.</p>
               </div>
@@ -201,17 +201,17 @@ export function LogBeer({
               placeholder="Add a caption… (optional)"
               maxLength={140}
               disabled={busy}
-              className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
             />
             {caption.length > 0 && (
-              <span className="self-end text-[11px] text-neutral-400">{caption.length}/140</span>
+              <span className="self-end text-[11px] text-faint">{caption.length}/140</span>
             )}
           </div>
           <BrandPicker value={brand} onChange={setBrand} disabled={busy} />
           <button
             disabled={!emptyFile || busy}
             onClick={finish}
-            className="rounded-full bg-amber-600 px-6 py-3 font-semibold text-white disabled:opacity-40"
+            className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast disabled:opacity-40"
           >
             {busy ? "Saving…" : "Finish 🍺"}
           </button>
@@ -219,7 +219,7 @@ export function LogBeer({
       )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button onClick={cancel} className="text-sm text-neutral-400 underline">
+      <button onClick={cancel} className="text-sm text-faint underline">
         Cancel
       </button>
     </div>

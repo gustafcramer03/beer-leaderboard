@@ -80,8 +80,8 @@ export function AuditDeck({
   function onDragEnd(_: unknown, info: PanInfo) {
     const offset = info.offset.x;
     const velocity = info.velocity.x;
-    if (offset > 100 || velocity > 750) flyOut(550, () => decide("confirm"));
-    else if (offset < -100 || velocity < -750) flyOut(-550, () => decide("challenge"));
+    if (offset > 100 || velocity > 450) flyOut(550, () => decide("confirm"));
+    else if (offset < -100 || velocity < -450) flyOut(-550, () => decide("challenge"));
     else animate(x, 0, { type: "spring", stiffness: 600, damping: 38 });
   }
 
@@ -97,10 +97,10 @@ export function AuditDeck({
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="text-center">
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-muted">
           {items.length - index} beer{items.length - index === 1 ? "" : "s"} left to audit
         </p>
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-faint">
           Swipe <span className="font-semibold text-green-600">right = legit</span> ·{" "}
           <span className="font-semibold text-red-600">left = challenge</span>
         </p>
@@ -113,7 +113,7 @@ export function AuditDeck({
         dragElastic={1}
         dragMomentum={false}
         onDragEnd={onDragEnd}
-        className="relative w-full max-w-sm cursor-grab touch-none rounded-3xl bg-white p-3 shadow-xl active:cursor-grabbing dark:bg-neutral-800"
+        className="relative w-full max-w-sm cursor-grab touch-none rounded-3xl bg-surface p-3 shadow-raise will-change-transform active:cursor-grabbing"
       >
         <motion.div
           style={{ opacity: confirmOpacity }}
@@ -135,23 +135,23 @@ export function AuditDeck({
           </p>
         )}
         {current.caption && (
-          <p className="mb-2 text-center text-sm italic text-neutral-600 dark:text-neutral-300">
+          <p className="mb-2 text-center text-sm italic text-muted">
             &ldquo;{current.caption}&rdquo;
           </p>
         )}
         <div className="mb-2 flex items-center justify-center gap-2">
-          <div className="flex flex-col items-center rounded-xl bg-neutral-100 px-3 py-1.5 dark:bg-neutral-700">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+          <div className="flex flex-col items-center rounded-xl bg-surface-muted px-3 py-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-faint">
               Full 🍺
             </span>
             <span className="text-base font-bold tabular-nums">{stamp(current.full_taken_at)}</span>
           </div>
-          <div className="flex flex-col items-center px-1 leading-tight text-neutral-500">
+          <div className="flex flex-col items-center px-1 leading-tight text-muted">
             <span className="text-lg">→</span>
             <span className="text-xs font-bold">{fmtGap(gap)}</span>
           </div>
-          <div className="flex flex-col items-center rounded-xl bg-neutral-100 px-3 py-1.5 dark:bg-neutral-700">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+          <div className="flex flex-col items-center rounded-xl bg-surface-muted px-3 py-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-faint">
               Empty 🏁
             </span>
             <span className="text-base font-bold tabular-nums">{stamp(current.empty_taken_at)}</span>
@@ -174,7 +174,7 @@ export function AuditDeck({
         </div>
         <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
           {(current.claimed_chug || looksChugged) && (
-            <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-700">
+            <span className="rounded-full bg-accent-soft px-2 py-1 text-accent-strong">
               {current.claimed_chug ? "claims chug" : "looks chugged"} 🍺×2
             </span>
           )}
@@ -197,7 +197,7 @@ export function AuditDeck({
         <button
           onClick={() => flyOut(-550, () => decide("challenge"))}
           disabled={busy}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500 text-2xl text-white shadow disabled:opacity-40"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500 text-2xl text-white shadow transition active:scale-90 disabled:opacity-40"
           aria-label="Challenge"
         >
           ✕
@@ -205,7 +205,7 @@ export function AuditDeck({
         <button
           onClick={() => flyOut(550, () => decide("confirm"))}
           disabled={busy}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-2xl text-white shadow disabled:opacity-40"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-2xl text-white shadow transition active:scale-90 disabled:opacity-40"
           aria-label="Confirm legit"
         >
           ✓
@@ -238,7 +238,7 @@ function Photo({
 
   return (
     <div
-      className="relative mx-auto h-[23vh] w-[23vh] max-w-full overflow-hidden rounded-xl bg-neutral-200 dark:bg-neutral-700"
+      className="relative mx-auto h-[23vh] w-[23vh] max-w-full overflow-hidden rounded-xl bg-surface-muted"
       onPointerDown={(e) => {
         down.current = { x: e.clientX, y: e.clientY };
       }}
@@ -253,7 +253,7 @@ function Photo({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt={label} className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full items-center justify-center text-neutral-400">…</div>
+        <div className="flex h-full items-center justify-center text-faint">…</div>
       )}
       <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[10px] font-bold text-white">
         {label}

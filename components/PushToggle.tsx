@@ -68,12 +68,12 @@ export function PushToggle() {
   if (!supported) return null;
 
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-800">
+    <div className="card p-4">
       <div className="flex items-center gap-3">
         <span className="text-2xl">🔔</span>
         <div className="min-w-0 flex-1">
           <div className="font-bold">Happy-hour alerts</div>
-          <div className="text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="text-xs text-muted">
             Get pinged when happy hour starts &amp; ends
           </div>
         </div>
@@ -83,7 +83,7 @@ export function PushToggle() {
             disabled={busy}
             aria-pressed={subscribed}
             className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
-              subscribed ? "bg-amber-500" : "bg-neutral-300 dark:bg-neutral-600"
+              subscribed ? "bg-accent" : "bg-surface-muted"
             }`}
             aria-label={subscribed ? "Disable notifications" : "Enable notifications"}
           >
@@ -98,7 +98,7 @@ export function PushToggle() {
 
       {/* iOS, not installed: notifications can't work from a Safari tab. */}
       {ios && !standalone && (
-        <p className="mt-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+        <p className="mt-3 rounded-xl border border-accent/40 bg-accent-soft p-3 text-xs text-accent-strong">
           To get alerts on iPhone, add this app to your Home Screen first: tap the
           Share button, then <strong>Add to Home Screen</strong>, and open it from there.
         </p>
@@ -109,14 +109,14 @@ export function PushToggle() {
         <button
           onClick={toggle}
           disabled={busy}
-          className="mt-3 w-full rounded-xl bg-amber-500 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="mt-3 w-full rounded-xl bg-accent py-2 text-sm font-semibold text-accent-contrast disabled:opacity-50"
         >
           {busy ? "…" : subscribed ? "Turn off alerts" : "Turn on alerts"}
         </button>
       )}
 
       {denied && (
-        <p className="mt-3 rounded-xl bg-neutral-100 p-3 text-xs text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300">
+        <p className="mt-3 rounded-xl bg-surface-muted p-3 text-xs text-muted">
           Notifications are blocked. Enable them for this app in your device or
           browser settings, then come back.
         </p>

@@ -1,26 +1,117 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* surfaces — desaturated warm paper, not pure white/amber-50 */
+  --surface-sunken: #f7f1e8; /* app bg */
+  --surface: #fffdfa; /* cards */
+  --surface-raised: #ffffff; /* swipe card / popovers */
+  --surface-muted: #f0e9dd; /* chips, inset pills */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* text — tighter warm-neutral ramp */
+  --text: #1c1814;
+  --text-muted: #6b6258;
+  --text-faint: #9a8f80;
+
+  /* hairlines */
+  --line: #e7ddcd;
+  --line-strong: #d8ccb6;
+
+  /* accents — keep amber, add strong + soft */
+  --accent: #f59e0b;
+  --accent-strong: #d97706;
+  --accent-soft: #fdebc8;
+  --accent-contrast: #ffffff;
+
+  --good: #16a34a;
+  --bad: #dc2626;
+
+  /* legacy aliases (kept so nothing referencing them breaks) */
+  --background: var(--surface-sunken);
+  --foreground: var(--text);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --surface-sunken: #0c0a08;
+    --surface: #1a1714;
+    --surface-raised: #221d18;
+    --surface-muted: #2a241d;
+    --text: #f3ede3;
+    --text-muted: #b3a896;
+    --text-faint: #8a7f6e;
+    --line: #2e2820;
+    --line-strong: #3a322a;
+    --accent: #fbbf24;
+    --accent-strong: #f59e0b;
+    --accent-soft: #3a2e15;
+    --accent-contrast: #1c1814;
+    --good: #22c55e;
+    --bad: #ef4444;
   }
 }
 
+/* Font stacks reference the next/font runtime vars on <html>, so plain @theme
+   (NOT @theme inline) — they must stay live var() references. */
+@theme {
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face), ui-serif, Georgia, serif;
+}
+
+@theme inline {
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-muted: var(--surface-muted);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+
+  --radius-card: 1rem;
+  --radius-pill: 9999px;
+
+  --shadow-card: 0 1px 2px rgb(28 24 20 / 0.06), 0 4px 12px -2px rgb(28 24 20 / 0.08);
+  --shadow-raise: 0 2px 4px rgb(28 24 20 / 0.08), 0 12px 28px -6px rgb(28 24 20 / 0.18);
+  --shadow-nav: 0 -1px 0 var(--line), 0 -8px 24px -12px rgb(28 24 20 / 0.12);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface-sunken);
+  color: var(--text);
+  font-family: var(--font-sans);
+  touch-action: manipulation; /* kills 300ms tap delay; viewport is already zoom-locked */
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-line bg-surface shadow-card;
+  }
+
+  .press {
+    transition:
+      transform 120ms ease-out,
+      opacity 120ms ease-out;
+  }
+  .press:active {
+    transform: scale(0.96);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .press,
+    .press:active {
+      transition: none;
+      transform: none;
+    }
+  }
 }

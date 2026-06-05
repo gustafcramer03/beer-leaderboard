@@ -34,8 +34,8 @@ const STATUS_LABEL: Record<AdminBeer["status"], string> = {
 };
 
 const STATUS_STYLE: Record<AdminBeer["status"], string> = {
-  pending: "bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300",
-  challenged: "bg-amber-100 text-amber-700",
+  pending: "bg-surface-muted text-muted",
+  challenged: "bg-accent-soft text-accent-strong",
   confirmed: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-700",
 };
@@ -99,7 +99,7 @@ export function AdminBeers({ holidayId }: { holidayId: string }) {
 
   if (beers.length === 0) {
     return (
-      <div className="p-8 text-center text-neutral-500">
+      <div className="p-8 text-center text-muted">
         <div className="mb-2 text-5xl">🍺</div>
         <p className="font-medium">No beers logged yet.</p>
         <p className="mt-1 text-sm">Nothing to manage — for now. 🍻</p>
@@ -109,15 +109,15 @@ export function AdminBeers({ holidayId }: { holidayId: string }) {
 
   return (
     <div className="flex flex-col gap-5 p-4">
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-muted">
         Every beer in the trip. Tap a beer to re-score, void or reinstate it if a ruling needs
         correcting.
       </p>
       {groups.map((g) => (
         <div key={g.name + g.beers[0].user_id} className="flex flex-col gap-3">
-          <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-neutral-500">
+          <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-muted">
             {g.name}
-            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-500 dark:bg-neutral-700">
+            <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-muted">
               {g.beers.length}🍺 · {g.beers.reduce((n, b) => n + b.points, 0)} pts
             </span>
           </h3>
@@ -189,7 +189,7 @@ function ManageCard({
   if (beer.is_night_owl) flags.push("🦉 Night owl");
 
   return (
-    <div className="rounded-2xl bg-white shadow dark:bg-neutral-800">
+    <div className="card">
       {/* Header row — always visible, tap to expand */}
       <button
         type="button"
@@ -202,28 +202,28 @@ function ManageCard({
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-medium">
             {beer.empty_taken_at ? stamp(beer.empty_taken_at) : "—"}
-            {gap !== null && <span className="text-neutral-400"> · {fmtGap(gap)}</span>}
-            {beer.score_override !== null && <span className="text-amber-600"> · adjusted ✎</span>}
+            {gap !== null && <span className="text-faint"> · {fmtGap(gap)}</span>}
+            {beer.score_override !== null && <span className="text-accent"> · adjusted ✎</span>}
           </div>
           {beer.reviews_challenged > 0 && (
-            <div className="text-[11px] text-neutral-400">
+            <div className="text-[11px] text-faint">
               {beer.reviews_challenged}/{beer.reviews_total} challenged
             </div>
           )}
         </div>
-        <span className="shrink-0 text-base font-black tabular-nums">{beer.points}<span className="text-xs font-medium text-neutral-400"> pts</span></span>
-        <span className="shrink-0 text-neutral-400">{open ? "▴" : "▾"}</span>
+        <span className="shrink-0 text-base font-black tabular-nums">{beer.points}<span className="text-xs font-medium text-faint"> pts</span></span>
+        <span className="shrink-0 text-faint">{open ? "▴" : "▾"}</span>
       </button>
 
       {open && (
-        <div className="border-t border-neutral-100 p-3 dark:border-neutral-700/60">
+        <div className="border-t border-line p-3">
           {/* Flags */}
           {flags.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5 text-[11px]">
               {flags.map((f) => (
                 <span
                   key={f}
-                  className="rounded-full bg-neutral-100 px-2 py-0.5 font-medium text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
+                  className="rounded-full bg-surface-muted px-2 py-0.5 font-medium text-muted"
                 >
                   {f}
                 </span>
@@ -234,18 +234,18 @@ function ManageCard({
           {/* Timing */}
           {beer.full_taken_at && beer.empty_taken_at && gap !== null && (
             <div className="mb-2 flex items-center justify-center gap-2">
-              <div className="flex flex-col items-center rounded-xl bg-neutral-100 px-3 py-1.5 dark:bg-neutral-700">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+              <div className="flex flex-col items-center rounded-xl bg-surface-muted px-3 py-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-faint">
                   Full 🍺
                 </span>
                 <span className="text-base font-bold tabular-nums">{stamp(beer.full_taken_at)}</span>
               </div>
-              <div className="flex flex-col items-center px-1 leading-tight text-neutral-500">
+              <div className="flex flex-col items-center px-1 leading-tight text-muted">
                 <span className="text-lg">→</span>
                 <span className="text-xs font-bold">{fmtGap(gap)}</span>
               </div>
-              <div className="flex flex-col items-center rounded-xl bg-neutral-100 px-3 py-1.5 dark:bg-neutral-700">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+              <div className="flex flex-col items-center rounded-xl bg-surface-muted px-3 py-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-faint">
                   Empty 🏁
                 </span>
                 <span className="text-base font-bold tabular-nums">{stamp(beer.empty_taken_at)}</span>
@@ -269,43 +269,43 @@ function ManageCard({
 
           {/* Caption */}
           {beer.caption && (
-            <p className="mt-2 text-center text-sm italic text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 text-center text-sm italic text-muted">
               &ldquo;{beer.caption}&rdquo;
             </p>
           )}
 
           {/* Existing ruling note */}
           {beer.override_reason && (
-            <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+            <p className="mt-2 rounded-lg bg-accent-soft px-3 py-2 text-xs text-accent-strong">
               ⚖️ Earlier ruling: {beer.override_reason}
             </p>
           )}
 
           {/* Ruling note for this change */}
           <div className="mt-3 flex flex-col gap-1">
-            <label className="text-xs font-semibold text-neutral-500">Ruling note (optional)</label>
+            <label className="text-xs font-semibold text-muted">Ruling note (optional)</label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value.slice(0, 200))}
               placeholder="Why you're changing this — shown to the player on their beer."
               maxLength={200}
               rows={2}
-              className="w-full resize-none rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-900"
+              className="w-full resize-none rounded-lg border border-line bg-surface px-3 py-2 text-sm"
             />
             {reason.length > 0 && (
-              <span className="self-end text-[11px] text-neutral-400">{reason.length}/200</span>
+              <span className="self-end text-[11px] text-faint">{reason.length}/200</span>
             )}
           </div>
 
           {/* Set-score stepper */}
           {editing && (
-            <div className="mt-3 flex flex-col gap-2 rounded-xl bg-neutral-50 p-3 dark:bg-neutral-900/40">
-              <p className="text-center text-xs text-neutral-500">Set this beer&apos;s points by hand:</p>
+            <div className="mt-3 flex flex-col gap-2 rounded-xl bg-surface-muted p-3">
+              <p className="text-center text-xs text-muted">Set this beer&apos;s points by hand:</p>
               <div className="flex items-center justify-center gap-3">
                 <button
                   type="button"
                   onClick={() => setPoints((p) => Math.max(0, p - 1))}
-                  className="h-10 w-10 rounded-full bg-neutral-200 text-xl font-bold dark:bg-neutral-700"
+                  className="h-10 w-10 rounded-full bg-surface-muted text-xl font-bold"
                   aria-label="Decrease points"
                 >
                   −
@@ -318,23 +318,23 @@ function ManageCard({
                   onChange={(e) =>
                     setPoints(Math.max(0, Math.min(100, Math.floor(Number(e.target.value) || 0))))
                   }
-                  className="w-20 rounded-lg border border-neutral-300 bg-white py-2 text-center text-lg font-bold dark:border-neutral-600 dark:bg-neutral-900"
+                  className="w-20 rounded-lg border border-line bg-surface py-2 text-center text-lg font-bold"
                 />
                 <button
                   type="button"
                   onClick={() => setPoints((p) => Math.min(100, p + 1))}
-                  className="h-10 w-10 rounded-full bg-neutral-200 text-xl font-bold dark:bg-neutral-700"
+                  className="h-10 w-10 rounded-full bg-surface-muted text-xl font-bold"
                   aria-label="Increase points"
                 >
                   +
                 </button>
-                <span className="text-sm text-neutral-400">pts</span>
+                <span className="text-sm text-faint">pts</span>
               </div>
               <div className="mt-1 flex gap-3">
                 <button
                   disabled={busy}
                   onClick={() => setEditing(false)}
-                  className="flex-1 rounded-full bg-neutral-200 py-2 font-semibold text-neutral-700 disabled:opacity-40 dark:bg-neutral-700 dark:text-neutral-200"
+                  className="flex-1 rounded-full bg-surface-muted py-2 font-semibold text-muted disabled:opacity-40"
                 >
                   Cancel
                 </button>
@@ -358,7 +358,7 @@ function ManageCard({
                   setPoints(beer.points);
                   setEditing(true);
                 }}
-                className="flex-1 rounded-full bg-amber-500 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                className="flex-1 rounded-full bg-accent py-2 text-sm font-semibold text-accent-contrast disabled:opacity-40"
               >
                 Set score ✎
               </button>
@@ -383,7 +383,7 @@ function ManageCard({
                 <button
                   disabled={busy}
                   onClick={() => onRule(beer.beer_id, "confirm", reason)}
-                  className="w-full rounded-full bg-neutral-200 py-2 text-sm font-semibold text-neutral-700 disabled:opacity-40 dark:bg-neutral-700 dark:text-neutral-200"
+                  className="w-full rounded-full bg-surface-muted py-2 text-sm font-semibold text-muted disabled:opacity-40"
                 >
                   Clear adjustment ↺
                 </button>
@@ -414,13 +414,13 @@ function CardPhoto({
       type="button"
       onClick={onOpen}
       disabled={!url}
-      className="relative aspect-square overflow-hidden rounded-xl bg-neutral-200 dark:bg-neutral-700"
+      className="relative aspect-square overflow-hidden rounded-xl bg-surface-muted"
     >
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt={label} className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full items-center justify-center text-neutral-400">…</div>
+        <div className="flex h-full items-center justify-center text-faint">…</div>
       )}
       <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[10px] font-bold text-white">
         {label}

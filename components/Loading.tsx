@@ -27,7 +27,7 @@ export function Loading({ label, className = "" }: { label?: string; className?:
       <span className="animate-bounce text-4xl" role="img" aria-label="loading">
         🍺
       </span>
-      <p className="text-sm text-neutral-500">{line}</p>
+      <p className="text-sm text-muted">{line}</p>
     </div>
   );
 }
@@ -39,16 +39,16 @@ export function SkeletonRows({ count = 5 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <li
           key={i}
-          className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm dark:bg-neutral-800"
+          className="card flex items-center justify-between px-4 py-3"
         >
           <span className="flex items-center gap-3">
-            <span className="h-5 w-5 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-700" />
+            <span className="h-5 w-5 animate-pulse rounded-full bg-surface-muted" />
             <span
-              className="h-4 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700"
+              className="h-4 animate-pulse rounded bg-surface-muted"
               style={{ width: `${6 + ((i * 3) % 5)}rem` }}
             />
           </span>
-          <span className="h-4 w-16 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+          <span className="h-4 w-16 animate-pulse rounded bg-surface-muted" />
         </li>
       ))}
     </ul>
@@ -62,12 +62,12 @@ export function SkeletonCards({ count = 4 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm dark:bg-neutral-800"
+          className="card flex items-center gap-3 p-3"
         >
-          <span className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-700" />
+          <span className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-surface-muted" />
           <span className="flex flex-1 flex-col gap-2">
-            <span className="h-3.5 w-3/4 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
-            <span className="h-3 w-1/3 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+            <span className="h-3.5 w-3/4 animate-pulse rounded bg-surface-muted" />
+            <span className="h-3 w-1/3 animate-pulse rounded bg-surface-muted" />
           </span>
         </div>
       ))}

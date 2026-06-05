@@ -45,12 +45,12 @@ export function DbManagement({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <h2 className="text-lg font-bold">🗄️ DB Management</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Close
         </button>
@@ -59,7 +59,7 @@ export function DbManagement({ onClose }: { onClose: () => void }) {
       {!unlocked ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
           <div className="text-6xl">🔒</div>
-          <p className="max-w-xs text-sm text-neutral-500">
+          <p className="max-w-xs text-sm text-muted">
             This area lets you delete trips and members. Enter the password to continue.
           </p>
           <input
@@ -69,13 +69,13 @@ export function DbManagement({ onClose }: { onClose: () => void }) {
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && tryUnlock()}
             placeholder="Password"
-            className="w-full max-w-xs rounded-xl border border-neutral-300 px-4 py-3 text-center dark:bg-neutral-800"
+            className="w-full max-w-xs rounded-xl border border-line bg-surface px-4 py-3 text-center"
           />
-          {authError && <p className="text-sm text-red-600">{authError}</p>}
+          {authError && <p className="text-sm text-bad">{authError}</p>}
           <button
             onClick={tryUnlock}
             disabled={checking || !password}
-            className="w-full max-w-xs rounded-full bg-amber-500 py-3 font-semibold text-white disabled:opacity-40"
+            className="w-full max-w-xs rounded-full bg-accent py-3 font-semibold text-accent-contrast disabled:opacity-40"
           >
             {checking ? "Checking…" : "Unlock"}
           </button>
@@ -166,7 +166,7 @@ function Dashboard({ password }: { password: string }) {
           />
         ) : (
           <>
-            <p className="mb-3 text-sm text-neutral-500">
+            <p className="mb-3 text-sm text-muted">
               {trips.length} trip{trips.length === 1 ? "" : "s"} in the database. Tap one to manage
               its members or delete it.
             </p>
@@ -175,11 +175,11 @@ function Dashboard({ password }: { password: string }) {
                 <li key={t.id}>
                   <button
                     onClick={() => setSelected(t)}
-                    className="flex w-full items-center justify-between gap-3 rounded-2xl bg-white p-4 text-left shadow-sm dark:bg-neutral-800"
+                    className="card press flex w-full items-center justify-between gap-3 p-4 text-left"
                   >
                     <div className="min-w-0">
                       <div className="truncate font-bold">{t.name}</div>
-                      <div className="text-xs text-neutral-500">
+                      <div className="text-xs text-muted">
                         {t.member_count} member{t.member_count === 1 ? "" : "s"} · {t.beer_count} beer
                         {t.beer_count === 1 ? "" : "s"} · {t.photo_count} photo
                         {t.photo_count === 1 ? "" : "s"}
@@ -187,13 +187,13 @@ function Dashboard({ password }: { password: string }) {
                     </div>
                     <div className="flex items-center gap-2 text-right">
                       <span className="text-sm font-semibold">{fmtBytes(t.storage_bytes)}</span>
-                      <span className="text-neutral-300">›</span>
+                      <span className="text-faint">›</span>
                     </div>
                   </button>
                 </li>
               ))}
               {trips.length === 0 && (
-                <li className="rounded-2xl bg-neutral-100 p-6 text-center text-sm text-neutral-500 dark:bg-neutral-800">
+                <li className="rounded-2xl bg-surface-muted p-6 text-center text-sm text-muted">
                   No trips in the database.
                 </li>
               )}
@@ -260,16 +260,16 @@ function TripDetail({
 
   return (
     <div className="flex flex-col gap-3">
-      <button onClick={onBack} className="self-start text-sm text-neutral-400">
+      <button onClick={onBack} className="self-start text-sm text-faint">
         ← All trips
       </button>
 
-      <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-800">
+      <div className="card p-4">
         <h3 className="text-lg font-bold">{trip.name}</h3>
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-muted">
           {trip.start_date} → {trip.end_date} · code {trip.invite_code}
         </p>
-        <p className="mt-1 text-xs text-neutral-500">
+        <p className="mt-1 text-xs text-muted">
           {trip.photo_count} photo{trip.photo_count === 1 ? "" : "s"} ·{" "}
           {fmtBytes(trip.storage_bytes)}
         </p>
@@ -281,30 +281,30 @@ function TripDetail({
         </p>
       )}
 
-      <h4 className="mt-1 text-sm font-semibold text-neutral-500">Members</h4>
+      <h4 className="mt-1 text-sm font-semibold text-muted">Members</h4>
       <ul className="flex flex-col gap-2">
         {members?.map((m) => (
           <li
             key={m.user_id}
-            className="flex items-center justify-between gap-3 rounded-2xl bg-white p-3 shadow-sm dark:bg-neutral-800"
+            className="card flex items-center justify-between gap-3 p-3"
           >
             <div className="min-w-0">
               <div className="truncate font-medium">
                 {m.display_name}
-                {m.is_admin && <span className="ml-1 text-xs text-amber-600">(admin)</span>}
+                {m.is_admin && <span className="ml-1 text-xs text-accent">(admin)</span>}
               </div>
-              <div className="text-xs text-neutral-500">
+              <div className="text-xs text-muted">
                 {m.beer_count} beer{m.beer_count === 1 ? "" : "s"} · {m.photo_count} photo
                 {m.photo_count === 1 ? "" : "s"} · {fmtBytes(m.storage_bytes)}
               </div>
             </div>
             {m.is_admin ? (
-              <span className="text-xs text-neutral-400">trip owner</span>
+              <span className="text-xs text-faint">trip owner</span>
             ) : (
               <button
                 onClick={() => removeMember(m)}
                 disabled={working || busy}
-                className="shrink-0 rounded-full bg-red-500 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+                className="shrink-0 rounded-full bg-bad px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
               >
                 Remove
               </button>
@@ -312,17 +312,17 @@ function TripDetail({
           </li>
         ))}
         {members && members.length === 0 && (
-          <li className="rounded-2xl bg-neutral-100 p-4 text-center text-sm text-neutral-500 dark:bg-neutral-800">
+          <li className="rounded-2xl bg-surface-muted p-4 text-center text-sm text-muted">
             No members.
           </li>
         )}
-        {!members && <li className="p-4 text-center text-sm text-neutral-500">Loading…</li>}
+        {!members && <li className="p-4 text-center text-sm text-muted">Loading…</li>}
       </ul>
 
       <button
         onClick={onDeleteTrip}
         disabled={busy || working}
-        className="mt-4 rounded-full bg-red-600 py-3 font-semibold text-white disabled:opacity-40"
+        className="mt-4 rounded-full bg-bad py-3 font-semibold text-white disabled:opacity-40"
       >
         {busy ? "Deleting…" : "🗑️ Delete this trip entirely"}
       </button>
@@ -334,8 +334,8 @@ function StorageFooter({ summary }: { summary: AdminStorageSummary }) {
   const pct = Math.min(summary.used_pct, 100);
   const danger = summary.used_pct >= 80;
   return (
-    <div className="border-t border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
-      <div className="mb-1 flex items-center justify-between text-xs text-neutral-500">
+    <div className="border-t border-line bg-surface px-4 py-3">
+      <div className="mb-1 flex items-center justify-between text-xs text-muted">
         <span>
           Storage used · {summary.total_photos} photo{summary.total_photos === 1 ? "" : "s"}
         </span>
@@ -343,13 +343,13 @@ function StorageFooter({ summary }: { summary: AdminStorageSummary }) {
           {fmtBytes(summary.total_bytes)} / {fmtBytes(summary.limit_bytes)}
         </span>
       </div>
-      <div className="h-3 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
+      <div className="h-3 w-full overflow-hidden rounded-full bg-surface-muted">
         <div
-          className={`h-full rounded-full transition-all ${danger ? "bg-red-500" : "bg-amber-500"}`}
+          className={`h-full rounded-full transition-all ${danger ? "bg-bad" : "bg-accent"}`}
           style={{ width: `${Math.max(pct, 1)}%` }}
         />
       </div>
-      <p className="mt-1 text-center text-xs text-neutral-400">
+      <p className="mt-1 text-center text-xs text-faint">
         {summary.used_pct}% of the free-tier 1&nbsp;GB allowance used
       </p>
     </div>

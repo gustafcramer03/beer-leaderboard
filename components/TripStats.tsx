@@ -41,16 +41,16 @@ function StatCard({
   className?: string;
 }) {
   return (
-    <div className={`flex flex-col gap-1 rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-800 ${className}`}>
+    <div className={`card flex flex-col gap-1 p-4 ${className}`}>
       <span className="text-2xl">{icon}</span>
       <span className="text-2xl font-bold leading-tight">{value}</span>
-      <span className="text-xs font-medium text-neutral-500">{label}</span>
-      {sub && <span className="text-[11px] text-neutral-400">{sub}</span>}
+      <span className="text-xs font-medium text-muted">{label}</span>
+      {sub && <span className="text-[11px] text-faint">{sub}</span>}
     </div>
   );
 }
 
-const HIDDEN = <span className="text-neutral-400">🌑 Hidden</span>;
+const HIDDEN = <span className="text-faint">🌑 Hidden</span>;
 
 export function TripStats({ holidayId }: { holidayId: string }) {
   const [stats, setStats] = useState<TripStatsT | null>(null);
@@ -84,7 +84,7 @@ export function TripStats({ holidayId }: { holidayId: string }) {
 
   if (stats.total_beers === 0) {
     return (
-      <div className="p-8 text-center text-neutral-500">
+      <div className="p-8 text-center text-muted">
         <div className="mb-2 text-5xl">📊</div>
         No beers logged yet — stats will fill in as the trip gets going. 🍻
       </div>
@@ -178,13 +178,13 @@ export function TripStats({ holidayId }: { holidayId: string }) {
       </div>
 
       {dark && (
-        <p className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-center text-xs text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+        <p className="rounded-2xl border border-accent/40 bg-accent-soft p-3 text-center text-xs text-accent-strong">
           🌑 The board is dark — individual highlights are hidden until the grand reveal. The group
           totals keep counting.
         </p>
       )}
 
-      <p className="text-center text-xs text-neutral-400">
+      <p className="text-center text-xs text-faint">
         Counts every audited beer. Updates as more get logged.
       </p>
     </div>

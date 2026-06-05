@@ -44,12 +44,12 @@ export function BeerInsights({
   }, [holidayId]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <h2 className="text-lg font-bold">🍻 Beer insights</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -57,13 +57,13 @@ export function BeerInsights({
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-md p-4">
           {error ? (
-            <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600">
+            <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center text-sm text-bad">
               {error}
             </p>
           ) : !data ? (
             <Loading label="Pouring the numbers…" />
           ) : data.total_tagged === 0 ? (
-            <div className="p-8 text-center text-neutral-500">
+            <div className="p-8 text-center text-muted">
               <div className="mb-2 text-5xl">🍺</div>
               No beers tagged yet. Tag a brand when you finish a beer and the
               popularity charts fill in here.
@@ -124,8 +124,8 @@ function InsightsBody({ data }: { data: InsightsData }) {
     <div className="flex flex-col gap-4">
       {/* Headline: the group's favourite */}
       {top && (
-        <div className="rounded-2xl bg-white p-4 text-center shadow-sm dark:bg-neutral-800">
-          <div className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+        <div className="rounded-2xl bg-surface p-4 text-center shadow-card">
+          <div className="text-xs font-semibold uppercase tracking-wide text-faint">
             Group favourite 🏆
           </div>
           <div className="mt-2 flex items-center justify-center">
@@ -134,7 +134,7 @@ function InsightsBody({ data }: { data: InsightsData }) {
           <div className="mt-2 text-3xl font-black" style={{ color: top.colour }}>
             {top.count}
           </div>
-          <div className="text-xs text-neutral-400">
+          <div className="text-xs text-faint">
             beer{top.count === 1 ? "" : "s"} tagged
           </div>
         </div>
@@ -148,7 +148,7 @@ function InsightsBody({ data }: { data: InsightsData }) {
       </div>
 
       {/* Top brands — horizontal bars */}
-      <section className="rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-800">
+      <section className="rounded-2xl bg-surface p-4 shadow-card">
         <h3 className="mb-3 text-sm font-bold">Most popular beers</h3>
         <div className="flex flex-col gap-2">
           {rows.slice(0, 12).map((r) => (
@@ -156,7 +156,7 @@ function InsightsBody({ data }: { data: InsightsData }) {
               <span className="w-28 flex-none truncate text-xs font-medium" title={r.name}>
                 {r.name}
               </span>
-              <div className="relative h-5 flex-1 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-700">
+              <div className="relative h-5 flex-1 overflow-hidden rounded-full bg-surface-muted">
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -175,7 +175,7 @@ function InsightsBody({ data }: { data: InsightsData }) {
 
       {/* Country split — stacked bar */}
       {byCountry.length > 1 && (
-        <section className="rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-800">
+        <section className="rounded-2xl bg-surface p-4 shadow-card">
           <h3 className="mb-3 text-sm font-bold">Where the beer's from</h3>
           <div className="flex h-6 w-full overflow-hidden rounded-full">
             {byCountry.map((c) => (
@@ -191,7 +191,7 @@ function InsightsBody({ data }: { data: InsightsData }) {
           </div>
           <div className="mt-2 flex flex-wrap gap-3">
             {byCountry.map((c) => (
-              <span key={c.country} className="flex items-center gap-1.5 text-xs text-neutral-500">
+              <span key={c.country} className="flex items-center gap-1.5 text-xs text-muted">
                 <span
                   className="inline-block h-3 w-3 rounded-full"
                   style={{ backgroundColor: COUNTRY_COLOUR[c.country] }}
@@ -205,15 +205,15 @@ function InsightsBody({ data }: { data: InsightsData }) {
 
       {/* Style split — small bars */}
       {byKind.length > 1 && (
-        <section className="rounded-2xl bg-white p-4 shadow-sm dark:bg-neutral-800">
+        <section className="rounded-2xl bg-surface p-4 shadow-card">
           <h3 className="mb-3 text-sm font-bold">By style</h3>
           <div className="flex flex-col gap-2">
             {byKind.map((k) => (
               <div key={k.kind} className="flex items-center gap-2">
                 <span className="w-16 flex-none text-xs font-medium">{kindLabel(k.kind)}</span>
-                <div className="relative h-4 flex-1 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-700">
+                <div className="relative h-4 flex-1 overflow-hidden rounded-full bg-surface-muted">
                   <div
-                    className="h-full rounded-full bg-amber-500"
+                    className="h-full rounded-full bg-accent"
                     style={{ width: `${Math.max(6, (k.count / byKind[0].count) * 100)}%` }}
                   />
                 </div>
@@ -226,7 +226,7 @@ function InsightsBody({ data }: { data: InsightsData }) {
         </section>
       )}
 
-      <p className="text-center text-[11px] text-neutral-400">
+      <p className="text-center text-[11px] text-faint">
         Counts every tagged, audited beer. {data.total_beers - data.total_tagged} beer
         {data.total_beers - data.total_tagged === 1 ? "" : "s"} untagged.
       </p>
@@ -236,9 +236,9 @@ function InsightsBody({ data }: { data: InsightsData }) {
 
 function Stat({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-2xl bg-white p-3 text-center shadow-sm dark:bg-neutral-800">
-      <div className="text-xl font-black text-amber-600 dark:text-amber-400">{value}</div>
-      <div className="text-[11px] text-neutral-400">{label}</div>
+    <div className="rounded-2xl bg-surface p-3 text-center shadow-card">
+      <div className="text-xl font-black text-accent">{value}</div>
+      <div className="text-[11px] text-faint">{label}</div>
     </div>
   );
 }

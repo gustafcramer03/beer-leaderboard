@@ -117,12 +117,12 @@ export function ShareCardView({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <h2 className="text-lg font-bold">📲 Share card</h2>
         <button
           onClick={onClose}
-          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+          className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
         >
           Done
         </button>
@@ -132,10 +132,10 @@ export function ShareCardView({
         <div className="mx-auto flex max-w-md flex-col items-center gap-4 p-4">
           {loading && <Loading label="Designing your flex…" />}
 
-          {error && <p className="p-6 text-center text-sm text-red-600">{error}</p>}
+          {error && <p className="p-6 text-center text-sm text-bad">{error}</p>}
 
           {!loading && !error && data && data.card === null && (
-            <p className="p-8 text-center text-sm text-neutral-500">
+            <p className="p-8 text-center text-sm text-muted">
               🌑 The board&apos;s dark — your share card unlocks at the grand reveal.
             </p>
           )}
@@ -153,7 +153,7 @@ export function ShareCardView({
                 />
               </div>
 
-              <p className="text-center text-xs text-neutral-400">
+              <p className="text-center text-xs text-faint">
                 Tap Share, then pick Instagram → Story. Or save the image and post it yourself.
               </p>
 
@@ -161,14 +161,14 @@ export function ShareCardView({
                 <button
                   onClick={share}
                   disabled={!drawn || sharing}
-                  className="w-full rounded-full bg-amber-500 py-3 font-semibold text-white active:scale-[0.99] disabled:opacity-40"
+                  className="press w-full rounded-full bg-accent py-3 font-semibold text-accent-contrast disabled:opacity-40"
                 >
                   {sharing ? "Opening…" : "📲 Share to story"}
                 </button>
                 <button
                   onClick={save}
                   disabled={!drawn}
-                  className="w-full rounded-full border border-amber-400 py-3 font-semibold text-amber-600 disabled:opacity-40"
+                  className="w-full rounded-full border border-accent/40 py-3 font-semibold text-accent-strong disabled:opacity-40"
                 >
                   Save image
                 </button>
