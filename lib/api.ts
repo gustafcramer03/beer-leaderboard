@@ -21,6 +21,7 @@ import type {
   HeadToHead,
   ActivityFeed,
   ChallengedBeer,
+  AdminBeer,
   RevealMedia,
 } from "@/lib/types";
 
@@ -242,6 +243,14 @@ export async function challengedBeers(holidayId: string): Promise<ChallengedBeer
     (profs ?? []).map((p) => [p.id as string, p.display_name as string]),
   );
   return beers.map((b) => ({ ...b, owner_name: nameById.get(b.user_id) ?? "Unknown" }));
+}
+
+// Every non-open beer in the trip (all players) for the admin "Manage beers"
+// screen — used to revisit and correct an earlier ruling. Admin-gated server-side.
+export async function getAdminBeers(holidayId: string): Promise<AdminBeer[]> {
+  const { data, error } = await supabase.rpc("admin_beers", { p_holiday: holidayId });
+  if (error) throw error;
+  return (data as AdminBeer[]) ?? [];
 }
 
 // --- Logging a beer (two-step, server timestamps via DB triggers) ---

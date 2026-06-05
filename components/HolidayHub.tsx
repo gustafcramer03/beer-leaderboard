@@ -8,6 +8,7 @@ import { Avatar } from "./Avatar";
 import { AuditDeck } from "./AuditDeck";
 import { Leaderboard } from "./Leaderboard";
 import { AdminQueue } from "./AdminQueue";
+import { AdminBeers } from "./AdminBeers";
 import { LogBeer } from "./LogBeer";
 import { HappyHourBanner } from "./HappyHourBanner";
 import { AchievementsCabinet } from "./AchievementsCabinet";
@@ -31,7 +32,8 @@ type MenuView =
   | "recap"
   | "share"
   | "rules"
-  | "rulings";
+  | "rulings"
+  | "manage";
 
 export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: () => void }) {
   const { userId, profile, refreshProfile } = useSession();
@@ -292,6 +294,15 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
           }}
         />
       )}
+      {view === "manage" && isAdmin && (
+        <ManageView
+          holidayId={holiday.id}
+          onClose={() => {
+            setView(null);
+            refreshBadges();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -344,6 +355,14 @@ function MenuPage({
             sub={rulingCount > 0 ? `${rulingCount} to settle` : "Settle challenges"}
             onClick={() => onSelect("rulings")}
             badge={rulingCount}
+          />
+        )}
+        {isAdmin && (
+          <MenuTile
+            icon="🛠️"
+            label="Manage beers"
+            sub="Fix scores & rulings"
+            onClick={() => onSelect("manage")}
           />
         )}
       </div>
@@ -487,6 +506,29 @@ function RulingsView({ holidayId, onClose }: { holidayId: string; onClose: () =>
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-md">
           <AdminQueue holidayId={holidayId} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Full-screen wrapper around the admin "Manage beers" board — revisit and fix
+// the score/status of any beer in the trip after the initial ruling.
+function ManageView({ holidayId, onClose }: { holidayId: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50 dark:bg-neutral-900">
+      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+        <h2 className="text-lg font-bold">🛠️ Manage beers</h2>
+        <button
+          onClick={onClose}
+          className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium dark:bg-neutral-700"
+        >
+          Done
+        </button>
+      </header>
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-md">
+          <AdminBeers holidayId={holidayId} />
         </div>
       </div>
     </div>

@@ -33,6 +33,34 @@ export type ChallengedBeer = Beer & {
   owner_name: string;
 };
 
+// One row of the admin "Manage beers" board (admin_beers RPC). Every non-open
+// beer in the trip with its owner, current status, the points it's contributing
+// right now, any override + reason, and the flags that earned its score — so the
+// admin can revisit and re-rule a beer that was already decided.
+export type AdminBeer = {
+  beer_id: string;
+  user_id: string;
+  owner_name: string;
+  full_taken_at: string | null;
+  empty_taken_at: string | null;
+  status: "pending" | "challenged" | "confirmed" | "rejected";
+  is_chug: boolean;
+  claimed_chug: boolean;
+  is_offline: boolean;
+  is_morning: boolean;
+  is_happy_hour: boolean;
+  is_early_bird: boolean;
+  is_night_owl: boolean;
+  score_override: number | null;
+  override_reason: string | null;
+  caption: string | null;
+  points: number;
+  reviews_total: number;
+  reviews_challenged: number;
+  full_photo_path: string | null;
+  empty_photo_path: string | null;
+};
+
 export type AuditItem = {
   beer_id: string;
   owner_name: string;
