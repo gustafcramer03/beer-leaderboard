@@ -5,6 +5,7 @@ import type { LedgerEntry } from "@/lib/types";
 import { getUserLedger, signedUrl, reactToBeer } from "@/lib/api";
 import { REACTION_EMOJIS } from "@/lib/reactions";
 import { PhotoPreview } from "./PhotoPreview";
+import { BrandBadge } from "./BrandBadge";
 
 // Save a remote image to the device. On mobile we hand it to the native share
 // sheet (which offers "Save Image" / "Save to Photos" → the camera roll); if
@@ -326,13 +327,23 @@ function LedgerPhotos({ entry }: { entry: LedgerEntry }) {
 
   return (
     <div className="grid grid-cols-2 gap-2 border-t border-neutral-100 px-4 py-3 dark:border-neutral-700">
-      <Photo url={urls?.full ?? null} label="FULL" time={fmtTime(entry.full_taken_at)} />
+      <Photo url={urls?.full ?? null} label="FULL" time={fmtTime(entry.full_taken_at)} brand={entry.brand} />
       <Photo url={urls?.empty ?? null} label="EMPTY" time={fmtTime(entry.empty_taken_at)} />
     </div>
   );
 }
 
-function Photo({ url, label, time }: { url: string | null; label: string; time: string }) {
+function Photo({
+  url,
+  label,
+  time,
+  brand,
+}: {
+  url: string | null;
+  label: string;
+  time: string;
+  brand?: string | null;
+}) {
   // A short tap opens the zoom inspector. A long-press (or right-click) reveals
   // a "Save to Photos" option — in a home-screen PWA iOS suppresses its own
   // image menu, so we provide our own.
@@ -430,6 +441,11 @@ function Photo({ url, label, time }: { url: string | null; label: string; time: 
       {url && (
         <span className="pointer-events-none absolute right-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
           🔍
+        </span>
+      )}
+      {url && brand && (
+        <span className="pointer-events-none absolute bottom-1 left-1">
+          <BrandBadge slug={brand} overlay size="xs" />
         </span>
       )}
 

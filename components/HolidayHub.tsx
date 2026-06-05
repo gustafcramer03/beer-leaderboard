@@ -17,6 +17,7 @@ import { RuleBook } from "./RuleBook";
 import { TripStats } from "./TripStats";
 import { PaceBoard } from "./PaceBoard";
 import { DrinkingHeatmap } from "./DrinkingHeatmap";
+import { BeerInsights } from "./BeerInsights";
 import { RivalryCard } from "./RivalryCard";
 import { ActivityFeed } from "./ActivityFeed";
 import { ShareCardView } from "./ShareCard";
@@ -29,6 +30,7 @@ type MenuView =
   | "stats"
   | "pace"
   | "heatmap"
+  | "insights"
   | "rivalry"
   | "activity"
   | "recap"
@@ -283,6 +285,9 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
       {view === "heatmap" && (
         <DrinkingHeatmap holidayId={holiday.id} onClose={() => setView(null)} />
       )}
+      {view === "insights" && (
+        <BeerInsights holidayId={holiday.id} onClose={() => setView(null)} />
+      )}
       {view === "rivalry" && <RivalryCard holidayId={holiday.id} onClose={() => setView(null)} />}
       {view === "activity" && (
         <ActivityFeed holidayId={holiday.id} timezone={holiday.timezone} onClose={() => setView(null)} />
@@ -344,6 +349,7 @@ function MenuPage({
         <MenuTile icon="🌅" label="Daily recap" sub="Yesterday's wrap-up" onClick={() => onSelect("recap")} />
         <MenuTile icon="📈" label="Pace board" sub="Trends & projections" onClick={() => onSelect("pace")} />
         <MenuTile icon="🔥" label="Drinking heatmap" sub="When the group drinks" onClick={() => onSelect("heatmap")} />
+        <MenuTile icon="🍻" label="Beer insights" sub="Most popular brands" onClick={() => onSelect("insights")} />
         <MenuTile icon="⚔️" label="Head to head" sub="Compare two players" onClick={() => onSelect("rivalry")} />
         <MenuTile icon="📲" label="Share card" sub="Flex on your story" onClick={() => onSelect("share")} />
         <MenuTile icon="📖" label="How to play" sub="Rules & scoring" onClick={() => onSelect("rules")} />

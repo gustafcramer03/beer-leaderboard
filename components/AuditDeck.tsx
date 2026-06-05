@@ -5,6 +5,7 @@ import { motion, useMotionValue, useTransform, animate, type PanInfo } from "fra
 import type { AuditItem } from "@/lib/types";
 import { signedUrl, submitReview } from "@/lib/api";
 import { PhotoPreview } from "./PhotoPreview";
+import { BrandBadge } from "./BrandBadge";
 
 function secondsBetween(a: string, b: string) {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 1000);
@@ -161,6 +162,7 @@ export function AuditDeck({
             url={urls.full}
             label="FULL"
             time={stamp(current.full_taken_at)}
+            brand={current.brand}
             onOpen={() => urls.full && setPreview({ url: urls.full, label: "FULL" })}
           />
           <Photo
@@ -221,11 +223,13 @@ function Photo({
   url,
   label,
   time,
+  brand,
   onOpen,
 }: {
   url: string | null;
   label: string;
   time: string;
+  brand?: string | null;
   onOpen: () => void;
 }) {
   // The card itself is draggable (left/right swipe), so distinguish a real tap
@@ -260,6 +264,11 @@ function Photo({
       {url && (
         <span className="pointer-events-none absolute right-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
           🔍 tap
+        </span>
+      )}
+      {url && brand && (
+        <span className="pointer-events-none absolute bottom-1 left-1">
+          <BrandBadge slug={brand} overlay size="xs" />
         </span>
       )}
     </div>

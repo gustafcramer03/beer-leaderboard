@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CameraCapture } from "./CameraCapture";
 import { OfflineLogBeer } from "./OfflineLogBeer";
+import { BrandPicker } from "./BrandPicker";
 import { startBeer, finishBeer, discardBeer, getOpenBeer, signedUrl } from "@/lib/api";
 import { celebrateBeer, celebrateChug } from "@/lib/celebrate";
 
@@ -23,6 +24,7 @@ export function LogBeer({
   const [emptyFile, setEmptyFile] = useState<File | null>(null);
   const [chug, setChug] = useState(false);
   const [caption, setCaption] = useState("");
+  const [brand, setBrand] = useState<string | null>(null);
   const [beerId, setBeerId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +79,7 @@ export function LogBeer({
     setBusy(true);
     setError(null);
     try {
-      await finishBeer(holidayId, beerId, emptyFile, chug, caption);
+      await finishBeer(holidayId, beerId, emptyFile, chug, caption, brand);
       if (chug) celebrateChug();
       else celebrateBeer();
       setStep("done");
@@ -205,6 +207,7 @@ export function LogBeer({
               <span className="self-end text-[11px] text-neutral-400">{caption.length}/140</span>
             )}
           </div>
+          <BrandPicker value={brand} onChange={setBrand} disabled={busy} />
           <button
             disabled={!emptyFile || busy}
             onClick={finish}

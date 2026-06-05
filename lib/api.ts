@@ -24,6 +24,7 @@ import type {
   AdminBeer,
   RevealMedia,
   Heatmap,
+  BeerInsights,
 } from "@/lib/types";
 
 export async function myHolidays(): Promise<Holiday[]> {
@@ -119,6 +120,13 @@ export async function getHeatmap(holidayId: string): Promise<Heatmap> {
   const { data, error } = await supabase.rpc("heatmap_data", { p_holiday: holidayId });
   if (error) throw error;
   return data as Heatmap;
+}
+
+// Per-brand popularity counts for the Beer insights tab (group aggregate).
+export async function getBeerInsights(holidayId: string): Promise<BeerInsights> {
+  const { data, error } = await supabase.rpc("beer_insights", { p_holiday: holidayId });
+  if (error) throw error;
+  return data as BeerInsights;
 }
 
 export async function refreshSnapshot(holidayId: string): Promise<void> {
@@ -294,13 +302,14 @@ export async function startBeer(holidayId: string, fullPhoto: File): Promise<str
 }
 
 // Step 2: upload the empty photo and finish the beer (trigger stamps empty_taken_at).
-// An optional caption rides along on the same owner update.
+// An optional caption + brand tag ride along on the same owner update.
 export async function finishBeer(
   holidayId: string,
   beerId: string,
   emptyPhoto: File,
   claimedChug: boolean,
   caption?: string | null,
+  brand?: string | null,
 ): Promise<void> {
   const upload = await compressImage(emptyPhoto);
   const path = `${holidayId}/${beerId}/empty.jpg`;
@@ -310,9 +319,10 @@ export async function finishBeer(
   if (upErr) throw upErr;
 
   const cap = (caption ?? "").trim().slice(0, 140) || null;
+  const br = (brand ?? "").trim().slice(0, 60) || null;
   const { error: updErr } = await supabase
     .from("beers")
-    .update({ empty_photo_path: path, claimed_chug: claimedChug, caption: cap })
+    .update({ empty_photo_path: path, claimed_chug: claimedChug, caption: cap, brand: br })
     .eq("id", beerId);
   if (updErr) throw updErr;
 }
@@ -343,6 +353,7 @@ export async function logOfflineBeer(
   emptyTaken: string, // ISO
   claimedChug: boolean,
   caption?: string | null,
+  brand?: string | null,
 ): Promise<string> {
   const { data: userData } = await supabase.auth.getUser();
   const uid = userData.user?.id;
@@ -373,6 +384,7 @@ export async function logOfflineBeer(
     p_empty_taken: emptyTaken,
     p_claimed_chug: claimedChug,
     p_caption: (caption ?? "").trim().slice(0, 140) || null,
+    p_brand: (brand ?? "").trim().slice(0, 60) || null,
   });
   if (error) throw error;
   return beerId;

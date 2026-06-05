@@ -54,6 +54,7 @@ export type AdminBeer = {
   score_override: number | null;
   override_reason: string | null;
   caption: string | null;
+  brand: string | null;
   points: number;
   reviews_total: number;
   reviews_challenged: number;
@@ -75,6 +76,7 @@ export type AuditItem = {
   is_early_bird: boolean;
   is_night_owl: boolean;
   caption: string | null;
+  brand: string | null;
 };
 
 export type Standing = {
@@ -106,6 +108,7 @@ export type LedgerEntry = {
   score_override: number | null;
   override_reason: string | null;
   caption: string | null;
+  brand: string | null;
   // Emoji reaction counts (emoji → n) and the caller's own reaction, if any.
   reactions: Record<string, number>;
   my_reaction: string | null;
@@ -350,4 +353,17 @@ export type Heatmap = {
   days: { date: string; counts: number[] }[]; // counts is always length 24 (hours 0–23)
   by_hour: number[]; // length 24 — column totals across all days
   peak: { date: string; hour: number; count: number } | null;
+};
+
+// Beer insights: per-brand counts across the trip (group aggregate, returned
+// even while dark). `brands` is sorted most-popular-first; each `slug` maps to a
+// display name + colour via lib/brands.ts on the client. `top` is the single
+// most-tagged brand (null when nothing's tagged yet).
+export type BeerInsights = {
+  state: "live" | "dark" | "reveal";
+  total_beers: number; // eligible (finished, non-rejected) beers
+  total_tagged: number; // of those, how many carry a brand tag
+  distinct_brands: number;
+  brands: { slug: string; count: number }[];
+  top: { slug: string; count: number } | null;
 };

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CameraCapture } from "./CameraCapture";
+import { BrandPicker } from "./BrandPicker";
 import { logOfflineBeer } from "@/lib/api";
 import { readPhotoTime } from "@/lib/exif";
 import { celebrateBeer, celebrateChug } from "@/lib/celebrate";
@@ -38,6 +39,7 @@ export function OfflineLogBeer({
   const [empty, setEmpty] = useState<PhotoState>(blank);
   const [chug, setChug] = useState(false);
   const [caption, setCaption] = useState("");
+  const [brand, setBrand] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export function OfflineLogBeer({
     setBusy(true);
     setError(null);
     try {
-      await logOfflineBeer(holidayId, full.file, empty.file, fullISO, emptyISO, chug, caption);
+      await logOfflineBeer(holidayId, full.file, empty.file, fullISO, emptyISO, chug, caption, brand);
       if (chug) celebrateChug();
       else celebrateBeer();
       setDone(true);
@@ -127,6 +129,8 @@ export function OfflineLogBeer({
           <span className="self-end text-[11px] text-neutral-400">{caption.length}/140</span>
         )}
       </div>
+
+      <BrandPicker value={brand} onChange={setBrand} disabled={busy} />
 
       <button
         disabled={!canSubmit}
