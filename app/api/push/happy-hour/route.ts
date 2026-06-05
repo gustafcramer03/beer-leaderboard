@@ -15,7 +15,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type Sub = { endpoint: string; p256dh: string; auth: string };
-type Event = { title: string; body: string; subscriptions: Sub[] };
+type Event = { title: string; body: string; tag?: string; subscriptions: Sub[] };
 
 let vapidReady = false;
 function ensureVapid(): boolean {
@@ -55,6 +55,7 @@ export async function POST(req: Request): Promise<Response> {
       title: ev.title,
       body: ev.body,
       url: "/",
+      tag: ev.tag || "happy-hour",
     });
     const subs = Array.isArray(ev.subscriptions) ? ev.subscriptions : [];
     const results = await Promise.allSettled(
