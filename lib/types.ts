@@ -56,6 +56,13 @@ export type Standing = {
   beer_count: number;
 };
 
+// Grand-reveal media keyed by user_id: their avatar path + a shuffled pool of
+// beer photo paths (both still need signing). Returned by reveal_media().
+export type RevealMedia = Record<
+  string,
+  { avatar_path: string | null; photos: string[] }
+>;
+
 export type LedgerEntry = {
   beer_id: string;
   full_taken_at: string;

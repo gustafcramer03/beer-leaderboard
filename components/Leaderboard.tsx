@@ -71,6 +71,29 @@ export function Leaderboard({
   const [stateBusy, setStateBusy] = useState(false);
   const [showReveal, setShowReveal] = useState(false);
 
+  // The final table stays hidden until you've played the grand reveal at least
+  // once (persisted per holiday so a reload doesn't re-gate you). Seeing the
+  // board before the reveal would spoil the whole moment.
+  const revealKey = `reveal-seen-${holidayId}`;
+  const [revealSeen, setRevealSeen] = useState(false);
+  useEffect(() => {
+    try {
+      setRevealSeen(localStorage.getItem(revealKey) === "1");
+    } catch {
+      // localStorage unavailable (private mode) — gate just won't persist.
+    }
+  }, [revealKey]);
+
+  function closeReveal() {
+    setShowReveal(false);
+    setRevealSeen(true);
+    try {
+      localStorage.setItem(revealKey, "1");
+    } catch {
+      /* ignore */
+    }
+  }
+
   // Sticky "your position" chip: a clone of your own row that pins to the top
   // edge when your row has scrolled above the viewport, and to the bottom edge
   // (above the nav) when it's below. Hidden while your real row is visible.
@@ -270,6 +293,39 @@ export function Leaderboard({
   const meIndex = standings.findIndex((s) => s.user_id === userId);
   const me = meIndex >= 0 ? standings[meIndex] : null;
 
+  // Trip's over but you haven't played the reveal yet — hide the table behind a
+  // cover so nobody spoils the result by glancing at the board.
+  if (result.state === "reveal" && !revealSeen) {
+    return (
+      <div className="flex min-h-full flex-col items-center justify-center gap-6 p-8 text-center">
+        <div className="text-7xl">🍺🥁</div>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-black">The trip&apos;s over!</h2>
+          <p className="max-w-xs text-sm text-neutral-500">
+            The final table is under wraps. No peeking — the standings stay hidden until
+            you&apos;ve been through the grand reveal.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowReveal(true)}
+          className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-7 py-4 text-lg font-bold text-white shadow-lg active:scale-95"
+        >
+          🍺 Find out who&apos;s top of the hops
+        </button>
+        <button
+          onClick={() => setShowReveal(true)}
+          className="text-xs text-neutral-400 underline"
+        >
+          Tap to start the countdown from last place
+        </button>
+
+        {showReveal && (
+          <RevealShow standings={standings} holidayId={holidayId} onClose={closeReveal} />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-3 p-4">
       {result.state === "dark" && (
@@ -281,17 +337,13 @@ export function Leaderboard({
       {result.state === "reveal" && (
         <div className="rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 p-4 text-center text-white shadow">
           <div className="text-3xl">🏆 GRAND REVEAL 🏆</div>
-          {standings[0] && (
-            <p className="mt-1 font-bold">
-              Champion: {standings[0].display_name} — {standings[0].points} pts
-            </p>
-          )}
+          <p className="mt-1 text-sm font-medium text-white/90">The trip is done — final standings below.</p>
           {standings.length > 0 && (
             <button
               onClick={() => setShowReveal(true)}
               className="mt-3 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold backdrop-blur active:scale-95"
             >
-              ▶️ Play the reveal
+              ▶️ Replay the reveal
             </button>
           )}
         </div>
@@ -389,7 +441,7 @@ export function Leaderboard({
       )}
 
       {showReveal && (
-        <RevealShow standings={standings} onClose={() => setShowReveal(false)} />
+        <RevealShow standings={standings} holidayId={holidayId} onClose={closeReveal} />
       )}
 
       {chipPos && me && (

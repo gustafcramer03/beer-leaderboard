@@ -21,6 +21,7 @@ import type {
   HeadToHead,
   ActivityFeed,
   ChallengedBeer,
+  RevealMedia,
 } from "@/lib/types";
 
 export async function myHolidays(): Promise<Holiday[]> {
@@ -410,6 +411,13 @@ export async function getShareCard(holidayId: string): Promise<ShareCard> {
   const { data, error } = await supabase.rpc("share_card", { p_holiday: holidayId });
   if (error) throw error;
   return data as ShareCard;
+}
+
+// Per-player avatar + beer-photo pool for the grand reveal, keyed by user_id.
+export async function getRevealMedia(holidayId: string): Promise<RevealMedia> {
+  const { data, error } = await supabase.rpc("reveal_media", { p_holiday: holidayId });
+  if (error) throw error;
+  return (data as RevealMedia) ?? {};
 }
 
 // --- Web Push subscriptions (per-device) ---
