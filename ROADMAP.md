@@ -98,7 +98,7 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ## 🔔 Utility / stickiness
 
-- [~] **Push notifications** — _PHASE 1 SHIPPED (happy-hour start & end only)_ (migration 0028).
+- [~] **Push notifications** — _PHASE 1 SHIPPED (happy-hour start & end, migration 0028); PHASE 2 SHIPPED (grand reveal, migration 0034)_.
   Web Push (VAPID) with no new always-on server: the existing hourly `pg_cron` runs
   `dispatch_happy_hour_push()`, which calls `happy_hour_push_due()` to find any happy-hour
   boundary landing in the current hour (per holiday, in its tz), logs it once in `push_sent_log`
@@ -110,7 +110,13 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   beers-sunk tally. Client: `lib/push.ts` (subscribe/unsubscribe, hardcoded public VAPID key),
   `components/PushToggle.tsx` in the Menu (iOS needs Add-to-Home-Screen; nudges accordingly), and
   `push`/`notificationclick` handlers in `public/sw.js`. _Future phases: beers-to-audit,
-  challenge-on-your-beer, grand-reveal-live._
+  challenge-on-your-beer._
+- [x] **Grand-reveal push** 🏆 — _SHIPPED_ (migration 0034). When a trip flips into reveal state
+  (the clock crossing `end_date + end_time`, or the admin forcing it via "End the trip"), every
+  member gets a one-off "🏆 The Grand Reveal!" push nudging them to open the app and see who's top
+  of the hops. Reuses the phase-1 pipeline: `reveal_push_due()` (dedup kind `'reveal'`, logged only
+  once at least one device is subscribed so it retries while nobody's signed up) feeds the unified
+  `dispatch_push()`, and `set_holiday_state` fires it immediately on a forced reveal. Verified live.
 - [x] **Legend of the Day** 👑 — _SHIPPED_ (migration 0022). Once-a-day popup on first open
   crowning whoever sank the most beers yesterday — profile photo, name and beer count. Day is
   resolved in the trip timezone; the `legend_of_the_day` RPC returns the celebrated day plus the
@@ -146,5 +152,5 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 ---
 
 _What's left, by effort-to-payoff: **Invite via QR / share link** is the last untouched admin
-nicety. **Push notifications** phase 1 (happy-hour start/end) is live; later phases (audit nudges,
-challenge alerts, grand-reveal) reuse the same pipeline._
+nicety. **Push notifications** phase 1 (happy-hour start/end) and phase 2 (grand reveal) are live;
+remaining phases (audit nudges, challenge alerts) reuse the same pipeline._
