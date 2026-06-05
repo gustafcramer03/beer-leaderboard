@@ -86,6 +86,16 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ## ✨ UX polish (cheap, high "easier to use")
 
+- [x] **Frontend refresh — typography, tokens, depth + motion** ✨ — _SHIPPED_ (2026-06-05).
+  Wired `next/font` (Fraunces display + Plus Jakarta Sans body) onto `<html>`, replacing the silent
+  Arial fallback. Added a semantic design-token layer in `globals.css` (`surface`/`text`/`line`/
+  `accent` families with auto-flipping dark mode), elevation shadows (`shadow-card`/`-raise`/`-nav`),
+  `rounded-card` radius, and `.card`/`.press` component classes. Input feel: `touch-action:
+  manipulation`, tap-highlight off, `.press` tap feedback, `will-change` on the swipe card, lighter
+  swipe-commit velocity. Motion: `lib/motion.ts` + animated tab switches and slide-up menu views
+  (board stays mounted to preserve optimistic state). All 30 components migrated off raw
+  `amber-*`/`neutral-*` onto tokens, light + dark, keeping deliberate celebration gradients and
+  canvas colours.
 - [x] **Haptics + confetti on key moments** 🎉 — _SHIPPED_. `canvas-confetti` + Web Vibration API
   via `lib/celebrate.ts`. Confetti on every beer logged (online + offline), with a **bigger golden
   burst** (centre blast + two side cannons) when a chug is claimed; a sustained 1s shower on the

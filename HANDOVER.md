@@ -67,6 +67,13 @@ Migrations through **0036** are applied. Feature highlights (full list in `ROADM
 - Push notifications (happy-hour start/end + grand reveal) via cron→pg_net→Vercel route.
 - **Drinking heatmap** (0035) — Menu → 🔥.
 - **Brand tagging + Beer insights** (0036, newest) — see below.
+- **Frontend refresh** (2026-06-05, frontend-only — no migration) — `next/font` (Fraunces + Plus
+  Jakarta Sans) replaces the old Arial fallback; semantic design tokens in `globals.css`
+  (surface/text/line/accent, auto-flipping dark mode) + `.card`/`.press` + elevation shadows; faster
+  tap/swipe feel; `lib/motion.ts` drives animated tab/menu-view transitions. All components migrated
+  onto tokens. **Tailwind v4 note:** fonts use plain `@theme` (so `next/font` runtime vars stay
+  live), colour tokens use `@theme inline`; Fraunces needs `weight: "variable"` because it sets the
+  `opsz` axis. Restart the dev server after any `@theme` edit.
 
 ### Newest feature: brand tagging + beer insights (migration 0036)
 - `lib/brands.ts` — canonical catalogue (slug/name/country[Greece|UK|International]/kind/colour) of UK pub staples + Greek beers incl. **Nymfi**; helpers (`getBrand`, `brandColour`, `BRANDS_BY_COUNTRY`, `kindLabel`) and a `LOGO_SLUGS` registry + `hasLogo()`.
