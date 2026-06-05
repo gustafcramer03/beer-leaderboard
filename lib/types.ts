@@ -23,7 +23,14 @@ export type Beer = {
   status: "open" | "pending" | "challenged" | "confirmed" | "rejected";
   is_offline: boolean;
   score_override: number | null;
+  caption: string | null;
   created_at: string;
+};
+
+// A challenged beer enriched with its owner's display name, for the admin
+// rulings screen (challengedBeers() joins the profile in).
+export type ChallengedBeer = Beer & {
+  owner_name: string;
 };
 
 export type AuditItem = {

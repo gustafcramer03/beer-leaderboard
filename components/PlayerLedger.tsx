@@ -212,9 +212,16 @@ export function PlayerLedger({
                 <ReactionBar entry={e} onReact={react} />
                 {open && (
                   <>
-                    {e.score_override !== null && e.override_reason && (
+                    {e.override_reason && (
                       <p className="border-t border-neutral-100 px-4 py-2 text-[11px] leading-snug text-indigo-700 dark:border-neutral-700 dark:text-indigo-300">
-                        <span className="font-semibold">Adjusted ✎</span> — {e.override_reason}
+                        <span className="font-semibold">
+                          {e.score_override !== null
+                            ? "Adjusted ✎"
+                            : e.status === "rejected"
+                              ? "Ruling ⚖️ Rejected"
+                              : "Ruling ⚖️"}
+                        </span>{" "}
+                        — {e.override_reason}
                       </p>
                     )}
                     <LedgerPhotos entry={e} />

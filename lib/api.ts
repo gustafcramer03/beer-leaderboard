@@ -20,6 +20,7 @@ import type {
   HolidayMember,
   HeadToHead,
   ActivityFeed,
+  ChallengedBeer,
 } from "@/lib/types";
 
 export async function myHolidays(): Promise<Holiday[]> {
@@ -170,10 +171,12 @@ export async function submitReview(
 export async function adminRuleBeer(
   beerId: string,
   decision: "confirm" | "reject",
+  reason?: string | null,
 ): Promise<void> {
   const { error } = await supabase.rpc("admin_rule_beer", {
     p_beer: beerId,
     p_decision: decision,
+    p_reason: (reason ?? "").trim().slice(0, 200) || null,
   });
   if (error) throw error;
 }
@@ -216,7 +219,7 @@ export async function getOpenBeer(holidayId: string): Promise<Beer | null> {
 }
 
 // Challenged beers in this holiday (admin queue).
-export async function challengedBeers(holidayId: string): Promise<Beer[]> {
+export async function challengedBeers(holidayId: string): Promise<ChallengedBeer[]> {
   const { data, error } = await supabase
     .from("beers")
     .select("*")
@@ -224,7 +227,20 @@ export async function challengedBeers(holidayId: string): Promise<Beer[]> {
     .eq("status", "challenged")
     .order("empty_taken_at", { ascending: true });
   if (error) throw error;
-  return (data as Beer[]) ?? [];
+  const beers = (data as Beer[]) ?? [];
+  if (beers.length === 0) return [];
+
+  // Enrich with the owner's display name so the admin knows whose beer it is.
+  // profiles are world-readable to authenticated users (profiles_select policy).
+  const ids = [...new Set(beers.map((b) => b.user_id))];
+  const { data: profs } = await supabase
+    .from("profiles")
+    .select("id, display_name")
+    .in("id", ids);
+  const nameById = new Map(
+    (profs ?? []).map((p) => [p.id as string, p.display_name as string]),
+  );
+  return beers.map((b) => ({ ...b, owner_name: nameById.get(b.user_id) ?? "Unknown" }));
 }
 
 // --- Logging a beer (two-step, server timestamps via DB triggers) ---
