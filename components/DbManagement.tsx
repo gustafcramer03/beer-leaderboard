@@ -12,10 +12,10 @@ import {
   adminListTrips,
   adminTripMembers,
   adminMemberBeers,
+  adminPhotoUrls,
   adminStorageSummary,
   adminDeleteTrip,
   adminDeleteMember,
-  signedUrl,
 } from "@/lib/api";
 import { Loading } from "./Loading";
 import { PhotoPreview } from "./PhotoPreview";
@@ -465,7 +465,7 @@ function MemberBeers({
                 </div>
                 <span className="text-faint">{open ? "▲" : "▼"}</span>
               </button>
-              {open && <AdminBeerPhotos beer={b} />}
+              {open && <AdminBeerPhotos beer={b} password={password} />}
             </li>
           );
         })}
@@ -474,22 +474,34 @@ function MemberBeers({
   );
 }
 
-function AdminBeerPhotos({ beer }: { beer: AdminMemberBeer }) {
+function AdminBeerPhotos({ beer, password }: { beer: AdminMemberBeer; password: string }) {
   const [urls, setUrls] = useState<{ full: string | null; empty: string | null } | null>(null);
 
   useEffect(() => {
     let active = true;
     (async () => {
-      const [full, empty] = await Promise.all([
-        beer.full_photo_path ? signedUrl(beer.full_photo_path) : Promise.resolve(null),
-        beer.empty_photo_path ? signedUrl(beer.empty_photo_path) : Promise.resolve(null),
-      ]);
-      if (active) setUrls({ full, empty });
+      // One round-trip for both photos; the server route signs via the service
+      // role so this works even for trips the owner isn't a member of.
+      const paths = [beer.full_photo_path, beer.empty_photo_path].filter(
+        (p): p is string => !!p,
+      );
+      let map: Record<string, string | null> = {};
+      try {
+        if (paths.length > 0) map = await adminPhotoUrls(password, paths);
+      } catch (e) {
+        console.error(e);
+      }
+      if (active) {
+        setUrls({
+          full: beer.full_photo_path ? (map[beer.full_photo_path] ?? null) : null,
+          empty: beer.empty_photo_path ? (map[beer.empty_photo_path] ?? null) : null,
+        });
+      }
     })();
     return () => {
       active = false;
     };
-  }, [beer]);
+  }, [beer, password]);
 
   return (
     <div className="grid grid-cols-2 gap-2 border-t border-line px-4 py-3">

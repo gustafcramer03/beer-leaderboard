@@ -67,6 +67,14 @@ Migrations through **0036** are applied. Feature highlights (full list in `ROADM
 - Push notifications (happy-hour start/end + grand reveal) via cron→pg_net→Vercel route.
 - **Drinking heatmap** (0035) — Menu → 🔥.
 - **Brand tagging + Beer insights** (0036, newest) — see below.
+- **DB-management photo browser** (2026-06-05, migration 0037) — in 🗄️ DB Management, tap a trip →
+  tap a member → browse their beers → tap a beer to view its full/empty photos (pinch/double-tap zoom).
+  Beer list comes from the password-gated `admin_member_beers` RPC. Photos load via a server route
+  **`app/api/admin/photo-urls/route.ts`** that mints signed URLs with the **service-role key**
+  (bypasses storage RLS), so it works for **any** trip even when the owner isn't a member. The route
+  is gated by the management password (`ADMIN_DB_PASSWORD`, defaults to the `'password'` placeholder).
+  **New Vercel env var: `SUPABASE_SERVICE_ROLE_KEY`** (production + preview, server-only — never
+  expose client-side). Retrieve it from the Supabase dashboard or `GET /v1/projects/<ref>/api-keys?reveal=true`.
 - **Frontend refresh** (2026-06-05, frontend-only — no migration) — `next/font` (Fraunces + Plus
   Jakarta Sans) replaces the old Arial fallback; semantic design tokens in `globals.css`
   (surface/text/line/accent, auto-flipping dark mode) + `.card`/`.press` + elevation shadows; faster

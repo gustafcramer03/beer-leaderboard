@@ -549,6 +549,24 @@ export async function adminMemberBeers(
   return (data as AdminMemberBeer[]) ?? [];
 }
 
+// Mint signed URLs for beer photos in any trip via the server route (service
+// role bypasses storage RLS). Used by the DB-management photo browser so the
+// owner can view photos even for trips they're not a member of. Returns a
+// path → signed URL map (missing/failed paths are absent or null).
+export async function adminPhotoUrls(
+  password: string,
+  paths: string[],
+): Promise<Record<string, string | null>> {
+  const res = await fetch("/api/admin/photo-urls", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password, paths }),
+  });
+  if (!res.ok) throw new Error(`photo-urls ${res.status}`);
+  const data = (await res.json()) as { urls?: Record<string, string | null> };
+  return data.urls ?? {};
+}
+
 export async function adminStorageSummary(password: string): Promise<AdminStorageSummary> {
   const { data, error } = await supabase.rpc("admin_storage_summary", { p_password: password });
   if (error) throw error;
