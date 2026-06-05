@@ -13,7 +13,7 @@ function secondsBetween(a: string, b: string) {
 function fmtGap(s: number) {
   if (s < 60) return `${s}s`;
   const m = Math.floor(s / 60);
-  return `${m}m ${s % 60}s`;
+  return `${m}m ${String(s % 60).padStart(2, "0")}s`;
 }
 
 function stamp(iso: string) {
@@ -138,6 +138,24 @@ export function AuditDeck({
             &ldquo;{current.caption}&rdquo;
           </p>
         )}
+        <div className="mb-2 flex items-center justify-center gap-2">
+          <div className="flex flex-col items-center rounded-xl bg-neutral-100 px-3 py-1.5 dark:bg-neutral-700">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+              Full 🍺
+            </span>
+            <span className="text-base font-bold tabular-nums">{stamp(current.full_taken_at)}</span>
+          </div>
+          <div className="flex flex-col items-center px-1 leading-tight text-neutral-500">
+            <span className="text-lg">→</span>
+            <span className="text-xs font-bold">{fmtGap(gap)}</span>
+          </div>
+          <div className="flex flex-col items-center rounded-xl bg-neutral-100 px-3 py-1.5 dark:bg-neutral-700">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+              Empty 🏁
+            </span>
+            <span className="text-base font-bold tabular-nums">{stamp(current.empty_taken_at)}</span>
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-2">
           <Photo
             url={urls.full}
@@ -153,9 +171,6 @@ export function AuditDeck({
           />
         </div>
         <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
-          <span className="rounded-full bg-neutral-100 px-2 py-1 dark:bg-neutral-700">
-            ⏱ gap {fmtGap(gap)}
-          </span>
           {(current.claimed_chug || looksChugged) && (
             <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-700">
               {current.claimed_chug ? "claims chug" : "looks chugged"} 🍺×2
@@ -239,7 +254,7 @@ function Photo({
       <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[10px] font-bold text-white">
         {label}
       </span>
-      <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1 text-[10px] text-white">
+      <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-white">
         {time}
       </span>
       {url && (
