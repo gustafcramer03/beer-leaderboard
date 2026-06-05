@@ -51,6 +51,29 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   for now/projected totals). Migration 0017 (`pace_series`) + `PaceBoard.tsx`. _Future: also a
   "+3 today" momentum chip/sparkline inline on the board itself._
 
+### Brainstormed 2026-06-04 — not yet started
+
+- [ ] **Streaks** 🔥 — consecutive beer-days with at least one beer logged; a flame count on your
+  row plus a "don't break the chain" nudge. _Needs a scoring/RPC addition (derive per-player day runs)._
+- [ ] **Teams / squads** — split a trip into 2+ teams (Reds vs Blues) with a team total shown
+  alongside the individual board. _Needs migration (team membership) + standings aggregation._
+- [ ] **Predictions market** — each morning players predict the day's Legend or the trip champion;
+  correct calls earn bragging-only "oracle points". _Needs migration (predictions table + resolution)._
+- [ ] **Bounties / dares** — admin (or anyone) posts a challenge ("finish a chug before noon", "a
+  beer in every bar"); completers claim bonus points. _Needs migration (bounties + claims/approval)._
+- [ ] **Surprise power hour** — admin fires a live double-points window on demand, distinct from the
+  scheduled happy hour. _Needs migration (ad-hoc window) + scoring hook + optional push._
+- [ ] **"Who's catching you"** — an inline board chip showing the gap to your nearest rivals
+  ("Erik is 2 beers behind you"). _Frontend-only (derive from the standings already loaded)._
+- [ ] **Beer wall / photo gallery** 🖼️ — every beer photo in a scrollable grid as the trip's visual
+  diary. _Mostly frontend (signed URLs); maybe a lightweight listing RPC; gate while dark._
+- [ ] **Trip Wrapped** 🎁 — a Spotify-Wrapped-style swipeable end-of-trip recap (totals, biggest day,
+  fastest chug, rival, a superlative). _Reuses existing stats RPCs; new full-screen reveal-time view._
+- [ ] **Drinking heatmap** — a clock/day grid showing when the group drinks most. _Needs an RPC
+  bucketing beers by local hour/day; frontend grid._
+- [ ] **Brand / type tagging** — optionally tag what you drank, with stats by brand ("most loyal to
+  X"). _Needs migration (`beers.brand`/`type`) + log-flow input + a stats slice._
+
 ## ✨ UX polish (cheap, high "easier to use")
 
 - [x] **Haptics + confetti on key moments** 🎉 — _SHIPPED_. `canvas-confetti` + Web Vibration API
@@ -139,9 +162,23 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   time it's challenged; once ruled (uphold / reject / set score) it's stamped `admin_ruled_at` and
   a later challenge can never re-escalate it. Players still audit every beer; admin reviews once.
 
+### Brainstormed 2026-06-04 — not yet started
+
+- [ ] **Round tracker** — a "whose round is it?" rotation so the group knows who's buying next.
+  _Needs migration (rotation state) + simple UI._
+- [ ] **Hydration / pace nudge** 💧 — an optional gentle "grab a water" push after N beers in M
+  hours. _Reuses the push pipeline; needs a per-user rate check + opt-in setting._
+- [ ] **"Done for the night" status** — flag yourself out so you're hidden from the active-race
+  chips ("who's catching you" etc.). _Frontend + a small per-user status flag._
+
 ## 🛠️ Admin niceties
 
 - [ ] **Invite via QR / share link** — faster onboarding than typing the invite code.
+- [ ] **Co-admins** — let the admin promote a second admin to share the audit/rulings load.
+  _Needs migration (multiple admins per holiday) + admin-check updates across RPCs._
+- [ ] **Configurable scoring** — admin sets bonus values (chug multiplier, happy-hour points, etc.)
+  per trip rather than hard-coded. _Larger: needs a per-holiday scoring-config table threaded through
+  every scoring function — keep all readers in sync._
 - [x] **Admin "adjust score" with reason** — _SHIPPED_ (migration 0029). The admin's "Set score ✎"
   ruling now takes an optional note (≤200 chars) stored in `beers.score_override_reason` alongside
   `score_override`; `admin_set_beer_score(beer, points, reason)` persists it and `admin_rule_beer`
@@ -151,6 +188,10 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ---
 
-_What's left, by effort-to-payoff: **Invite via QR / share link** is the last untouched admin
-nicety. **Push notifications** phase 1 (happy-hour start/end) and phase 2 (grand reveal) are live;
-remaining phases (audit nudges, challenge alerts) reuse the same pipeline._
+_What's left, by effort-to-payoff: cheapest wins are the frontend-only ideas — **"who's catching
+you"**, **"done for the night"**, **beer wall**, and **Trip Wrapped** (reuses existing stats RPCs).
+**Invite via QR / share link** remains the easy admin nicety. The richer competition mechanics
+(**streaks**, **teams**, **predictions**, **bounties**, **surprise power hour**) and **configurable
+scoring** each need a migration. **Push notifications** phase 1 (happy-hour) and phase 2 (grand
+reveal) are live; remaining phases (audit nudges, challenge alerts, hydration nudge) reuse the same
+pipeline. The 2026-06-04 brainstorm batch is now captured under each section's "Brainstormed" heading._
