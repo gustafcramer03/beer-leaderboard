@@ -74,8 +74,15 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   (`full_taken_at`); cell darkness ramps with intensity, tap a cell for its exact count, and a
   readout calls out the busiest hour. `heatmap_data` RPC is a pure group aggregate (no per-player
   data) so it shows even while the board is dark, like `trip_stats` group totals. `DrinkingHeatmap.tsx`.
-- [ ] **Brand / type tagging** — optionally tag what you drank, with stats by brand ("most loyal to
-  X"). _Needs migration (`beers.brand`/`type`) + log-flow input + a stats slice._
+- [x] **Brand / type tagging + Beer insights** 🍻 — _SHIPPED_ (migration 0036). Optional brand picker
+  in both log flows (online + offline) drawn from a catalogue of UK pub staples + Greek beers
+  (incl. Nymfi) in `lib/brands.ts`. Brand marks render as "colour chip + logo drop-in": `BrandBadge`
+  shows `/brands/{slug}.png` once the slug is registered in `LOGO_SLUGS`, else a brand-coloured name
+  pill (no copyrighted logos ship by default). Badges overlay the full-beer photo in the ledger and
+  audit deck. New Menu → "Beer insights" tab (`BeerInsights.tsx`): per-brand popularity bars, country
+  split, style split — backed by the `beer_insights` RPC (pure group aggregate, visible while dark).
+  Brand threaded through `log_offline_beer`/`user_ledger`/`audit_queue`/`admin_beers`.
+  _To light up a real logo: drop the PNG in `public/brands/` and add its slug to `LOGO_SLUGS`._
 
 ## ✨ UX polish (cheap, high "easier to use")
 
