@@ -69,8 +69,11 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
   diary. _Mostly frontend (signed URLs); maybe a lightweight listing RPC; gate while dark._
 - [ ] **Trip Wrapped** 🎁 — a Spotify-Wrapped-style swipeable end-of-trip recap (totals, biggest day,
   fastest chug, rival, a superlative). _Reuses existing stats RPCs; new full-screen reveal-time view._
-- [ ] **Drinking heatmap** — a clock/day grid showing when the group drinks most. _Needs an RPC
-  bucketing beers by local hour/day; frontend grid._
+- [x] **Drinking heatmap** 🔥 — _SHIPPED_ (migration 0035). Menu → "Drinking heatmap": a day × hour
+  grid of beer counts in the trip's local timezone, keyed on when each beer was cracked
+  (`full_taken_at`); cell darkness ramps with intensity, tap a cell for its exact count, and a
+  readout calls out the busiest hour. `heatmap_data` RPC is a pure group aggregate (no per-player
+  data) so it shows even while the board is dark, like `trip_stats` group totals. `DrinkingHeatmap.tsx`.
 - [ ] **Brand / type tagging** — optionally tag what you drank, with stats by brand ("most loyal to
   X"). _Needs migration (`beers.brand`/`type`) + log-flow input + a stats slice._
 
