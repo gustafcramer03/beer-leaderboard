@@ -315,6 +315,21 @@ export type AdminMember = {
   storage_bytes: number;
 };
 
+// A single beer surfaced in the DB-management photo browser (drill: trip →
+// member → beers → photos). Photo paths are resolved to signed URLs client-side.
+export type AdminMemberBeer = {
+  beer_id: string;
+  status: "open" | "pending" | "challenged" | "confirmed" | "rejected";
+  is_offline: boolean;
+  claimed_chug: boolean;
+  caption: string | null;
+  brand: string | null;
+  full_taken_at: string | null;
+  empty_taken_at: string | null;
+  full_photo_path: string | null;
+  empty_photo_path: string | null;
+};
+
 export type AdminStorageSummary = {
   total_photos: number;
   total_bytes: number;

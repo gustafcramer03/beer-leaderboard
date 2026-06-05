@@ -6,16 +6,20 @@
 // passes it to the server on every call too). Footer shows total storage used
 // as a percentage of the Supabase free-tier allowance.
 
-import { useCallback, useEffect, useState } from "react";
-import type { AdminTrip, AdminMember, AdminStorageSummary } from "@/lib/types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { AdminTrip, AdminMember, AdminMemberBeer, AdminStorageSummary } from "@/lib/types";
 import {
   adminListTrips,
   adminTripMembers,
+  adminMemberBeers,
   adminStorageSummary,
   adminDeleteTrip,
   adminDeleteMember,
+  signedUrl,
 } from "@/lib/api";
 import { Loading } from "./Loading";
+import { PhotoPreview } from "./PhotoPreview";
+import { BrandBadge } from "./BrandBadge";
 
 function fmtBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -224,6 +228,7 @@ function TripDetail({
   const [members, setMembers] = useState<AdminMember[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
+  const [openMember, setOpenMember] = useState<AdminMember | null>(null);
 
   const loadMembers = useCallback(async () => {
     setError(null);
@@ -258,6 +263,17 @@ function TripDetail({
     }
   }
 
+  if (openMember) {
+    return (
+      <MemberBeers
+        password={password}
+        trip={trip}
+        member={openMember}
+        onBack={() => setOpenMember(null)}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <button onClick={onBack} className="self-start text-sm text-faint">
@@ -282,24 +298,31 @@ function TripDetail({
       )}
 
       <h4 className="mt-1 text-sm font-semibold text-muted">Members</h4>
+      <p className="-mt-1 text-xs text-faint">Tap a member to browse their beers and photos.</p>
       <ul className="flex flex-col gap-2">
         {members?.map((m) => (
           <li
             key={m.user_id}
             className="card flex items-center justify-between gap-3 p-3"
           >
-            <div className="min-w-0">
-              <div className="truncate font-medium">
-                {m.display_name}
-                {m.is_admin && <span className="ml-1 text-xs text-accent">(admin)</span>}
+            <button
+              onClick={() => setOpenMember(m)}
+              className="press -m-1 flex min-w-0 flex-1 items-center gap-2 rounded-xl p-1 text-left"
+            >
+              <div className="min-w-0">
+                <div className="truncate font-medium">
+                  {m.display_name}
+                  {m.is_admin && <span className="ml-1 text-xs text-accent">(admin)</span>}
+                </div>
+                <div className="text-xs text-muted">
+                  {m.beer_count} beer{m.beer_count === 1 ? "" : "s"} · {m.photo_count} photo
+                  {m.photo_count === 1 ? "" : "s"} · {fmtBytes(m.storage_bytes)}
+                </div>
               </div>
-              <div className="text-xs text-muted">
-                {m.beer_count} beer{m.beer_count === 1 ? "" : "s"} · {m.photo_count} photo
-                {m.photo_count === 1 ? "" : "s"} · {fmtBytes(m.storage_bytes)}
-              </div>
-            </div>
+              <span className="text-faint">›</span>
+            </button>
             {m.is_admin ? (
-              <span className="text-xs text-faint">trip owner</span>
+              <span className="shrink-0 text-xs text-faint">trip owner</span>
             ) : (
               <button
                 onClick={() => removeMember(m)}
@@ -326,6 +349,218 @@ function TripDetail({
       >
         {busy ? "Deleting…" : "🗑️ Delete this trip entirely"}
       </button>
+    </div>
+  );
+}
+
+function fmtBeerDate(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+}
+function fmtBeerTime(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+// Drill-down: one member's beers with their full/empty photos. Mirrors the
+// scoreboard ledger (tap a beer to reveal its photos) but read-only and sourced
+// from the password-gated admin RPC so it works for any trip.
+function MemberBeers({
+  password,
+  trip,
+  member,
+  onBack,
+}: {
+  password: string;
+  trip: AdminTrip;
+  member: AdminMember;
+  onBack: () => void;
+}) {
+  const [beers, setBeers] = useState<AdminMemberBeer[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const data = await adminMemberBeers(password, trip.id, member.user_id);
+        if (active) setBeers(data);
+      } catch (e) {
+        if (active) setError(e instanceof Error ? e.message : "Could not load beers.");
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [password, trip.id, member.user_id]);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <button onClick={onBack} className="self-start text-sm text-faint">
+        ← {trip.name}
+      </button>
+
+      <div className="card p-4">
+        <h3 className="text-lg font-bold">
+          {member.display_name}
+          {member.is_admin && <span className="ml-1 text-xs text-accent">(admin)</span>}
+        </h3>
+        <p className="text-xs text-muted">
+          {member.beer_count} beer{member.beer_count === 1 ? "" : "s"} · {member.photo_count} photo
+          {member.photo_count === 1 ? "" : "s"} · {fmtBytes(member.storage_bytes)}
+        </p>
+      </div>
+
+      {error && (
+        <p className="rounded-card border border-accent/40 bg-accent-soft p-3 text-center text-sm text-accent-strong">
+          {error}
+        </p>
+      )}
+
+      {!error && beers && beers.length === 0 && (
+        <p className="rounded-2xl bg-surface-muted p-6 text-center text-sm text-muted">
+          No beers with photos in this trip.
+        </p>
+      )}
+      {!error && !beers && <p className="p-4 text-center text-sm text-muted">Loading…</p>}
+
+      <ul className="flex flex-col gap-2">
+        {beers?.map((b) => {
+          const open = openId === b.beer_id;
+          return (
+            <li
+              key={b.beer_id}
+              className={`overflow-hidden rounded-card shadow-card ${
+                b.is_offline ? "bg-accent-soft ring-1 ring-accent/30" : "bg-surface"
+              }`}
+            >
+              <button
+                onClick={() => setOpenId(open ? null : b.beer_id)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+              >
+                <div className="flex min-w-0 flex-col gap-1">
+                  <span className="text-sm font-medium">
+                    {fmtBeerDate(b.full_taken_at ?? b.empty_taken_at)} ·{" "}
+                    {fmtBeerTime(b.full_taken_at ?? b.empty_taken_at)}
+                  </span>
+                  <span className="flex flex-wrap items-center gap-1 text-[11px] text-muted">
+                    <span className="rounded-full bg-surface-muted px-2 py-0.5 font-medium capitalize">
+                      {b.status}
+                    </span>
+                    {b.claimed_chug && (
+                      <span className="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent-strong">
+                        Chug 🍺×2
+                      </span>
+                    )}
+                    {b.is_offline && (
+                      <span className="rounded-full bg-sky-100 px-2 py-0.5 font-medium text-sky-700">
+                        🛜 Offline
+                      </span>
+                    )}
+                  </span>
+                  {b.caption && (
+                    <span className="truncate text-sm italic text-muted">&ldquo;{b.caption}&rdquo;</span>
+                  )}
+                </div>
+                <span className="text-faint">{open ? "▲" : "▼"}</span>
+              </button>
+              {open && <AdminBeerPhotos beer={b} />}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function AdminBeerPhotos({ beer }: { beer: AdminMemberBeer }) {
+  const [urls, setUrls] = useState<{ full: string | null; empty: string | null } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const [full, empty] = await Promise.all([
+        beer.full_photo_path ? signedUrl(beer.full_photo_path) : Promise.resolve(null),
+        beer.empty_photo_path ? signedUrl(beer.empty_photo_path) : Promise.resolve(null),
+      ]);
+      if (active) setUrls({ full, empty });
+    })();
+    return () => {
+      active = false;
+    };
+  }, [beer]);
+
+  return (
+    <div className="grid grid-cols-2 gap-2 border-t border-line px-4 py-3">
+      <AdminPhoto
+        url={urls?.full ?? null}
+        label="FULL"
+        time={fmtBeerTime(beer.full_taken_at)}
+        brand={beer.brand}
+      />
+      <AdminPhoto url={urls?.empty ?? null} label="EMPTY" time={fmtBeerTime(beer.empty_taken_at)} />
+    </div>
+  );
+}
+
+function AdminPhoto({
+  url,
+  label,
+  time,
+  brand,
+}: {
+  url: string | null;
+  label: string;
+  time: string;
+  brand?: string | null;
+}) {
+  const [preview, setPreview] = useState(false);
+  const down = useRef<{ x: number; y: number } | null>(null);
+
+  return (
+    <div
+      className="relative aspect-square overflow-hidden rounded-xl bg-surface-muted"
+      onPointerDown={(e) => {
+        down.current = { x: e.clientX, y: e.clientY };
+      }}
+      onPointerUp={(e) => {
+        const d = down.current;
+        down.current = null;
+        if (!url || !d) return;
+        if (Math.abs(e.clientX - d.x) < 8 && Math.abs(e.clientY - d.y) < 8) setPreview(true);
+      }}
+    >
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt={label}
+          draggable={false}
+          className="h-full w-full select-none object-cover"
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center text-faint">…</div>
+      )}
+      <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[10px] font-bold text-white">
+        {label}
+      </span>
+      <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1 text-[10px] text-white">
+        {time}
+      </span>
+      {url && (
+        <span className="pointer-events-none absolute right-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+          🔍
+        </span>
+      )}
+      {url && brand && (
+        <span className="pointer-events-none absolute bottom-1 left-1">
+          <BrandBadge slug={brand} overlay size="xs" />
+        </span>
+      )}
+      {preview && url && (
+        <PhotoPreview url={url} label={label} onClose={() => setPreview(false)} />
+      )}
     </div>
   );
 }

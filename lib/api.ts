@@ -11,6 +11,7 @@ import type {
   TripStats,
   AdminTrip,
   AdminMember,
+  AdminMemberBeer,
   AdminStorageSummary,
   HappyHourStatus,
   Achievements,
@@ -530,6 +531,22 @@ export async function adminTripMembers(
   });
   if (error) throw error;
   return (data as AdminMember[]) ?? [];
+}
+
+// A member's beers (with photo paths) for the DB-management photo browser.
+// Password-gated server-side; works for any trip regardless of membership.
+export async function adminMemberBeers(
+  password: string,
+  holidayId: string,
+  userId: string,
+): Promise<AdminMemberBeer[]> {
+  const { data, error } = await supabase.rpc("admin_member_beers", {
+    p_password: password,
+    p_holiday: holidayId,
+    p_user: userId,
+  });
+  if (error) throw error;
+  return (data as AdminMemberBeer[]) ?? [];
 }
 
 export async function adminStorageSummary(password: string): Promise<AdminStorageSummary> {
