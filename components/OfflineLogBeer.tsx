@@ -112,7 +112,7 @@ export function OfflineLogBeer({
           onChange={(e) => setChug(e.target.checked)}
           className="h-5 w-5 accent-amber-500"
         />
-        I chugged this one (claim 🍺×2 — also judged by the time gap)
+        I chugged this one (claim 🍺×2)
       </label>
 
       <div className="flex w-full max-w-xs flex-col gap-1">

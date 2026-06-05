@@ -141,7 +141,7 @@ export function LogBeer({
       <p className="max-w-xs text-center text-sm text-muted">
         {step === "full"
           ? "Snap your full pint to start. The clock starts now (server time)."
-          : "Drink up, then snap the empty glass to finish. A gap under 60s counts as a chug (🍺×2)."}
+          : "Drink up, then snap the empty glass to finish. Tick “I chugged it” below to claim a chug (🍺×2)."}
       </p>
 
       {step === "full" && (
@@ -191,7 +191,7 @@ export function LogBeer({
               onChange={(e) => setChug(e.target.checked)}
               className="h-5 w-5 accent-amber-500"
             />
-            I chugged this one (claim 🍺×2 — verified by timestamps)
+            I chugged this one (claim 🍺×2)
           </label>
           <div className="flex w-full max-w-xs flex-col gap-1">
             <input

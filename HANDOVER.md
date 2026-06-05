@@ -32,7 +32,7 @@ First real-world use will be a trip in **Greece**.
 - Photo path convention: `{holiday_id}/{beer_id}/{full|empty}.jpg`.
 
 ## Scoring (lives in Postgres — keep all readers in sync!)
-Per-beer points: base 1; **chug ×2** (≤60s or claimed) or **chain ×N** (finishes within 5 min climb a run) — take the higher, they don't stack; then additive **+1** each for **morning** (start 07–10), **happy hour** (one deterministic random hour/day), **early bird** (group's first finish of the day) and **night owl** (group's last finish, only if after midnight). `score_override` beats everything; rejected = 0.
+Per-beer points: base 1; **chug ×2** (only when the logger ticked "I chugged it" — `claimed_chug`; a ≤60s photo gap no longer auto-counts, changed in migration 0038) or **chain ×N** (finishes within 5 min climb a run) — take the higher, they don't stack; then additive **+1** each for **morning** (start 07–10), **happy hour** (one deterministic random hour/day), **early bird** (group's first finish of the day) and **night owl** (group's last finish, only if after midnight). `score_override` beats everything; rejected = 0.
 Readers that must agree: `compute_standings`, `user_ledger`, `audit_queue`, `trip_stats`, `pace_series`, `admin_beers` — **plus the UI** (`RuleBook.tsx`, badges in `PlayerLedger.tsx`). If you change scoring, update all of them.
 
 ## Deploy & migration mechanics

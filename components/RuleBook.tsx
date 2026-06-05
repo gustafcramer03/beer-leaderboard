@@ -124,9 +124,10 @@ export function RuleBook({ onClose }: { onClose: () => void }) {
                 worth <span className="font-semibold">1 point</span>.
               </li>
               <li>
-                <Badge label="Chug 🍺×2" cls="bg-accent-soft text-accent-strong" /> Chug it — empty within
-                60 seconds of the full photo, or you ticked &quot;I chugged it&quot; — and it&apos;s
-                worth <span className="font-semibold">2 points</span>.
+                <Badge label="Chug 🍺×2" cls="bg-accent-soft text-accent-strong" /> Chug it — tick{" "}
+                <span className="font-semibold">&quot;I chugged it&quot;</span> when you log the beer
+                and it&apos;s worth <span className="font-semibold">2 points</span>. (Only the tick
+                counts — a quick gap between photos doesn&apos;t earn it automatically.)
               </li>
               <li>
                 <Badge label="Chain ×N" cls="bg-purple-100 text-purple-700" /> Beers in quick

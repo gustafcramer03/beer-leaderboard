@@ -92,7 +92,6 @@ export function AuditDeck({
   if (!current) return null;
 
   const gap = secondsBetween(current.full_taken_at, current.empty_taken_at);
-  const looksChugged = gap <= 60;
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -173,9 +172,14 @@ export function AuditDeck({
           />
         </div>
         <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs">
-          {(current.claimed_chug || looksChugged) && (
+          {current.claimed_chug && (
             <span className="rounded-full bg-accent-soft px-2 py-1 text-accent-strong">
-              {current.claimed_chug ? "claims chug" : "looks chugged"} 🍺×2
+              claims chug 🍺×2
+            </span>
+          )}
+          {!current.claimed_chug && gap <= 60 && (
+            <span className="rounded-full bg-surface-muted px-2 py-1 text-muted">
+              fast finish ({fmtGap(gap)}) · not claimed
             </span>
           )}
           {current.is_morning && (
