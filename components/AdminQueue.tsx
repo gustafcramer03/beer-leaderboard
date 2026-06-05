@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import type { ChallengedBeer } from "@/lib/types";
-import { challengedBeers, adminRuleBeer, adminSetBeerScore, signedUrl } from "@/lib/api";
+import type { AdminBeer } from "@/lib/types";
+import { getAdminBeers, adminRuleBeer, adminSetBeerScore, signedUrl } from "@/lib/api";
 import { Loading } from "./Loading";
 import { PhotoPreview } from "./PhotoPreview";
 
@@ -20,15 +20,29 @@ function stamp(iso: string) {
   });
 }
 
+// The active multipliers/bonuses on a beer, as labelled pills, so the admin can
+// see at a glance why it's worth what it's worth before adjusting the score.
+function beerFlags(b: AdminBeer): string[] {
+  const flags: string[] = [];
+  if (b.is_offline) flags.push("🛜 Offline");
+  if (b.claimed_chug || b.is_chug) flags.push("🍺×2 Chug");
+  if (b.is_morning) flags.push("🌅 Morning +1");
+  if (b.is_happy_hour) flags.push("🍻 Happy hour +1");
+  if (b.is_early_bird) flags.push("🐦 Early bird +1");
+  if (b.is_night_owl) flags.push("🦉 Night owl +1");
+  return flags;
+}
+
 export function AdminQueue({ holidayId }: { holidayId: string }) {
-  const [beers, setBeers] = useState<ChallengedBeer[]>([]);
+  const [beers, setBeers] = useState<AdminBeer[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setBeers(await challengedBeers(holidayId));
+      const all = await getAdminBeers(holidayId);
+      setBeers(all.filter((b) => b.status === "challenged"));
     } catch (e) {
       console.error(e);
     } finally {
@@ -81,9 +95,9 @@ export function AdminQueue({ holidayId }: { holidayId: string }) {
       <h2 className="text-lg font-bold">Challenged beers — your ruling</h2>
       {beers.map((b) => (
         <AdminCard
-          key={b.id}
+          key={b.beer_id}
           beer={b}
-          busy={busyId === b.id}
+          busy={busyId === b.beer_id}
           onRule={rule}
           onSetScore={setScore}
         />
@@ -98,7 +112,7 @@ function AdminCard({
   onRule,
   onSetScore,
 }: {
-  beer: ChallengedBeer;
+  beer: AdminBeer;
   busy: boolean;
   onRule: (id: string, d: "confirm" | "reject", reason: string) => void;
   onSetScore: (id: string, points: number, reason: string) => void;
@@ -108,7 +122,7 @@ function AdminCard({
     empty: null,
   });
   const [editing, setEditing] = useState(false);
-  const [points, setPoints] = useState(1);
+  const [points, setPoints] = useState(beer.points);
   const [reason, setReason] = useState("");
   const [preview, setPreview] = useState<{ url: string; label: string } | null>(null);
 
@@ -128,25 +142,40 @@ function AdminCard({
           (new Date(beer.empty_taken_at).getTime() - new Date(beer.full_taken_at).getTime()) / 1000,
         )
       : null;
-  const looksChugged = gap !== null && gap <= 60;
+
+  const flags = beerFlags(beer);
 
   return (
     <div className="rounded-2xl bg-white p-4 shadow dark:bg-neutral-800">
       {/* Who & what */}
       <div className="mb-2 flex flex-col items-center gap-1 text-center">
         <p className="font-bold">{beer.owner_name}</p>
-        <div className="flex flex-wrap justify-center gap-1.5 text-[11px]">
-          {beer.is_offline && (
-            <span className="rounded-full bg-sky-100 px-2 py-0.5 font-medium text-sky-700">
-              🛜 Offline
-            </span>
-          )}
-          {(beer.claimed_chug || looksChugged) && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700">
-              {beer.claimed_chug ? "claims chug" : "looks chugged"} 🍺×2
-            </span>
-          )}
+      </div>
+
+      {/* Currently due — the computed score + the multipliers behind it */}
+      <div className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-center dark:bg-amber-900/20">
+        <div className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+          Currently worth
         </div>
+        <div className="text-2xl font-black tabular-nums text-amber-700 dark:text-amber-300">
+          {beer.points} pts
+        </div>
+        {flags.length > 0 ? (
+          <div className="mt-1.5 flex flex-wrap justify-center gap-1.5 text-[11px]">
+            {flags.map((f) => (
+              <span
+                key={f}
+                className="rounded-full bg-white px-2 py-0.5 font-medium text-amber-800 shadow-sm dark:bg-neutral-800 dark:text-amber-200"
+              >
+                {f}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-1 text-[11px] text-amber-700/70 dark:text-amber-300/70">
+            Base beer · no bonuses
+          </div>
+        )}
       </div>
 
       {/* Timing — when each shot was taken + the gap */}
@@ -212,7 +241,7 @@ function AdminCard({
       {editing && (
         <div className="mt-3 flex flex-col gap-2 rounded-xl bg-neutral-50 p-3 dark:bg-neutral-900/40">
           <p className="text-center text-xs text-neutral-500">
-            Accept this beer but set its points by hand:
+            Accept this beer but set its points by hand (computed: {beer.points}):
           </p>
           <div className="flex items-center justify-center gap-3">
             <button
@@ -253,7 +282,7 @@ function AdminCard({
             </button>
             <button
               disabled={busy}
-              onClick={() => onSetScore(beer.id, points, reason)}
+              onClick={() => onSetScore(beer.beer_id, points, reason)}
               className="flex-1 rounded-full bg-green-500 py-2 font-semibold text-white disabled:opacity-40"
             >
               Save {points} pts
@@ -267,21 +296,24 @@ function AdminCard({
         <div className="mt-3 flex gap-2">
           <button
             disabled={busy}
-            onClick={() => onRule(beer.id, "confirm", reason)}
+            onClick={() => onRule(beer.beer_id, "confirm", reason)}
             className="flex-1 rounded-full bg-green-500 py-2 text-sm font-semibold text-white disabled:opacity-40"
           >
             Uphold ✓
           </button>
           <button
             disabled={busy}
-            onClick={() => setEditing(true)}
+            onClick={() => {
+              setPoints(beer.points);
+              setEditing(true);
+            }}
             className="flex-1 rounded-full bg-amber-500 py-2 text-sm font-semibold text-white disabled:opacity-40"
           >
             Set score ✎
           </button>
           <button
             disabled={busy}
-            onClick={() => onRule(beer.id, "reject", reason)}
+            onClick={() => onRule(beer.beer_id, "reject", reason)}
             className="flex-1 rounded-full bg-red-500 py-2 text-sm font-semibold text-white disabled:opacity-40"
           >
             Reject ✕
