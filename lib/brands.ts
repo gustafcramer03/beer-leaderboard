@@ -72,6 +72,7 @@ export const BRANDS: Brand[] = [
   { slug: "corona", name: "Corona", country: "International", kind: "lager", colour: "#d9b310" },
   { slug: "estrella-damm", name: "Estrella Damm", country: "International", kind: "lager", colour: "#c8102e" },
   { slug: "san-miguel", name: "San Miguel", country: "International", kind: "lager", colour: "#c8102e" },
+  { slug: "cruzcampo", name: "Cruzcampo", country: "International", kind: "lager", colour: "#e1231a" },
   { slug: "amstel", name: "Amstel", country: "International", kind: "lager", colour: "#d4151c" },
   { slug: "kronenbourg", name: "Kronenbourg 1664", country: "International", kind: "lager", colour: "#0a4ea3" },
   { slug: "coors", name: "Coors", country: "International", kind: "lager", colour: "#b01c2e" },
