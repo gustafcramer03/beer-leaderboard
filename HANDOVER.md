@@ -75,6 +75,14 @@ Migrations through **0036** are applied. Feature highlights (full list in `ROADM
   is gated by the management password (`ADMIN_DB_PASSWORD`, defaults to the `'password'` placeholder).
   **New Vercel env var: `SUPABASE_SERVICE_ROLE_KEY`** (production + preview, server-only — never
   expose client-side). Retrieve it from the Supabase dashboard or `GET /v1/projects/<ref>/api-keys?reveal=true`.
+- **Polish & optimisation pass** (2026-06-08, frontend-only — no migration) — perceived-speed wins
+  (batched photo signing via `signedUrls` in `lib/api.ts`, audit next-card preload, cached `avatarUrl`,
+  visibility-gated polling, lazy images, lazy confetti), consistency (focus rings, `.press` sweep,
+  `font-display` on screen titles, active bottom-nav indicator), and intuitive flows (log Step 1/2,
+  brand-picker Other chip, audit labels/skeleton + retry-on-fail). **New shared infra:** global toasts —
+  `components/Toast.tsx` exports `ToastProvider` (mounted in `AppRoot`) + `useToast()` (`toast(msg,
+  "success"|"error"|"info")`); and `components/ErrorBox.tsx` for token-styled error callouts. Reuse these
+  rather than re-rolling feedback UI.
 - **Frontend refresh** (2026-06-05, frontend-only — no migration) — `next/font` (Fraunces + Plus
   Jakarta Sans) replaces the old Arial fallback; semantic design tokens in `globals.css`
   (surface/text/line/accent, auto-flipping dark mode) + `.card`/`.press` + elevation shadows; faster

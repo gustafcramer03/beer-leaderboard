@@ -168,6 +168,7 @@ export function PhotoPreview({
           src={url}
           alt={label ?? "photo"}
           draggable={false}
+          decoding="async"
           className="h-full w-full object-contain"
           style={{
             transform: `translate(${tx}px, ${ty}px) scale(${scale})`,

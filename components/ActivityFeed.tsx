@@ -5,6 +5,7 @@ import { getActivityFeed } from "@/lib/api";
 import type { ActivityEvent } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { SkeletonCards } from "./Loading";
+import { ErrorBox } from "./ErrorBox";
 
 // Live "what's happening" ticker — only the bigger moments (never every beer).
 // Reverse-chron, polls every 45s and on window focus so the trip feels alive
@@ -44,20 +45,24 @@ export function ActivityFeed({
   useEffect(() => {
     let active = true;
     load();
-    const id = setInterval(() => active && load(), 45_000);
-    const onFocus = () => active && load();
-    window.addEventListener("focus", onFocus);
+    // Poll only while the tab is actually visible — no point fetching (or
+    // draining battery) for a backgrounded app. Refetch once on return.
+    const id = setInterval(() => active && !document.hidden && load(), 45_000);
+    const onVisible = () => active && !document.hidden && load();
+    window.addEventListener("focus", onVisible);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       active = false;
       clearInterval(id);
-      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("focus", onVisible);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [load]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
-        <h2 className="text-lg font-bold">📰 What&apos;s happening</h2>
+        <h2 className="font-display text-lg font-bold">📰 What&apos;s happening</h2>
         <button
           onClick={onClose}
           className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
@@ -70,7 +75,7 @@ export function ActivityFeed({
         <div className="mx-auto flex max-w-md flex-col gap-2 p-4">
           {loading && events === null && !dark && <SkeletonCards count={5} />}
 
-          {error && <p className="p-6 text-center text-sm text-red-600">{error}</p>}
+          {error && <ErrorBox className="m-4">{error}</ErrorBox>}
 
           {dark && (
             <p className="p-8 text-center text-sm text-muted">

@@ -20,6 +20,8 @@ import {
 import { Loading } from "./Loading";
 import { PhotoPreview } from "./PhotoPreview";
 import { BrandBadge } from "./BrandBadge";
+import { ErrorBox } from "./ErrorBox";
+import { useToast } from "./Toast";
 
 function fmtBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -51,7 +53,7 @@ export function DbManagement({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
-        <h2 className="text-lg font-bold">🗄️ DB Management</h2>
+        <h2 className="font-display text-lg font-bold">🗄️ DB Management</h2>
         <button
           onClick={onClose}
           className="rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
@@ -97,6 +99,7 @@ function Dashboard({ password }: { password: string }) {
   const [selected, setSelected] = useState<AdminTrip | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { toast } = useToast();
 
   const load = useCallback(async () => {
     setError(null);
@@ -129,8 +132,11 @@ function Dashboard({ password }: { password: string }) {
       await adminDeleteTrip(password, trip.id);
       setSelected(null);
       await load();
+      toast(`Deleted "${trip.name}"`, "success");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Delete failed.");
+      const m = e instanceof Error ? e.message : "Delete failed.";
+      setError(m);
+      toast(m, "error");
     } finally {
       setBusy(false);
     }
@@ -140,9 +146,7 @@ function Dashboard({ password }: { password: string }) {
     return (
       <div className="flex flex-1 flex-col">
         <div className="flex-1 p-4">
-          <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600">
-            {error}
-          </p>
+          <ErrorBox>{error}</ErrorBox>
           <button onClick={load} className="mx-auto mt-4 block rounded-full border px-4 py-2 text-sm">
             Retry
           </button>
@@ -229,6 +233,7 @@ function TripDetail({
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const [openMember, setOpenMember] = useState<AdminMember | null>(null);
+  const { toast } = useToast();
 
   const loadMembers = useCallback(async () => {
     setError(null);
@@ -256,8 +261,11 @@ function TripDetail({
       await adminDeleteMember(password, trip.id, m.user_id);
       await loadMembers();
       await onChanged();
+      toast(`Removed ${m.display_name}`, "success");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Remove failed.");
+      const msg = e instanceof Error ? e.message : "Remove failed.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setWorking(false);
     }
@@ -292,9 +300,7 @@ function TripDetail({
       </div>
 
       {error && (
-        <p className="rounded-2xl border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600">
-          {error}
-        </p>
+        <ErrorBox className="p-3">{error}</ErrorBox>
       )}
 
       <h4 className="mt-1 text-sm font-semibold text-muted">Members</h4>
@@ -549,6 +555,8 @@ function AdminPhoto({
           src={url}
           alt={label}
           draggable={false}
+          loading="lazy"
+          decoding="async"
           className="h-full w-full select-none object-cover"
         />
       ) : (

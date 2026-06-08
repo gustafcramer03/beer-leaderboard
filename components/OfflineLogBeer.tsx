@@ -6,6 +6,7 @@ import { BrandPicker } from "./BrandPicker";
 import { logOfflineBeer } from "@/lib/api";
 import { readPhotoTime } from "@/lib/exif";
 import { celebrateBeer, celebrateChug } from "@/lib/celebrate";
+import { useToast } from "./Toast";
 
 // Logging a beer that was drunk with no signal (plane, ferry). You pick the two
 // shots you already took from your camera roll; we read each photo's capture time
@@ -43,6 +44,7 @@ export function OfflineLogBeer({
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   async function pick(which: "full" | "empty", file: File) {
     const t = await readPhotoTime(file);
@@ -68,9 +70,12 @@ export function OfflineLogBeer({
       await logOfflineBeer(holidayId, full.file, empty.file, fullISO, emptyISO, chug, caption, brand);
       if (chug) celebrateChug();
       else celebrateBeer();
+      toast(chug ? "Offline chug logged 🍺×2" : "Offline beer logged 🍺", "success");
       setDone(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      const m = e instanceof Error ? e.message : "Something went wrong";
+      setError(m);
+      toast(m, "error");
     } finally {
       setBusy(false);
     }
@@ -80,13 +85,13 @@ export function OfflineLogBeer({
     return (
       <div className="flex flex-col items-center gap-4 p-6 text-center">
         <div className="text-6xl">🛜🍺</div>
-        <h2 className="text-xl font-bold">Offline beer logged!</h2>
+        <h2 className="font-display text-xl font-bold">Offline beer logged!</h2>
         <p className="text-sm text-muted">
           It&apos;s in the audit queue, tagged as logged offline. Scores update hourly.
         </p>
         <button
           onClick={onDone}
-          className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast"
+          className="press rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast"
         >
           Done
         </button>
@@ -96,7 +101,7 @@ export function OfflineLogBeer({
 
   return (
     <div className="flex flex-col items-center gap-5 p-6">
-      <h2 className="text-xl font-bold">Log an offline beer</h2>
+      <h2 className="font-display text-xl font-bold">Log an offline beer</h2>
       <p className="max-w-xs text-center text-sm text-muted">
         No signal at the time? Pick the full and empty shots from your camera roll. We read the
         time each photo was taken for scoring.
@@ -135,12 +140,12 @@ export function OfflineLogBeer({
       <button
         disabled={!canSubmit}
         onClick={submit}
-        className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast disabled:opacity-40"
+        className="press rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast disabled:opacity-40"
       >
         {busy ? "Uploading…" : "Log offline beer 🍺"}
       </button>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-bad">{error}</p>}
       <button onClick={onCancel} className="text-sm text-faint underline">
         Cancel
       </button>

@@ -105,7 +105,7 @@ export function DailyRecapView({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
-        <h2 className="text-lg font-bold">🌅 Daily recap</h2>
+        <h2 className="font-display text-lg font-bold">🌅 Daily recap</h2>
         <button
           onClick={onClose}
           className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
@@ -147,7 +147,7 @@ function RecapBody({ recap, date }: { recap: NonNullable<RecapData["recap"]>; da
     <div>
       <div className="bg-gradient-to-b from-amber-400 to-yellow-500 px-6 pb-5 pt-6 text-center text-white">
         <div className="text-5xl">🌅</div>
-        <h2 className="mt-1 text-lg font-black uppercase tracking-wide">Daily recap</h2>
+        <h2 className="mt-1 font-display text-lg font-black uppercase tracking-wide">Daily recap</h2>
         <p className="text-xs text-amber-50/90">{dayLabel(date)}</p>
         <p className="mt-3 text-4xl font-black">
           {recap.total_beers} <span className="text-2xl">🍺</span>

@@ -56,6 +56,8 @@ export function Avatar({
       alt=""
       width={size}
       height={size}
+      loading="lazy"
+      decoding="async"
       style={{ width: size, height: size }}
       onError={() => setBroken(true)}
       className={`shrink-0 rounded-full bg-accent-soft ${

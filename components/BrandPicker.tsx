@@ -78,9 +78,15 @@ export function BrandPicker({
 
       {matches ? (
         matches.length === 0 ? (
-          <p className="text-center text-xs text-faint">
-            No match. Pick “Other / unknown”, or leave it untagged.
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-center text-xs text-faint">
+              No match for “{q.trim()}”. Tag it as Other, or leave it untagged.
+            </p>
+            {(() => {
+              const other = getBrand("other");
+              return other ? chip(other.slug, other.name, other.colour) : null;
+            })()}
+          </div>
         ) : (
           <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
             {matches.map((b) => chip(b.slug, b.name, b.colour))}

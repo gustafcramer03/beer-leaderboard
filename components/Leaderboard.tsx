@@ -186,11 +186,17 @@ export function Leaderboard({
   }, [refreshSignal, reconcile, onRefreshSettled]);
 
   // Quietly re-fetch when the board tab is re-activated (off→on), so switching
-  // back from another tab shows fresh numbers without a skeleton flash.
+  // back from another tab shows fresh numbers without a skeleton flash. Guarded
+  // by a short min-interval so rapid tab toggles don't fire duplicate fetches.
   const prevActive = useRef(active);
+  const lastQuietLoad = useRef(0);
   useEffect(() => {
     if (active && !prevActive.current) {
-      load(peekRef.current, true);
+      const now = Date.now();
+      if (now - lastQuietLoad.current > 5000) {
+        lastQuietLoad.current = now;
+        load(peekRef.current, true);
+      }
     }
     prevActive.current = active;
   }, [active, load]);
@@ -308,7 +314,7 @@ export function Leaderboard({
         </div>
         <button
           onClick={() => setShowReveal(true)}
-          className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-7 py-4 text-lg font-bold text-white shadow-lg active:scale-95"
+          className="press rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-7 py-4 text-lg font-bold text-white shadow-lg"
         >
           🍺 Find out who&apos;s top of the hops
         </button>
@@ -341,7 +347,7 @@ export function Leaderboard({
           {standings.length > 0 && (
             <button
               onClick={() => setShowReveal(true)}
-              className="mt-3 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold backdrop-blur active:scale-95"
+              className="press mt-3 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold backdrop-blur"
             >
               ▶️ Replay the reveal
             </button>

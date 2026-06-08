@@ -141,15 +141,24 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
 
   useEffect(() => {
     if (!gateCleared) return;
-    refreshBadges();
-    const id = setInterval(refreshBadges, 60_000);
-    const onFocus = () => refreshBadges();
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onFocus);
+    // Poll only while visible, and coalesce the focus + visibilitychange events
+    // (both fire on tab-return) so we don't double-fetch on every switch back.
+    let last = 0;
+    const tick = () => {
+      if (document.hidden) return;
+      const now = Date.now();
+      if (now - last < 3000) return;
+      last = now;
+      refreshBadges();
+    };
+    tick();
+    const id = setInterval(tick, 60_000);
+    window.addEventListener("focus", tick);
+    document.addEventListener("visibilitychange", tick);
     return () => {
       clearInterval(id);
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onFocus);
+      window.removeEventListener("focus", tick);
+      document.removeEventListener("visibilitychange", tick);
     };
   }, [gateCleared, refreshBadges]);
 
@@ -269,7 +278,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
         </AnimatePresence>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-center justify-around border-t border-line bg-surface pt-2 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-nav">
+      <nav aria-label="Main navigation" className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-center justify-around border-t border-line bg-surface pt-2 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-nav">
         <TabButton active={tab === "board"} onClick={() => setTab("board")} icon="🏆" label="Board" />
         <button
           onClick={() => setTab("log")}
@@ -605,13 +614,20 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`relative flex flex-col items-center gap-0.5 px-4 text-xs ${
+      aria-current={active ? "page" : undefined}
+      className={`press relative flex flex-col items-center gap-0.5 px-4 text-xs ${
         active ? "text-accent" : "text-faint"
       }`}
     >
       {badge > 0 && <CountBubble count={badge} className="right-1 -top-1" />}
-      <span className="text-xl">{icon}</span>
-      {label}
+      <span
+        className={`flex h-8 w-12 items-center justify-center rounded-full text-xl transition-colors ${
+          active ? "bg-accent-soft" : ""
+        }`}
+      >
+        {icon}
+      </span>
+      <span className={active ? "font-semibold" : ""}>{label}</span>
     </button>
   );
 }

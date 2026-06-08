@@ -114,4 +114,11 @@ body {
       transform: none;
     }
   }
+
+  /* Visible keyboard-focus ring (pointer taps don't trigger :focus-visible, so
+     this stays out of the way on touch). */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 }

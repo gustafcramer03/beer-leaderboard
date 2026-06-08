@@ -86,6 +86,18 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ## ✨ UX polish (cheap, high "easier to use")
 
+- [x] **Polish & optimisation pass** ✨ — _SHIPPED_ (2026-06-08). Perceived speed: batch beer-photo
+  signing (`signedUrls`), audit deck preloads the next card's photos, in-memory avatar-URL cache,
+  polling pauses while the tab is hidden (activity feed + nav badges) and the board's quiet refetch is
+  rate-guarded, `loading="lazy"`/`decoding="async"` on photos, and `canvas-confetti` lazy-loads on first
+  use. Crispness: keyboard `:focus-visible` ring, finished the `.press` sweep, `font-display` on all
+  screen/modal titles, unified photo radii, and a clear active **bottom-nav** indicator (accent pill +
+  weight + `aria-current`, `<nav>` landmark). Intuitive: log flow shows a **Step 1/2** indicator + clearer
+  button labels + success copy, the brand picker surfaces an explicit **Other** chip on no-match, the audit
+  deck shows the LEGIT/CHALLENGE labels at rest + a photo skeleton + no longer silently skips a failed
+  vote, and a reusable token-styled `ErrorBox` replaced the ad-hoc red boxes (which broke in dark mode).
+  New: a lightweight global **toast** system (`components/Toast.tsx`, `useToast()`) wired into beer-logged,
+  log/audit errors, admin rulings/score, and DB-management actions.
 - [x] **Frontend refresh — typography, tokens, depth + motion** ✨ — _SHIPPED_ (2026-06-05).
   Wired `next/font` (Fraunces display + Plus Jakarta Sans body) onto `<html>`, replacing the silent
   Arial fallback. Added a semantic design-token layer in `globals.css` (`surface`/`text`/`line`/

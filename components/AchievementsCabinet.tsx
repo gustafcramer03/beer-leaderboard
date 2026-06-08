@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import type { Achievements } from "@/lib/types";
 import { getAchievements } from "@/lib/api";
 import { Loading } from "./Loading";
+import { ErrorBox } from "./ErrorBox";
 
 // The trophy catalogue. Add a row here + the matching count in the
 // user_achievements RPC to introduce a new trophy.
@@ -89,7 +90,7 @@ export function AchievementsCabinet({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
-        <h2 className="text-lg font-bold">🏅 Trophy cabinet</h2>
+        <h2 className="font-display text-lg font-bold">🏅 Trophy cabinet</h2>
         <button
           onClick={onClose}
           className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
@@ -101,9 +102,7 @@ export function AchievementsCabinet({
       <div className="flex-1 overflow-y-auto p-4">
         <div className="mx-auto flex max-w-md flex-col gap-4">
           {error ? (
-            <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600">
-              {error}
-            </p>
+            <ErrorBox>{error}</ErrorBox>
           ) : !data ? (
             <Loading label="Polishing the silverware…" />
           ) : (

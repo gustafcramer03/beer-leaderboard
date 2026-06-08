@@ -64,7 +64,7 @@ export function AuthGate() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-5 p-8">
         <div className="text-6xl">🔑</div>
-        <h1 className="text-2xl font-black">Save your login</h1>
+        <h1 className="font-display text-2xl font-black">Save your login</h1>
         <p className="max-w-xs text-center text-sm text-muted">
           Write these down. You&apos;ll need them to get back into your account on another phone,
           or if you reinstall or clear your browser.
@@ -88,7 +88,7 @@ export function AuthGate() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-5 p-8">
       <div className="text-6xl">🍺</div>
-      <h1 className="text-2xl font-black">Beer League</h1>
+      <h1 className="font-display text-2xl font-black">Beer League</h1>
 
       <div className="flex rounded-full bg-surface-muted p-1 text-sm">
         <button

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import type { Heatmap } from "@/lib/types";
 import { getHeatmap } from "@/lib/api";
 import { Loading } from "./Loading";
+import { ErrorBox } from "./ErrorBox";
 
 function dayLabel(d: string) {
   return new Date(`${d}T00:00:00`).toLocaleDateString([], {
@@ -60,7 +61,7 @@ export function DrinkingHeatmap({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
-        <h2 className="text-lg font-bold">🔥 Drinking heatmap</h2>
+        <h2 className="font-display text-lg font-bold">🔥 Drinking heatmap</h2>
         <button
           onClick={onClose}
           className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
@@ -71,9 +72,7 @@ export function DrinkingHeatmap({
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-md p-4">
           {error ? (
-            <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center text-sm text-bad">
-              {error}
-            </p>
+            <ErrorBox>{error}</ErrorBox>
           ) : !data ? (
             <Loading label="Mapping the mayhem…" />
           ) : data.total === 0 ? (

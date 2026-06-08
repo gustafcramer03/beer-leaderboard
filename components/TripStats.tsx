@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import type { TripStats as TripStatsT } from "@/lib/types";
 import { tripStats } from "@/lib/api";
 import { Loading } from "./Loading";
+import { ErrorBox } from "./ErrorBox";
 
 function fmtHour(h: number) {
   const a = String(h).padStart(2, "0");
@@ -73,9 +74,7 @@ export function TripStats({ holidayId }: { holidayId: string }) {
 
   if (error) {
     return (
-      <p className="m-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600">
-        {error}
-      </p>
+      <ErrorBox className="m-4">{error}</ErrorBox>
     );
   }
   if (!stats) return <Loading label="Adding up the rounds…" />;

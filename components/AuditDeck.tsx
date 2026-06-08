@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import type { AuditItem } from "@/lib/types";
-import { signedUrl, submitReview } from "@/lib/api";
+import { signedUrls, submitReview } from "@/lib/api";
 import { PhotoPreview } from "./PhotoPreview";
 import { BrandBadge } from "./BrandBadge";
+import { useToast } from "./Toast";
 
 function secondsBetween(a: string, b: string) {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 1000);
@@ -35,29 +36,48 @@ export function AuditDeck({
   });
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<{ url: string; label: string } | null>(null);
+  const { toast } = useToast();
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
-  const confirmOpacity = useTransform(x, [40, 130], [0, 1]); // swipe RIGHT = legit (Tinder yes)
-  const challengeOpacity = useTransform(x, [-130, -40], [1, 0]); // swipe LEFT = challenge (Tinder nope)
+  // Labels are primed at a low opacity even at rest (so the swipe meaning is
+  // obvious before you drag), then ramp to full as you pull that way.
+  const confirmOpacity = useTransform(x, [0, 40, 130], [0.3, 0.45, 1]); // swipe RIGHT = legit
+  const challengeOpacity = useTransform(x, [-130, -40, 0], [1, 0.45, 0.3]); // swipe LEFT = challenge
 
   const current = items[index];
+
+  // Cache signed URLs per beer so an already-seen card is instant, and so we can
+  // prefetch the NEXT card's photos while you look at the current one.
+  const urlCache = useRef<Map<string, { full: string | null; empty: string | null }>>(new Map());
+
+  const loadUrls = useCallback(async (item: AuditItem | undefined) => {
+    if (!item) return null;
+    const cached = urlCache.current.get(item.beer_id);
+    if (cached) return cached;
+    const map = await signedUrls([item.full_photo_path, item.empty_photo_path]);
+    const entry = {
+      full: map[item.full_photo_path] ?? null,
+      empty: map[item.empty_photo_path] ?? null,
+    };
+    urlCache.current.set(item.beer_id, entry);
+    return entry;
+  }, []);
 
   useEffect(() => {
     let active = true;
     if (!current) return;
-    setUrls({ full: null, empty: null });
+    setUrls(urlCache.current.get(current.beer_id) ?? { full: null, empty: null });
     (async () => {
-      const [full, empty] = await Promise.all([
-        signedUrl(current.full_photo_path),
-        signedUrl(current.empty_photo_path),
-      ]);
-      if (active) setUrls({ full, empty });
+      const entry = await loadUrls(current);
+      if (active && entry) setUrls(entry);
+      // Warm the next card's photos in the background so the swipe feels instant.
+      void loadUrls(items[index + 1]);
     })();
     return () => {
       active = false;
     };
-  }, [current]);
+  }, [current, index, items, loadUrls]);
 
   async function decide(verdict: "confirm" | "challenge") {
     if (!current || busy) return;
@@ -66,6 +86,11 @@ export function AuditDeck({
       await submitReview(current.beer_id, verdict);
     } catch (e) {
       console.error(e);
+      // Don't skip the card on failure — bring it back so the vote can be retried.
+      toast("Couldn't submit your verdict — try again", "error");
+      setBusy(false);
+      animate(x, 0, { type: "spring", stiffness: 600, damping: 38 });
+      return;
     }
     const next = index + 1;
     x.set(0);
@@ -201,7 +226,7 @@ export function AuditDeck({
         <button
           onClick={() => flyOut(-550, () => decide("challenge"))}
           disabled={busy}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500 text-2xl text-white shadow transition active:scale-90 disabled:opacity-40"
+          className="press flex h-14 w-14 items-center justify-center rounded-full bg-red-500 text-2xl text-white shadow disabled:opacity-40"
           aria-label="Challenge"
         >
           ✕
@@ -209,7 +234,7 @@ export function AuditDeck({
         <button
           onClick={() => flyOut(550, () => decide("confirm"))}
           disabled={busy}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-2xl text-white shadow transition active:scale-90 disabled:opacity-40"
+          className="press flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-2xl text-white shadow disabled:opacity-40"
           aria-label="Confirm legit"
         >
           ✓
@@ -255,9 +280,15 @@ function Photo({
     >
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={label} className="h-full w-full object-cover" />
+        <img
+          src={url}
+          alt={label}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
       ) : (
-        <div className="flex h-full items-center justify-center text-faint">…</div>
+        <div className="h-full w-full animate-pulse bg-line" />
       )}
       <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[10px] font-bold text-white">
         {label}

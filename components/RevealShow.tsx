@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Standing, RevealMedia } from "@/lib/types";
-import { getRevealMedia, signedUrl, avatarUrl } from "@/lib/api";
+import { getRevealMedia, signedUrls, avatarUrl } from "@/lib/api";
 import { celebrateBig } from "@/lib/celebrate";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
@@ -97,7 +97,7 @@ export function RevealShow({
         {shown === 0 && (
           <div className="flex flex-col items-center gap-4">
             <div className="text-7xl">🥁</div>
-            <h1 className="text-3xl font-black">The Grand Reveal</h1>
+            <h1 className="font-display text-3xl font-black">The Grand Reveal</h1>
             <p className="max-w-xs text-sm text-neutral-400">
               Counting up from last place. Tap anywhere to reveal the next drinker.
             </p>
@@ -152,11 +152,12 @@ function RevealCard({
       const picks = sample(media?.photos ?? [], SCATTER.length);
       const [av, signed] = await Promise.all([
         media?.avatar_path ? avatarUrl(media.avatar_path) : Promise.resolve(null),
-        Promise.all(picks.map((p) => signedUrl(p))),
+        signedUrls(picks),
       ]);
       if (!active) return;
       setAvatar(av);
-      setPhotos(signed.filter((u): u is string => !!u));
+      // Preserve the sampled order; drop any that failed to sign.
+      setPhotos(picks.map((p) => signed[p]).filter((u): u is string => !!u));
     })();
     return () => {
       active = false;
@@ -182,7 +183,7 @@ function RevealCard({
           className="pointer-events-none absolute h-24 w-24 overflow-hidden rounded-2xl border-2 border-white/20 shadow-xl"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt="" className="h-full w-full object-cover" />
+          <img src={url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
         </motion.div>
       ))}
 
@@ -194,7 +195,7 @@ function RevealCard({
       >
         {avatar ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={avatar} alt={standing.display_name} className="h-full w-full object-cover" />
+          <img src={avatar} alt={standing.display_name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (
           <span className={isChampion ? "text-6xl" : "text-5xl"}>{MEDALS[place] ?? "🍺"}</span>
         )}

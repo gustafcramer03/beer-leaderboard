@@ -5,6 +5,7 @@ import type { AdminBeer } from "@/lib/types";
 import { getAdminBeers, adminRuleBeer, adminSetBeerScore, signedUrl } from "@/lib/api";
 import { Loading } from "./Loading";
 import { PhotoPreview } from "./PhotoPreview";
+import { useToast } from "./Toast";
 
 function fmtGap(s: number) {
   if (s < 60) return `${s}s`;
@@ -37,6 +38,7 @@ export function AdminQueue({ holidayId }: { holidayId: string }) {
   const [beers, setBeers] = useState<AdminBeer[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -58,9 +60,11 @@ export function AdminQueue({ holidayId }: { holidayId: string }) {
     setBusyId(beerId);
     try {
       await adminRuleBeer(beerId, decision, reason);
+      toast(decision === "confirm" ? "Beer upheld ✓" : "Beer rejected", "success");
       await load();
     } catch (e) {
       console.error(e);
+      toast(e instanceof Error ? e.message : "Ruling failed", "error");
     } finally {
       setBusyId(null);
     }
@@ -70,9 +74,11 @@ export function AdminQueue({ holidayId }: { holidayId: string }) {
     setBusyId(beerId);
     try {
       await adminSetBeerScore(beerId, points, reason);
+      toast(`Score set to ${points} pt${points === 1 ? "" : "s"}`, "success");
       await load();
     } catch (e) {
       console.error(e);
+      toast(e instanceof Error ? e.message : "Couldn't set the score", "error");
     } finally {
       setBusyId(null);
     }
@@ -92,7 +98,7 @@ export function AdminQueue({ holidayId }: { holidayId: string }) {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <h2 className="text-lg font-bold">Challenged beers — your ruling</h2>
+      <h2 className="font-display text-lg font-bold">Challenged beers — your ruling</h2>
       {beers.map((b) => (
         <AdminCard
           key={b.beer_id}
@@ -346,7 +352,7 @@ function CardPhoto({
     >
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={label} className="h-full w-full object-cover" />
+        <img src={url} alt={label} loading="lazy" decoding="async" className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full items-center justify-center text-faint">…</div>
       )}

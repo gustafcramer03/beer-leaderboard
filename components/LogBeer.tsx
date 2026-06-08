@@ -6,6 +6,7 @@ import { OfflineLogBeer } from "./OfflineLogBeer";
 import { BrandPicker } from "./BrandPicker";
 import { startBeer, finishBeer, discardBeer, getOpenBeer, signedUrl } from "@/lib/api";
 import { celebrateBeer, celebrateChug } from "@/lib/celebrate";
+import { useToast } from "./Toast";
 
 type Step = "full" | "empty" | "done";
 
@@ -28,6 +29,7 @@ export function LogBeer({
   const [beerId, setBeerId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Resume an in-progress beer: if we logged a start earlier but never finished
   // (reload / app switch), the open row still lives server-side. Jump straight
@@ -69,6 +71,7 @@ export function LogBeer({
       setStep("empty");
     } catch (e) {
       setError(msg(e));
+      toast(msg(e), "error");
     } finally {
       setBusy(false);
     }
@@ -82,9 +85,11 @@ export function LogBeer({
       await finishBeer(holidayId, beerId, emptyFile, chug, caption, brand);
       if (chug) celebrateChug();
       else celebrateBeer();
+      toast(chug ? "Chug logged 🍺×2" : "Beer logged 🍺", "success");
       setStep("done");
     } catch (e) {
       setError(msg(e));
+      toast(msg(e), "error");
     } finally {
       setBusy(false);
     }
@@ -119,13 +124,14 @@ export function LogBeer({
     return (
       <div className="flex flex-col items-center gap-4 p-6 text-center">
         <div className="text-6xl">🍺</div>
-        <h2 className="text-xl font-bold">Beer logged!</h2>
-        <p className="text-sm text-muted">
-          It&apos;s now in the audit queue for your mates to verify. Scores update hourly.
+        <h2 className="font-display text-xl font-bold">Beer logged!</h2>
+        <p className="max-w-xs text-sm text-muted">
+          Tap Done to head back to the board — your beer is in the audit queue for your mates to
+          verify, and scores update hourly.
         </p>
         <button
           onClick={onDone}
-          className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast"
+          className="press rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast"
         >
           Done
         </button>
@@ -135,8 +141,17 @@ export function LogBeer({
 
   return (
     <div className="flex flex-col items-center gap-5 p-6">
-      <h2 className="text-xl font-bold">
-        {step === "full" ? "Step 1: your full beer" : "Step 2: your empty beer"}
+      <div className="flex flex-col items-center gap-1.5">
+        <div className="flex items-center gap-1.5" aria-hidden>
+          <span className={`h-1.5 w-7 rounded-full ${step === "full" ? "bg-accent" : "bg-good"}`} />
+          <span className={`h-1.5 w-7 rounded-full ${step === "empty" ? "bg-accent" : "bg-line"}`} />
+        </div>
+        <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+          Step {step === "full" ? "1" : "2"} of 2
+        </span>
+      </div>
+      <h2 className="font-display text-xl font-bold">
+        {step === "full" ? "Your full beer" : "Your empty beer"}
       </h2>
       <p className="max-w-xs text-center text-sm text-muted">
         {step === "full"
@@ -150,9 +165,9 @@ export function LogBeer({
           <button
             disabled={!fullFile || busy}
             onClick={continueToEmpty}
-            className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast disabled:opacity-40"
+            className="press rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast disabled:opacity-40"
           >
-            {busy ? "Saving…" : "Continue →"}
+            {busy ? "Saving…" : "Next: empty photo →"}
           </button>
           <button
             onClick={() => setOffline(true)}
@@ -211,14 +226,14 @@ export function LogBeer({
           <button
             disabled={!emptyFile || busy}
             onClick={finish}
-            className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast disabled:opacity-40"
+            className="press rounded-full bg-accent px-6 py-3 font-semibold text-accent-contrast disabled:opacity-40"
           >
             {busy ? "Saving…" : "Finish 🍺"}
           </button>
         </>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-bad">{error}</p>}
       <button onClick={cancel} className="text-sm text-faint underline">
         Cancel
       </button>

@@ -401,6 +401,21 @@ export async function signedUrl(path: string): Promise<string | null> {
   return data?.signedUrl ?? null;
 }
 
+// Batch variant: sign many beer-photo paths in a single round-trip (vs. one
+// request per photo). Returns a path → signed URL map; failed/absent paths are
+// simply missing from the map. Falsy paths are ignored.
+export async function signedUrls(paths: (string | null | undefined)[]): Promise<Record<string, string>> {
+  const real = [...new Set(paths.filter((p): p is string => !!p))];
+  if (real.length === 0) return {};
+  const { data, error } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(real, 120);
+  if (error) throw error;
+  const out: Record<string, string> = {};
+  for (const row of data ?? []) {
+    if (row.path && row.signedUrl) out[row.path] = row.signedUrl;
+  }
+  return out;
+}
+
 // --- Profile avatars ---
 
 // Compress (square ~256px JPEG) and store the caller's avatar, then point their
@@ -426,9 +441,31 @@ export async function uploadAvatar(file: File): Promise<string> {
   return path;
 }
 
+// Avatar signed URLs are cached in-memory and deduped: the same avatar often
+// appears in several places at once (reveal, share card, rivalry, feed), and
+// the URL is valid for an hour, so re-signing on every mount is wasteful. We
+// keep entries well inside the 3600s validity window.
+const AVATAR_TTL_MS = 30 * 60 * 1000; // refresh well before the 1h URL expiry
+const avatarCache = new Map<string, { url: string | null; ts: number }>();
+const avatarInflight = new Map<string, Promise<string | null>>();
+
 export async function avatarUrl(path: string): Promise<string | null> {
-  const { data } = await supabase.storage.from(AVATAR_BUCKET).createSignedUrl(path, 3600);
-  return data?.signedUrl ?? null;
+  const now = Date.now();
+  const hit = avatarCache.get(path);
+  if (hit && now - hit.ts < AVATAR_TTL_MS) return hit.url;
+
+  const pending = avatarInflight.get(path);
+  if (pending) return pending;
+
+  const req = (async () => {
+    const { data } = await supabase.storage.from(AVATAR_BUCKET).createSignedUrl(path, 3600);
+    const url = data?.signedUrl ?? null;
+    avatarCache.set(path, { url, ts: Date.now() });
+    avatarInflight.delete(path);
+    return url;
+  })();
+  avatarInflight.set(path, req);
+  return req;
 }
 
 export async function getDailyRecap(holidayId: string): Promise<DailyRecap> {

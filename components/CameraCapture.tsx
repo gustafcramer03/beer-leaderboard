@@ -40,10 +40,11 @@ export function CameraCapture({ label, onCapture, disabled, fromGallery }: Props
         <img
           src={preview}
           alt={label}
-          className="h-48 w-48 rounded-2xl object-cover ring-2 ring-accent"
+          decoding="async"
+          className="h-48 w-48 rounded-card object-cover ring-2 ring-accent"
         />
       ) : (
-        <div className="flex h-48 w-48 items-center justify-center rounded-2xl border-2 border-dashed border-accent/40 text-5xl">
+        <div className="flex h-48 w-48 items-center justify-center rounded-card border-2 border-dashed border-accent/40 text-5xl">
           📷
         </div>
       )}

@@ -119,7 +119,7 @@ export function ShareCardView({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
-        <h2 className="text-lg font-bold">📲 Share card</h2>
+        <h2 className="font-display text-lg font-bold">📲 Share card</h2>
         <button
           onClick={onClose}
           className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"

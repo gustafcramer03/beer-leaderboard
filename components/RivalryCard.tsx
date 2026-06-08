@@ -5,6 +5,7 @@ import { holidayMembers, getHeadToHead } from "@/lib/api";
 import type { HolidayMember, RivalryPlayer, HeadToHead } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { Loading } from "./Loading";
+import { ErrorBox } from "./ErrorBox";
 
 type MetricKey =
   | "points"
@@ -86,7 +87,7 @@ export function RivalryCard({ holidayId, onClose }: { holidayId: string; onClose
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
-        <h2 className="text-lg font-bold">⚔️ Head to head</h2>
+        <h2 className="font-display text-lg font-bold">⚔️ Head to head</h2>
         <button
           onClick={onClose}
           className="press rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
@@ -119,7 +120,7 @@ export function RivalryCard({ holidayId, onClose }: { holidayId: string; onClose
           )}
 
           {loading && <Loading label="Sizing up the contenders…" />}
-          {error && <p className="p-6 text-center text-sm text-red-600">{error}</p>}
+          {error && <ErrorBox className="m-4">{error}</ErrorBox>}
 
           {!loading && !error && (!aId || !bId) && (
             <p className="p-8 text-center text-sm text-muted">

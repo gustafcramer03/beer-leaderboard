@@ -11,6 +11,7 @@ import type { AdminBeer } from "@/lib/types";
 import { getAdminBeers, adminRuleBeer, adminSetBeerScore, signedUrl } from "@/lib/api";
 import { Loading } from "./Loading";
 import { PhotoPreview } from "./PhotoPreview";
+import { useToast } from "./Toast";
 
 function fmtGap(s: number) {
   if (s < 60) return `${s}s`;
@@ -44,6 +45,7 @@ export function AdminBeers({ holidayId }: { holidayId: string }) {
   const [beers, setBeers] = useState<AdminBeer[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,9 +66,11 @@ export function AdminBeers({ holidayId }: { holidayId: string }) {
     setBusyId(beerId);
     try {
       await adminRuleBeer(beerId, decision, reason);
+      toast(decision === "confirm" ? "Beer reinstated ✓" : "Beer voided", "success");
       await load();
     } catch (e) {
       console.error(e);
+      toast(e instanceof Error ? e.message : "Action failed", "error");
     } finally {
       setBusyId(null);
     }
@@ -76,9 +80,11 @@ export function AdminBeers({ holidayId }: { holidayId: string }) {
     setBusyId(beerId);
     try {
       await adminSetBeerScore(beerId, points, reason);
+      toast(`Score set to ${points} pt${points === 1 ? "" : "s"}`, "success");
       await load();
     } catch (e) {
       console.error(e);
+      toast(e instanceof Error ? e.message : "Couldn't set the score", "error");
     } finally {
       setBusyId(null);
     }

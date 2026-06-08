@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { LedgerEntry } from "@/lib/types";
-import { getUserLedger, signedUrl, reactToBeer } from "@/lib/api";
+import { getUserLedger, signedUrls, reactToBeer } from "@/lib/api";
 import { REACTION_EMOJIS } from "@/lib/reactions";
 import { PhotoPreview } from "./PhotoPreview";
 import { BrandBadge } from "./BrandBadge";
+import { ErrorBox } from "./ErrorBox";
 
 // Save a remote image to the device. On mobile we hand it to the native share
 // sheet (which offers "Save Image" / "Save to Photos" → the camera roll); if
@@ -136,7 +137,7 @@ export function PlayerLedger({
     <div className="fixed inset-0 z-50 flex flex-col bg-surface-sunken">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
         <div>
-          <h2 className="text-lg font-bold">{displayName}</h2>
+          <h2 className="font-display text-lg font-bold">{displayName}</h2>
           <p className="text-xs text-muted">
             {entries ? `${entries.length} beer${entries.length === 1 ? "" : "s"} · ${total} pts` : "Loading…"}
           </p>
@@ -151,9 +152,7 @@ export function PlayerLedger({
 
       <div className="flex-1 overflow-y-auto p-4">
         {error && (
-          <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600">
-            {error}
-          </p>
+          <ErrorBox>{error}</ErrorBox>
         )}
         {!error && entries && entries.length === 0 && (
           <p className="p-6 text-center text-muted">No beers logged yet. 🍺</p>
@@ -314,11 +313,14 @@ function LedgerPhotos({ entry }: { entry: LedgerEntry }) {
   useEffect(() => {
     let active = true;
     (async () => {
-      const [full, empty] = await Promise.all([
-        entry.full_photo_path ? signedUrl(entry.full_photo_path) : Promise.resolve(null),
-        entry.empty_photo_path ? signedUrl(entry.empty_photo_path) : Promise.resolve(null),
-      ]);
-      if (active) setUrls({ full, empty });
+      // Both photos signed in a single round-trip.
+      const map = await signedUrls([entry.full_photo_path, entry.empty_photo_path]);
+      if (active) {
+        setUrls({
+          full: entry.full_photo_path ? (map[entry.full_photo_path] ?? null) : null,
+          empty: entry.empty_photo_path ? (map[entry.empty_photo_path] ?? null) : null,
+        });
+      }
     })();
     return () => {
       active = false;
@@ -426,6 +428,8 @@ function Photo({
           src={url}
           alt={label}
           draggable={false}
+          loading="lazy"
+          decoding="async"
           className="h-full w-full select-none object-cover"
           style={{ WebkitTouchCallout: "none" }}
         />

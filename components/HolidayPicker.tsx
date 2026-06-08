@@ -33,7 +33,7 @@ export function HolidayPicker({ onPick }: { onPick: (h: Holiday) => void }) {
 
   return (
     <div className="flex flex-col gap-4 p-5">
-      <h1 className="text-center text-2xl font-black">🍺 Your holidays</h1>
+      <h1 className="text-center font-display text-2xl font-black">🍺 Your holidays</h1>
 
       {mode === "list" && (
         <>
