@@ -7,6 +7,10 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ## 🎯 Engagement & fun
 
+- [x] **Daily tally** 📊 — _SHIPPED_ (migration 0040). Menu → 📊: a grouped bar chart of your beers
+  finished each day next to the group average for that day, for every beer-day from trip start to today
+  (7am–7am boundary). Tap a day for exact numbers; readout shows your trip total + your/group beers-per-day.
+  Group aggregate + own data, so visible while dark. `daily_bars(holiday)` RPC + `DailyBars.tsx`.
 - [x] **Unfinished-beer penalty** 🏳️ — _SHIPPED_ (migration 0039). A beer left unfinished costs −1 (not
   0). Never auto-applied: a started beer with no empty photo after 90 min triggers a blocking resolution
   gate on next app open — "I finished it" (resume the empty upload) or "I didn't" (−1 + a note, with a

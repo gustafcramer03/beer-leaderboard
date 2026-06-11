@@ -26,6 +26,7 @@ import type {
   AdminBeer,
   RevealMedia,
   Heatmap,
+  DailyBars,
   BeerInsights,
 } from "@/lib/types";
 
@@ -122,6 +123,13 @@ export async function getHeatmap(holidayId: string): Promise<Heatmap> {
   const { data, error } = await supabase.rpc("heatmap_data", { p_holiday: holidayId });
   if (error) throw error;
   return data as Heatmap;
+}
+
+// Per-day: your beers finished vs the group average, trip-start to today.
+export async function getDailyBars(holidayId: string): Promise<DailyBars> {
+  const { data, error } = await supabase.rpc("daily_bars", { p_holiday: holidayId });
+  if (error) throw error;
+  return data as DailyBars;
 }
 
 // Per-brand popularity counts for the Beer insights tab (group aggregate).

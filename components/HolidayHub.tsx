@@ -27,6 +27,7 @@ import { RuleBook } from "./RuleBook";
 import { TripStats } from "./TripStats";
 import { PaceBoard } from "./PaceBoard";
 import { DrinkingHeatmap } from "./DrinkingHeatmap";
+import { DailyBars } from "./DailyBars";
 import { BeerInsights } from "./BeerInsights";
 import { RivalryCard } from "./RivalryCard";
 import { ActivityFeed } from "./ActivityFeed";
@@ -40,6 +41,7 @@ type MenuView =
   | "stats"
   | "pace"
   | "heatmap"
+  | "daily"
   | "insights"
   | "rivalry"
   | "activity"
@@ -371,6 +373,8 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
         return <PaceBoard holidayId={holiday.id} onClose={close} />;
       case "heatmap":
         return <DrinkingHeatmap holidayId={holiday.id} onClose={close} />;
+      case "daily":
+        return <DailyBars holidayId={holiday.id} onClose={close} />;
       case "insights":
         return <BeerInsights holidayId={holiday.id} onClose={close} />;
       case "rivalry":
@@ -425,6 +429,7 @@ function MenuPage({
         <MenuTile icon="🌅" label="Daily recap" sub="Yesterday's wrap-up" onClick={() => onSelect("recap")} />
         <MenuTile icon="📈" label="Pace board" sub="Trends & projections" onClick={() => onSelect("pace")} />
         <MenuTile icon="🔥" label="Drinking heatmap" sub="When the group drinks" onClick={() => onSelect("heatmap")} />
+        <MenuTile icon="📊" label="Daily tally" sub="You vs the group, daily" onClick={() => onSelect("daily")} />
         <MenuTile icon="🍻" label="Beer insights" sub="Most popular brands" onClick={() => onSelect("insights")} />
         <MenuTile icon="⚔️" label="Head to head" sub="Compare two players" onClick={() => onSelect("rivalry")} />
         <MenuTile icon="📲" label="Share card" sub="Flex on your story" onClick={() => onSelect("share")} />

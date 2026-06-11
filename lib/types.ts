@@ -380,6 +380,17 @@ export type Heatmap = {
   peak: { date: string; hour: number; count: number } | null;
 };
 
+// Daily tally: the caller's beers finished each beer-day vs the group average
+// that day, from trip start up to today. `avg` = the day's group total ÷ members.
+export type DailyBars = {
+  tz: string;
+  state: "live" | "dark" | "reveal";
+  members: number;
+  days: { date: string; mine: number; avg: number }[];
+  my_total: number;
+  group_total: number;
+};
+
 // Beer insights: per-brand counts across the trip (group aggregate, returned
 // even while dark). `brands` is sorted most-popular-first; each `slug` maps to a
 // display name + colour via lib/brands.ts on the client. `top` is the single
