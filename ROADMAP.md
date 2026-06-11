@@ -7,6 +7,12 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ## 🎯 Engagement & fun
 
+- [x] **Trip activity window** ⏱️ — _SHIPPED_ (migration 0041). Beers can only be logged while the trip is
+  actually on. Added a `start_time` (alongside `end_time`); uploads are blocked before start and after end
+  (server-enforced in the insert trigger, online + offline), with a friendly "trip hasn't started / trip's
+  over" screen on the log tab. Create a group early so people can join, but logging only opens at the start.
+  Times are picked in the create form and editable in the admin controls; they gate uploads + the reveal
+  only — the 7am–7am beer-day stats are unchanged. Finishing an in-progress beer stays allowed.
 - [x] **Daily tally** 📊 — _SHIPPED_ (migration 0040). Menu → 📊: a grouped bar chart of your beers
   finished each day next to the group average for that day, for every beer-day from trip start to today
   (7am–7am boundary). Tap a day for exact numbers; readout shows your trip total + your/group beers-per-day.

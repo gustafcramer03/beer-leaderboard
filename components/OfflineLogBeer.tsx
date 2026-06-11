@@ -73,7 +73,12 @@ export function OfflineLogBeer({
       toast(chug ? "Offline chug logged 🍺×2" : "Offline beer logged 🍺", "success");
       setDone(true);
     } catch (e) {
-      const m = e instanceof Error ? e.message : "Something went wrong";
+      const raw = e instanceof Error ? e.message : "Something went wrong";
+      const m = raw.includes("trip_not_started")
+        ? "The trip hasn't started yet."
+        : raw.includes("trip_ended")
+          ? "The trip's over — no more beers."
+          : raw;
       setError(m);
       toast(m, "error");
     } finally {

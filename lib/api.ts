@@ -4,6 +4,7 @@ import { supabase, PHOTO_BUCKET, AVATAR_BUCKET } from "@/lib/supabase";
 import { compressImage, compressAvatar } from "@/lib/image";
 import type {
   Holiday,
+  UploadWindow,
   AuditItem,
   StandingsResult,
   Beer,
@@ -46,6 +47,8 @@ export async function createHoliday(
   end: string,
   darkDays: number,
   timezone: string,
+  startTime: string, // HH:MM
+  endTime: string, // HH:MM
 ): Promise<Holiday> {
   const { data, error } = await supabase.rpc("create_holiday", {
     p_name: name,
@@ -53,6 +56,8 @@ export async function createHoliday(
     p_end: end,
     p_dark_days: darkDays,
     p_timezone: timezone,
+    p_start_time: startTime,
+    p_end_time: endTime,
   });
   if (error) throw error;
   return data as Holiday;
@@ -170,6 +175,27 @@ export async function setTripEnd(
     p_end_time: endTime,
   });
   if (error) throw error;
+}
+
+// Admin reschedules the trip start (date + time, in the trip's timezone).
+export async function setTripStart(
+  holidayId: string,
+  startDate: string, // YYYY-MM-DD
+  startTime: string, // HH:MM
+): Promise<void> {
+  const { error } = await supabase.rpc("set_trip_start", {
+    p_holiday: holidayId,
+    p_start_date: startDate,
+    p_start_time: startTime,
+  });
+  if (error) throw error;
+}
+
+// Can the caller log a beer right now? phase: 'pre' (not started) | 'open' | 'ended'.
+export async function uploadWindow(holidayId: string): Promise<UploadWindow> {
+  const { data, error } = await supabase.rpc("upload_window", { p_holiday: holidayId });
+  if (error) throw error;
+  return data as UploadWindow;
 }
 
 // Is it happy hour right now for this holiday? Drives the load-time banner.

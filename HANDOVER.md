@@ -66,6 +66,14 @@ Migrations through **0036** are applied. Feature highlights (full list in `ROADM
 - Achievements, pace board, trip stats, head-to-head rivalry, activity feed, daily recap, share card.
 - Emoji reactions + captions; pull-to-refresh + optimistic board; "Manage beers" admin screen.
 - Push notifications (happy-hour start/end + grand reveal) via cron→pg_net→Vercel route.
+- **Trip activity window** (migration 0041) — beers can only be logged while the trip is on. Holidays
+  now have a `start_time` (plus the existing `end_time`); uploads are blocked before `start_date+start_time`
+  and on/after `end_date+end_time` (or once the admin forces the reveal), enforced in the `beers_before_insert`
+  trigger (covers online **and** offline inserts; raises `trip_not_started` / `trip_ended`, which the client
+  maps to friendly copy). `upload_window(holiday)` RPC drives the log-tab gate UI; `set_trip_start` mirrors
+  `set_trip_end`; `create_holiday` now takes `p_start_time`/`p_end_time`. Finishing an already-started beer
+  (an UPDATE) is still allowed. **Start/end times only gate uploads + reveal — they do NOT change the
+  7am–7am beer-day stats.** Create form + AdminTripControls let you set both date+time.
 - **Drinking heatmap** (0035) — Menu → 🔥.
 - **Brand tagging + Beer insights** (0036, newest) — see below.
 - **DB-management photo browser** (2026-06-05, migration 0037) — in 🗄️ DB Management, tap a trip →

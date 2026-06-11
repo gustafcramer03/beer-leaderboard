@@ -2,6 +2,7 @@ export type Holiday = {
   id: string;
   name: string;
   start_date: string;
+  start_time: string;
   end_date: string;
   end_time: string;
   dark_days: number;
@@ -9,6 +10,14 @@ export type Holiday = {
   invite_code: string;
   timezone: string;
   created_at: string;
+};
+
+// Whether logging is open right now. 'pre' = before start_date+start_time;
+// 'ended' = on/after end_date+end_time (or admin forced the reveal).
+export type UploadWindow = {
+  phase: "pre" | "open" | "ended";
+  starts_at: number; // ms epoch
+  ends_at: number; // ms epoch
 };
 
 export type Beer = {

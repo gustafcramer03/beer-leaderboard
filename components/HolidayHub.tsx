@@ -281,6 +281,8 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
         >
           <Leaderboard
             holidayId={holiday.id}
+            startDate={holiday.start_date}
+            startTime={holiday.start_time}
             endDate={holiday.end_date}
             endTime={holiday.end_time}
             timezone={holiday.timezone}

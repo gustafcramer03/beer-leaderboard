@@ -11,7 +11,9 @@ import {
   getOpenBeer,
   signedUrl,
   declareBeerUnfinished,
+  uploadWindow,
 } from "@/lib/api";
+import type { UploadWindow } from "@/lib/types";
 import { celebrateBeer, celebrateChug } from "@/lib/celebrate";
 import { useToast } from "./Toast";
 
@@ -54,13 +56,17 @@ export function LogBeer({
   // original start time, so the chug clock stays honest.
   const [resuming, setResuming] = useState(true);
   const [resumedFullUrl, setResumedFullUrl] = useState<string | null>(null);
+  // Set when the trip isn't open for *new* beers — finishing an in-progress
+  // beer is still allowed (it's an update, not a new upload).
+  const [blocked, setBlocked] = useState<UploadWindow | null>(null);
   // "I didn't finish this beer" confirm flow.
   const [bailing, setBailing] = useState(false);
   const [bailNote, setBailNote] = useState("");
 
   useEffect(() => {
     let active = true;
-    // Resolution-gate path: resume a specific beer at the empty step.
+    // Resolution-gate path: resume a specific beer at the empty step (finishing
+    // is always allowed, even after the trip has ended).
     if (resumeBeerId) {
       setBeerId(resumeBeerId);
       setStep("empty");
@@ -74,22 +80,33 @@ export function LogBeer({
         active = false;
       };
     }
-    getOpenBeer(holidayId)
-      .then(async (open) => {
-        if (!active || !open) return;
-        setBeerId(open.id);
-        setStep("empty");
-        if (open.full_photo_path) {
-          const url = await signedUrl(open.full_photo_path);
-          if (active) setResumedFullUrl(url);
+    (async () => {
+      try {
+        const open = await getOpenBeer(holidayId);
+        if (!active) return;
+        if (open) {
+          // Resume finishing an in-progress beer — allowed regardless of window.
+          setBeerId(open.id);
+          setStep("empty");
+          if (open.full_photo_path) {
+            const url = await signedUrl(open.full_photo_path);
+            if (active) setResumedFullUrl(url);
+          }
+        } else {
+          // Starting fresh — only allowed while the trip is open.
+          try {
+            const w = await uploadWindow(holidayId);
+            if (active && w.phase !== "open") setBlocked(w);
+          } catch {
+            /* if the check fails, fall through — the server still enforces it */
+          }
         }
-      })
-      .catch(() => {
+      } catch {
         /* best-effort; fall back to a fresh start */
-      })
-      .finally(() => {
+      } finally {
         if (active) setResuming(false);
-      });
+      }
+    })();
     return () => {
       active = false;
     };
@@ -167,6 +184,10 @@ export function LogBeer({
 
   if (resuming) {
     return <p className="p-6 text-center text-muted">Checking for a beer in progress…</p>;
+  }
+
+  if (blocked) {
+    return <BlockedScreen window={blocked} onBack={onCancel} />;
   }
 
   if (step === "done") {
@@ -335,5 +356,50 @@ export function LogBeer({
 }
 
 function msg(e: unknown): string {
-  return e instanceof Error ? e.message : "Something went wrong";
+  const raw = e instanceof Error ? e.message : "Something went wrong";
+  if (raw.includes("trip_not_started")) return "The trip hasn't started yet.";
+  if (raw.includes("trip_ended")) return "The trip's over — no more beers.";
+  return raw;
+}
+
+function fmtWhen(ms: number): string {
+  return new Date(ms).toLocaleString([], {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Shown when the trip isn't open for new beers (before start / after end).
+function BlockedScreen({ window: w, onBack }: { window: UploadWindow; onBack: () => void }) {
+  const pre = w.phase === "pre";
+  return (
+    <div className="flex flex-col items-center gap-4 p-8 text-center">
+      <div className="text-6xl">{pre ? "🚧" : "🏁"}</div>
+      <h2 className="font-display text-xl font-bold">
+        {pre ? "The trip hasn't started yet" : "The trip's over"}
+      </h2>
+      <p className="max-w-xs text-sm text-muted">
+        {pre ? (
+          <>
+            Logging opens <span className="font-semibold">{fmtWhen(w.starts_at)}</span>. Hang tight —
+            get everyone joined in the meantime. 🍻
+          </>
+        ) : (
+          <>
+            Logging closed <span className="font-semibold">{fmtWhen(w.ends_at)}</span>. No more beers
+            count — check the final standings on the board. 🏆
+          </>
+        )}
+      </p>
+      <button
+        onClick={onBack}
+        className="press rounded-full bg-surface-muted px-6 py-3 font-semibold"
+      >
+        Back to the board
+      </button>
+    </div>
+  );
 }

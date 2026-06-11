@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { StandingsResult, Standing } from "@/lib/types";
-import { getStandings, refreshSnapshot, setHolidayState, setTripEnd } from "@/lib/api";
+import { getStandings, refreshSnapshot, setHolidayState, setTripEnd, setTripStart } from "@/lib/api";
 import { useSession } from "./SessionProvider";
 import { PlayerLedger } from "./PlayerLedger";
 import { RevealShow } from "./RevealShow";
@@ -38,6 +38,8 @@ function applyOptimistic(
 
 export function Leaderboard({
   holidayId,
+  startDate,
+  startTime,
   endDate,
   endTime,
   timezone,
@@ -50,6 +52,8 @@ export function Leaderboard({
   onOpenRules,
 }: {
   holidayId: string;
+  startDate: string;
+  startTime: string;
   endDate: string;
   endTime: string;
   timezone: string;
@@ -249,6 +253,18 @@ export function Leaderboard({
     }
   }
 
+  async function saveTripStart(date: string, time: string) {
+    setStateBusy(true);
+    try {
+      await setTripStart(holidayId, date, time);
+      await load();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setStateBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col gap-3 p-4">
@@ -305,9 +321,12 @@ export function Leaderboard({
             state={result.state}
             busy={stateBusy}
             onChange={changeState}
+            startDate={startDate}
+            startTime={startTime}
             endDate={endDate}
             endTime={endTime}
             timezone={timezone}
+            onSaveStart={saveTripStart}
             onSaveEnd={saveTripEnd}
           />
         )}
@@ -444,9 +463,12 @@ export function Leaderboard({
             state={result.state}
             busy={stateBusy}
             onChange={changeState}
+            startDate={startDate}
+            startTime={startTime}
             endDate={endDate}
             endTime={endTime}
             timezone={timezone}
+            onSaveStart={saveTripStart}
             onSaveEnd={saveTripEnd}
           />
         </>
@@ -559,20 +581,29 @@ function AdminTripControls({
   state,
   busy,
   onChange,
+  startDate,
+  startTime,
   endDate,
   endTime,
   timezone,
+  onSaveStart,
   onSaveEnd,
 }: {
   state: "live" | "dark" | "reveal";
   busy: boolean;
   onChange: (s: "live" | "dark" | "reveal" | "auto") => void;
+  startDate: string;
+  startTime: string;
   endDate: string;
   endTime: string;
   timezone: string;
+  onSaveStart: (date: string, time: string) => void;
   onSaveEnd: (date: string, time: string) => void;
 }) {
-  // end_time arrives as a Postgres time ("HH:MM:SS"); inputs want "HH:MM".
+  // times arrive as a Postgres time ("HH:MM:SS"); inputs want "HH:MM".
+  const [sDate, setSDate] = useState(startDate);
+  const [sTime, setSTime] = useState(startTime.slice(0, 5));
+  const startDirty = sDate !== startDate || sTime !== startTime.slice(0, 5);
   const [date, setDate] = useState(endDate);
   const [time, setTime] = useState(endTime.slice(0, 5));
   const dirty = date !== endDate || time !== endTime.slice(0, 5);
@@ -582,6 +613,36 @@ function AdminTripControls({
       <span className="text-center text-xs font-semibold uppercase tracking-wide text-faint">
         Admin controls
       </span>
+
+      <div className="flex flex-col gap-2 rounded-xl bg-surface-muted p-3">
+        <span className="text-xs font-medium text-muted">
+          Scheduled start {timezone ? `(${timezone})` : ""}
+        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="date"
+            value={sDate}
+            onChange={(e) => setSDate(e.target.value)}
+            disabled={busy}
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm"
+          />
+          <input
+            type="time"
+            value={sTime}
+            onChange={(e) => setSTime(e.target.value)}
+            disabled={busy}
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-sm"
+          />
+          <button
+            onClick={() => onSaveStart(sDate, sTime)}
+            disabled={busy || !startDirty || !sDate || !sTime}
+            className="press rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-contrast disabled:opacity-40"
+          >
+            Save start
+          </button>
+        </div>
+        <span className="text-[11px] text-faint">Beers can only be logged once the trip has started.</span>
+      </div>
 
       <div className="flex flex-col gap-2 rounded-xl bg-surface-muted p-3">
         <span className="text-xs font-medium text-muted">

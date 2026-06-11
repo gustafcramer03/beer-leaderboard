@@ -106,7 +106,9 @@ function CreateForm({ onDone, onBack }: { onDone: (h: Holiday) => void; onBack: 
     (typeof Intl !== "undefined" && Intl.DateTimeFormat().resolvedOptions().timeZone) || "UTC";
   const [name, setName] = useState("");
   const [start, setStart] = useState(today);
+  const [startTime, setStartTime] = useState("12:00");
   const [end, setEnd] = useState(today);
+  const [endTime, setEndTime] = useState("23:59");
   const [darkDays, setDarkDays] = useState(2);
   const [timezone, setTimezone] = useState(detectedTz);
   const [busy, setBusy] = useState(false);
@@ -134,7 +136,7 @@ function CreateForm({ onDone, onBack }: { onDone: (h: Holiday) => void; onBack: 
     setBusy(true);
     setError(null);
     try {
-      onDone(await createHoliday(name.trim(), start, end, darkDays, timezone));
+      onDone(await createHoliday(name.trim(), start, end, darkDays, timezone, startTime, endTime));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed");
       setBusy(false);
@@ -148,13 +150,24 @@ function CreateForm({ onDone, onBack }: { onDone: (h: Holiday) => void; onBack: 
           onChange={(e) => setName(e.target.value)} placeholder="Mallorca 2026" />
       </Field>
       <div className="flex gap-3">
-        <Field label="Start">
+        <Field label="Start date">
           <input type="date" className={inputCls} value={start} onChange={(e) => setStart(e.target.value)} />
         </Field>
-        <Field label="End">
-          <input type="date" className={inputCls} value={end} onChange={(e) => setEnd(e.target.value)} />
+        <Field label="Start time">
+          <input type="time" className={inputCls} value={startTime} onChange={(e) => setStartTime(e.target.value)} />
         </Field>
       </div>
+      <div className="flex gap-3">
+        <Field label="End date">
+          <input type="date" className={inputCls} value={end} onChange={(e) => setEnd(e.target.value)} />
+        </Field>
+        <Field label="End time">
+          <input type="time" className={inputCls} value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+        </Field>
+      </div>
+      <p className="text-xs text-faint">
+        Beers can only be logged between the start and end. The board reveals at the end time.
+      </p>
       <Field label="Dark days before the end (board hidden)">
         <input type="number" min={0} max={14} className={inputCls} value={darkDays}
           onChange={(e) => setDarkDays(parseInt(e.target.value || "0", 10))} />
