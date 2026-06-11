@@ -43,6 +43,7 @@ export function Leaderboard({
   timezone,
   active = true,
   logSignal = 0,
+  penaltySignal = 0,
   refreshSignal = 0,
   onRefreshSettled,
   onOpenStats,
@@ -54,6 +55,7 @@ export function Leaderboard({
   timezone: string;
   active?: boolean;
   logSignal?: number;
+  penaltySignal?: number;
   refreshSignal?: number;
   onRefreshSettled?: () => void;
   onOpenStats: () => void;
@@ -173,6 +175,24 @@ export function Leaderboard({
     });
     reconcile();
   }, [logSignal, reconcile, userId]);
+
+  // Optimistic −1 the instant a beer is declared unfinished (no beer added),
+  // then reconcile. Mirrors the +1 path above.
+  const prevPenalty = useRef(penaltySignal);
+  useEffect(() => {
+    if (penaltySignal === prevPenalty.current) return;
+    prevPenalty.current = penaltySignal;
+    setResult((cur) => {
+      if (cur?.standings && cur.standings.some((s) => s.user_id === userId)) {
+        setOptimistic((o) => ({
+          beers: o?.beers ?? 0,
+          points: (o?.points ?? 0) - 1,
+        }));
+      }
+      return cur;
+    });
+    reconcile();
+  }, [penaltySignal, reconcile, userId]);
 
   // Pull-to-refresh from the parent: reconcile, then tell it we've settled.
   const prevRefresh = useRef(refreshSignal);

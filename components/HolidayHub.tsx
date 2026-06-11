@@ -2,10 +2,18 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { Holiday, AuditItem } from "@/lib/types";
+import type { Holiday, AuditItem, OverdueBeer } from "@/lib/types";
 import { tabVariants, sheetVariants } from "@/lib/motion";
-import { getAuditQueue, challengedBeers, uploadAvatar } from "@/lib/api";
+import {
+  getAuditQueue,
+  getAdminBeers,
+  overdueBeers,
+  declareBeerUnfinished,
+  signedUrl,
+  uploadAvatar,
+} from "@/lib/api";
 import { useSession } from "./SessionProvider";
+import { useToast } from "./Toast";
 import { Avatar } from "./Avatar";
 import { AuditDeck } from "./AuditDeck";
 import { Leaderboard } from "./Leaderboard";
@@ -56,6 +64,12 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
   const [view, setView] = useState<MenuView | null>(null);
   const [auditCount, setAuditCount] = useState(0);
   const [rulingCount, setRulingCount] = useState(0);
+
+  // Overdue beers (>90 min, no empty) the owner must resolve before using the
+  // app, and the −1 penalty signal that bumps the board optimistically.
+  const [overdue, setOverdue] = useState<OverdueBeer[] | null>(null);
+  const [overdueResolved, setOverdueResolved] = useState(false);
+  const [penaltySignal, setPenaltySignal] = useState(0);
 
   // Optimistic board + pull-to-refresh wiring. `logSignal` bumps the board's
   // own row by +1 the instant a beer is logged; `refreshSignal` triggers a
@@ -119,6 +133,12 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
     loadQueue();
   }, [loadQueue]);
 
+  useEffect(() => {
+    overdueBeers(holiday.id)
+      .then(setOverdue)
+      .catch(() => setOverdue([]));
+  }, [holiday.id]);
+
   // Display-only counts for the nudge badges — refreshed without re-triggering
   // the audit gate, so beers others log/challenge while you're in the app
   // surface on the Menu. Ruling count is admin-only (beers awaiting a ruling).
@@ -131,8 +151,13 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
     }
     if (isAdmin) {
       try {
-        const c = await challengedBeers(holiday.id);
-        setRulingCount(c.length);
+        // Rulings to settle = challenged beers + unfinished beers not yet ruled.
+        const all = await getAdminBeers(holiday.id);
+        const challenged = all.filter((b) => b.status === "challenged").length;
+        const unfinished = all.filter(
+          (b) => b.status === "unfinished" && !b.admin_ruled_at,
+        ).length;
+        setRulingCount(challenged + unfinished);
       } catch {
         /* ignore */
       }
@@ -184,6 +209,23 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
             }}
           />
         </div>
+      </div>
+    );
+  }
+
+  // Resolution gate: any of your own beers left unfinished >90 min must be
+  // sorted (finish it, or own up for −1) before you carry on.
+  if (overdue && overdue.length > 0 && !overdueResolved) {
+    return (
+      <div className="flex flex-1 flex-col">
+        <HappyHourBanner holidayId={holiday.id} />
+        <Header holiday={holiday} onLeave={onLeave} />
+        <OverdueGate
+          holidayId={holiday.id}
+          beers={overdue}
+          onResolved={() => setOverdueResolved(true)}
+          onDeclared={() => setPenaltySignal((n) => n + 1)}
+        />
       </div>
     );
   }
@@ -242,6 +284,7 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
             timezone={holiday.timezone}
             active={tab === "board"}
             logSignal={logSignal}
+            penaltySignal={penaltySignal}
             refreshSignal={refreshSignal}
             onRefreshSettled={() => setPullRefreshing(false)}
             onOpenStats={() => setView("stats")}
@@ -258,6 +301,10 @@ export function HolidayHub({ holiday, onLeave }: { holiday: Holiday; onLeave: ()
                   setTab("board");
                 }}
                 onCancel={() => setTab("board")}
+                onUnfinished={() => {
+                  setPenaltySignal((n) => n + 1);
+                  setTab("board");
+                }}
               />
             </motion.div>
           )}
@@ -629,5 +676,178 @@ function TabButton({
       </span>
       <span className={active ? "font-semibold" : ""}>{label}</span>
     </button>
+  );
+}
+
+function fmtClock(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+// Resolution gate for the owner's overdue (>90 min) unfinished beers. For each,
+// they either finish it (resume the empty-photo upload) or own up for −1.
+function OverdueGate({
+  holidayId,
+  beers,
+  onResolved,
+  onDeclared,
+}: {
+  holidayId: string;
+  beers: OverdueBeer[];
+  onResolved: () => void;
+  onDeclared: () => void;
+}) {
+  const [remaining, setRemaining] = useState<OverdueBeer[]>(beers);
+  const [finishing, setFinishing] = useState<OverdueBeer | null>(null);
+
+  function resolve(id: string) {
+    setRemaining((cur) => {
+      const next = cur.filter((b) => b.id !== id);
+      if (next.length === 0) onResolved();
+      return next;
+    });
+    setFinishing(null);
+  }
+
+  if (finishing) {
+    return (
+      <LogBeer
+        holidayId={holidayId}
+        resumeBeerId={finishing.id}
+        resumeFullPath={finishing.full_photo_path}
+        onDone={() => resolve(finishing.id)}
+        onCancel={() => setFinishing(null)}
+        onUnfinished={() => {
+          onDeclared();
+          resolve(finishing.id);
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-1 flex-col items-center justify-start gap-4 p-4 pt-2">
+      <div className="text-6xl">⏳🍺</div>
+      <h2 className="font-display text-xl font-bold">Did you finish?</h2>
+      <p className="max-w-xs text-center text-sm text-muted">
+        You started {remaining.length} beer{remaining.length === 1 ? "" : "s"} over 90 minutes ago
+        and never logged the empty. Finish up — or own up. An unfinished beer costs you a point.
+      </p>
+      <ul className="flex w-full max-w-xs flex-col gap-3">
+        {remaining.map((b) => (
+          <OverdueRow
+            key={b.id}
+            beer={b}
+            onFinish={() => setFinishing(b)}
+            onDeclared={() => {
+              onDeclared();
+              resolve(b.id);
+            }}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function OverdueRow({
+  beer,
+  onFinish,
+  onDeclared,
+}: {
+  beer: OverdueBeer;
+  onFinish: () => void;
+  onDeclared: () => void;
+}) {
+  const { toast } = useToast();
+  const [url, setUrl] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (beer.full_photo_path) {
+      signedUrl(beer.full_photo_path).then((u) => {
+        if (active) setUrl(u);
+      });
+    }
+    return () => {
+      active = false;
+    };
+  }, [beer.full_photo_path]);
+
+  async function declare() {
+    setBusy(true);
+    try {
+      await declareBeerUnfinished(beer.id, note);
+      toast("Marked unfinished — that's −1 🏳️", "info");
+      onDeclared();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Couldn't update", "error");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <li className="card flex flex-col gap-3 p-3">
+      <div className="flex items-center gap-3">
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={url} alt="" decoding="async" className="h-14 w-14 flex-none rounded-lg object-cover" />
+        ) : (
+          <div className="h-14 w-14 flex-none rounded-lg bg-surface-muted" />
+        )}
+        <div className="text-xs text-muted">Started at {fmtClock(beer.full_taken_at)}</div>
+      </div>
+
+      {!confirming ? (
+        <div className="flex gap-2">
+          <button
+            onClick={onFinish}
+            className="press flex-1 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-contrast"
+          >
+            ✅ I finished it
+          </button>
+          <button
+            onClick={() => setConfirming(true)}
+            className="press flex-1 rounded-full bg-surface-muted px-4 py-2 text-sm font-medium"
+          >
+            🏳️ I didn&apos;t
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 rounded-card border border-bad/30 bg-bad/10 p-3 text-center">
+          <p className="font-display text-base font-bold">Bottling it? 🐱</p>
+          <p className="text-xs text-muted">
+            Leaving a soldier behind costs you a point. Don&apos;t pussy out unless you really have to.
+          </p>
+          <input
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value.slice(0, 200))}
+            placeholder="What happened? (optional)"
+            maxLength={200}
+            disabled={busy}
+            className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={declare}
+              disabled={busy}
+              className="press flex-1 rounded-full bg-bad px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              {busy ? "…" : "Yeah, I bottled it (−1)"}
+            </button>
+            <button
+              onClick={() => setConfirming(false)}
+              disabled={busy}
+              className="press flex-1 rounded-full bg-surface-muted px-4 py-2 text-sm font-medium disabled:opacity-40"
+            >
+              No — I&apos;ll finish it
+            </button>
+          </div>
+        </div>
+      )}
+    </li>
   );
 }

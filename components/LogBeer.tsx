@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import { CameraCapture } from "./CameraCapture";
 import { OfflineLogBeer } from "./OfflineLogBeer";
 import { BrandPicker } from "./BrandPicker";
-import { startBeer, finishBeer, discardBeer, getOpenBeer, signedUrl } from "@/lib/api";
+import {
+  startBeer,
+  finishBeer,
+  discardBeer,
+  getOpenBeer,
+  signedUrl,
+  declareBeerUnfinished,
+} from "@/lib/api";
 import { celebrateBeer, celebrateChug } from "@/lib/celebrate";
 import { useToast } from "./Toast";
 
@@ -14,10 +21,20 @@ export function LogBeer({
   holidayId,
   onDone,
   onCancel,
+  onUnfinished,
+  resumeBeerId,
+  resumeFullPath,
 }: {
   holidayId: string;
   onDone: () => void;
   onCancel: () => void;
+  // Called after the user declares this beer unfinished (−1). When omitted,
+  // falls back to onDone. Lets the parent fire the optimistic penalty.
+  onUnfinished?: () => void;
+  // When set, resume this specific beer at the empty step (used by the overdue
+  // resolution gate) instead of auto-detecting the latest open beer.
+  resumeBeerId?: string;
+  resumeFullPath?: string | null;
 }) {
   const [offline, setOffline] = useState(false);
   const [step, setStep] = useState<Step>("full");
@@ -37,9 +54,26 @@ export function LogBeer({
   // original start time, so the chug clock stays honest.
   const [resuming, setResuming] = useState(true);
   const [resumedFullUrl, setResumedFullUrl] = useState<string | null>(null);
+  // "I didn't finish this beer" confirm flow.
+  const [bailing, setBailing] = useState(false);
+  const [bailNote, setBailNote] = useState("");
 
   useEffect(() => {
     let active = true;
+    // Resolution-gate path: resume a specific beer at the empty step.
+    if (resumeBeerId) {
+      setBeerId(resumeBeerId);
+      setStep("empty");
+      setResuming(false);
+      if (resumeFullPath) {
+        signedUrl(resumeFullPath).then((url) => {
+          if (active) setResumedFullUrl(url);
+        });
+      }
+      return () => {
+        active = false;
+      };
+    }
     getOpenBeer(holidayId)
       .then(async (open) => {
         if (!active || !open) return;
@@ -59,7 +93,22 @@ export function LogBeer({
     return () => {
       active = false;
     };
-  }, [holidayId]);
+  }, [holidayId, resumeBeerId, resumeFullPath]);
+
+  async function declareUnfinished() {
+    if (!beerId) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await declareBeerUnfinished(beerId, bailNote);
+      toast("Marked unfinished — that's −1 🏳️", "info");
+      (onUnfinished ?? onDone)();
+    } catch (e) {
+      setError(msg(e));
+      toast(msg(e), "error");
+      setBusy(false);
+    }
+  }
 
   async function continueToEmpty() {
     if (!fullFile) return;
@@ -230,6 +279,50 @@ export function LogBeer({
           >
             {busy ? "Saving…" : "Finish 🍺"}
           </button>
+
+          {/* Couldn't finish it? Own up — costs a point. */}
+          {!bailing ? (
+            <button
+              onClick={() => setBailing(true)}
+              disabled={busy}
+              className="text-sm text-faint underline disabled:opacity-40"
+            >
+              🏳️ I didn&apos;t finish this beer
+            </button>
+          ) : (
+            <div className="flex w-full max-w-xs flex-col gap-2 rounded-card border border-bad/30 bg-bad/10 p-3 text-center">
+              <p className="font-display text-base font-bold">Bottling it? 🐱</p>
+              <p className="text-xs text-muted">
+                Leaving a soldier behind costs you a point. Don&apos;t pussy out unless you really
+                have to.
+              </p>
+              <input
+                type="text"
+                value={bailNote}
+                onChange={(e) => setBailNote(e.target.value.slice(0, 200))}
+                placeholder="What happened? (optional)"
+                maxLength={200}
+                disabled={busy}
+                className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={declareUnfinished}
+                  disabled={busy}
+                  className="press flex-1 rounded-full bg-bad px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                >
+                  {busy ? "…" : "Yeah, I bottled it (−1)"}
+                </button>
+                <button
+                  onClick={() => setBailing(false)}
+                  disabled={busy}
+                  className="press flex-1 rounded-full bg-surface-muted px-4 py-2 text-sm font-medium disabled:opacity-40"
+                >
+                  No — I&apos;ll finish it
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 

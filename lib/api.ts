@@ -7,6 +7,7 @@ import type {
   AuditItem,
   StandingsResult,
   Beer,
+  OverdueBeer,
   LedgerEntry,
   TripStats,
   AdminTrip,
@@ -394,6 +395,40 @@ export async function logOfflineBeer(
 // Abandon an open beer that never got an empty photo.
 export async function discardBeer(beerId: string): Promise<void> {
   await supabase.from("beers").delete().eq("id", beerId);
+}
+
+// --- Unfinished beers (the −1 penalty mechanic) ---
+
+// The caller's own started beers that are now overdue (>90 min, no empty photo).
+// Drives the resolution gate on app open.
+export async function overdueBeers(holidayId: string): Promise<OverdueBeer[]> {
+  const { data, error } = await supabase.rpc("overdue_open_beers", { p_holiday: holidayId });
+  if (error) throw error;
+  return (data as OverdueBeer[]) ?? [];
+}
+
+// Declare one of your open beers unfinished (−1), with an optional note. Raised
+// to the admin rulings queue.
+export async function declareBeerUnfinished(beerId: string, note?: string | null): Promise<void> {
+  const { error } = await supabase.rpc("declare_beer_unfinished", {
+    p_beer: beerId,
+    p_note: (note ?? "").trim().slice(0, 200) || null,
+  });
+  if (error) throw error;
+}
+
+// Admin rules on an unfinished beer: uphold the −1, or reinstate as +1.
+export async function adminRuleUnfinished(
+  beerId: string,
+  uphold: boolean,
+  reason?: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc("admin_rule_unfinished", {
+    p_beer: beerId,
+    p_uphold: uphold,
+    p_reason: (reason ?? "").trim().slice(0, 200) || null,
+  });
+  if (error) throw error;
 }
 
 export async function signedUrl(path: string): Promise<string | null> {

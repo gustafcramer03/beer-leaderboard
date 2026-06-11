@@ -7,6 +7,14 @@ frontend-only or needs a Postgres function/migration. Tick items off as they shi
 
 ## 🎯 Engagement & fun
 
+- [x] **Unfinished-beer penalty** 🏳️ — _SHIPPED_ (migration 0039). A beer left unfinished costs −1 (not
+  0). Never auto-applied: a started beer with no empty photo after 90 min triggers a blocking resolution
+  gate on next app open — "I finished it" (resume the empty upload) or "I didn't" (−1 + a note, with a
+  cheeky confirm); there's also an "I didn't finish this beer" button on the empty-photo step. Declared
+  ones are raised to the admin Rulings panel as "Unfinished beer?" cards — uphold the −1 or reinstate +1.
+  The −1 lands optimistically and is reversed if reinstated. Accounting: status='unfinished' contributes
+  `coalesce(score_override,-1)`, never touching beer counts/chains. `declare_beer_unfinished` /
+  `admin_rule_unfinished` / `overdue_open_beers` RPCs; the adjust term spans all points readers.
 - [x] **Emoji reactions on beers** 🔥 — _SHIPPED_ (migration 0030). WhatsApp-style one-tap emoji
   (🍺🔥💪😂😮🤮) on a mate's beer in the player ledger — exactly one reaction per person per beer
   (tap a new one to replace, tap the same to remove); existing reactions show as counted pills with

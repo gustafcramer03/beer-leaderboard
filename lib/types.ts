@@ -20,11 +20,19 @@ export type Beer = {
   full_taken_at: string | null;
   empty_taken_at: string | null;
   claimed_chug: boolean;
-  status: "open" | "pending" | "challenged" | "confirmed" | "rejected";
+  status: "open" | "pending" | "challenged" | "confirmed" | "rejected" | "unfinished";
   is_offline: boolean;
   score_override: number | null;
   caption: string | null;
   created_at: string;
+};
+
+// A started-but-overdue beer (>90 min, no empty photo) surfaced by the
+// resolution gate so the owner can finish it or declare it unfinished.
+export type OverdueBeer = {
+  id: string;
+  full_taken_at: string;
+  full_photo_path: string | null;
 };
 
 // A challenged beer enriched with its owner's display name, for the admin
@@ -43,7 +51,7 @@ export type AdminBeer = {
   owner_name: string;
   full_taken_at: string | null;
   empty_taken_at: string | null;
-  status: "pending" | "challenged" | "confirmed" | "rejected";
+  status: "pending" | "challenged" | "confirmed" | "rejected" | "unfinished";
   is_chug: boolean;
   claimed_chug: boolean;
   is_offline: boolean;
@@ -53,6 +61,8 @@ export type AdminBeer = {
   is_night_owl: boolean;
   score_override: number | null;
   override_reason: string | null;
+  unfinished_note: string | null;
+  admin_ruled_at: string | null;
   caption: string | null;
   brand: string | null;
   points: number;
@@ -96,8 +106,8 @@ export type RevealMedia = Record<
 export type LedgerEntry = {
   beer_id: string;
   full_taken_at: string;
-  empty_taken_at: string;
-  status: "pending" | "challenged" | "confirmed" | "rejected";
+  empty_taken_at: string | null;
+  status: "pending" | "challenged" | "confirmed" | "rejected" | "unfinished";
   is_chug: boolean;
   streak_position: number;
   is_morning: boolean;

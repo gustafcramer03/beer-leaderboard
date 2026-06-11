@@ -50,6 +50,11 @@ function fmtTime(iso: string) {
 // Human-readable badges describing how a beer earned its points.
 // Bonus = greater of chug (×2) and chain position; morning adds +1 on top.
 function badges(e: LedgerEntry): { label: string; cls: string }[] {
+  if (e.status === "unfinished") {
+    return e.score_override === 1
+      ? [{ label: "Reinstated +1", cls: "bg-good/15 text-good" }]
+      : [{ label: "Unfinished −1", cls: "bg-bad/15 text-bad" }];
+  }
   if (e.status === "rejected") {
     return [{ label: "Rejected", cls: "bg-red-100 text-red-700" }];
   }
@@ -215,11 +220,13 @@ export function PlayerLedger({
                     {e.override_reason && (
                       <p className="border-t border-line px-4 py-2 text-[11px] leading-snug text-indigo-700 dark:text-indigo-300">
                         <span className="font-semibold">
-                          {e.score_override !== null
-                            ? "Adjusted ✎"
-                            : e.status === "rejected"
-                              ? "Ruling ⚖️ Rejected"
-                              : "Ruling ⚖️"}
+                          {e.status === "unfinished"
+                            ? "Didn't finish 🏳️"
+                            : e.score_override !== null
+                              ? "Adjusted ✎"
+                              : e.status === "rejected"
+                                ? "Ruling ⚖️ Rejected"
+                                : "Ruling ⚖️"}
                         </span>{" "}
                         — {e.override_reason}
                       </p>
@@ -330,7 +337,7 @@ function LedgerPhotos({ entry }: { entry: LedgerEntry }) {
   return (
     <div className="grid grid-cols-2 gap-2 border-t border-line px-4 py-3">
       <Photo url={urls?.full ?? null} label="FULL" time={fmtTime(entry.full_taken_at)} brand={entry.brand} />
-      <Photo url={urls?.empty ?? null} label="EMPTY" time={fmtTime(entry.empty_taken_at)} />
+      <Photo url={urls?.empty ?? null} label="EMPTY" time={entry.empty_taken_at ? fmtTime(entry.empty_taken_at) : "—"} />
     </div>
   );
 }

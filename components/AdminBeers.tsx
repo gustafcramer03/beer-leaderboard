@@ -32,6 +32,7 @@ const STATUS_LABEL: Record<AdminBeer["status"], string> = {
   challenged: "Challenged",
   confirmed: "Confirmed",
   rejected: "Voided",
+  unfinished: "Unfinished",
 };
 
 const STATUS_STYLE: Record<AdminBeer["status"], string> = {
@@ -39,6 +40,7 @@ const STATUS_STYLE: Record<AdminBeer["status"], string> = {
   challenged: "bg-accent-soft text-accent-strong",
   confirmed: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-700",
+  unfinished: "bg-bad/15 text-bad",
 };
 
 export function AdminBeers({ holidayId }: { holidayId: string }) {

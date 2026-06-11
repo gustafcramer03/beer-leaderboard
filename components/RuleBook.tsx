@@ -189,6 +189,30 @@ export function RuleBook({ onClose }: { onClose: () => void }) {
             </p>
           </Section>
 
+          <Section title="🏳️ Unfinished beers">
+            <p>
+              Start a beer, you finish a beer. Bottle it and it costs you —{" "}
+              <Badge label="Unfinished −1" cls="bg-bad/15 text-bad" /> an unfinished beer is{" "}
+              <span className="font-semibold">−1 point</span>, not zero.
+            </p>
+            <p>
+              Nothing is ever docked automatically. If a beer you started sits for over{" "}
+              <span className="font-semibold">90 minutes</span> with no empty photo, the next time you
+              open the app you&apos;ll be asked to sort it: <span className="font-semibold">finish
+              it</span> (snap the empty now) or <span className="font-semibold">own up</span> that you
+              didn&apos;t — with a quick note on what happened. There&apos;s also an{" "}
+              <span className="font-semibold">&quot;I didn&apos;t finish this beer&quot;</span> button
+              on the empty-photo screen for when you already know.
+            </p>
+            <p>
+              Each declared one goes to the admin like a challenge. They can{" "}
+              <span className="font-semibold">uphold</span> the −1, or{" "}
+              <span className="font-semibold">reinstate</span> the point (
+              <Badge label="Reinstated +1" cls="bg-good/15 text-good" />) if they&apos;re feeling
+              merciful. The −1 hits your tally straight away and is undone only if they reinstate it.
+            </p>
+          </Section>
+
           <Section title="🌑 The dark window & reveal">
             <p>
               For the last few days the board goes <span className="font-semibold">dark</span> —
