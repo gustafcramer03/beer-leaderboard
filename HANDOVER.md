@@ -1,6 +1,6 @@
 # Beer-leaderboard — session handover
 
-Snapshot for resuming development in a fresh chat. Last updated **2026-06-05**.
+Snapshot for resuming development in a fresh chat. Last updated **2026-06-08**.
 
 > Fuller detail lives in the persistent memory note `project_beer_leaderboard_handover.md`
 > and the feature backlog in `ROADMAP.md` (repo root). This file is the quick-start.
@@ -25,9 +25,9 @@ First real-world use will be a trip in **Greece**.
 - Node isn't on PATH by default in a fresh shell: prefix with `$env:Path="C:\Program Files\nodejs;$env:Path"` then use `npx.cmd`.
 
 ## Data model (key tables)
-- `holidays` (id, name, start/end_date, dark_days, admin_id, invite_code, timezone, forced_state).
+- `holidays` (id, name, start/end_date, **start_time/end_time**, dark_days, admin_id, invite_code, timezone, forced_state). start_time/end_time (in `timezone`) gate uploads + the reveal (migration 0041 / 0023).
 - `memberships` (holiday_id, user_id).
-- `beers` (id, holiday_id, user_id, full/empty_photo_path, full/empty_taken_at [server-stamped by triggers], claimed_chug, status, score_override, score_override_reason, is_offline, caption, **brand**). Status: open → pending → challenged → confirmed/rejected.
+- `beers` (id, holiday_id, user_id, full/empty_photo_path, full/empty_taken_at [server-stamped by triggers], claimed_chug, status, score_override, score_override_reason, **unfinished_note**, **admin_ruled_at**, is_offline, caption, **brand**). Status: open → pending → challenged → confirmed/rejected, plus **`unfinished`** (left-unfinished penalty, migration 0039).
 - `reviews` (peer audits), `beer_reactions` (RPC-only), `leaderboard_snapshots` (jsonb), push tables (RPC-only).
 - Photo path convention: `{holiday_id}/{beer_id}/{full|empty}.jpg`.
 
@@ -61,11 +61,14 @@ Before deploying: `npx.cmd tsc --noEmit` (exit 0) and ideally `npx.cmd next buil
 **Always commit + push to GitHub after every change** so the repo stays in sync with the live site. Use multiple `-m` flags for commit bodies (the PowerShell here-string `'@` closer is fragile).
 
 ## Current state — what's already built & live
-Migrations through **0036** are applied. Feature highlights (full list in `ROADMAP.md` / memory note):
+Migrations through **0041** are applied. Feature highlights (full list in `ROADMAP.md` / memory note):
 - Core log/audit/rule/reveal loop; dark window + grand reveal; admin state control.
 - Achievements, pace board, trip stats, head-to-head rivalry, activity feed, daily recap, share card.
 - Emoji reactions + captions; pull-to-refresh + optimistic board; "Manage beers" admin screen.
 - Push notifications (happy-hour start/end + grand reveal) via cron→pg_net→Vercel route.
+- **Daily tally** (migration 0040) — Menu → 📊: grouped bar chart of your beers/day vs the group
+  average/day, trip-start to today (`daily_bars` RPC + `DailyBars.tsx`).
+- **Unfinished-beer penalty** (migration 0039) — see the Scoring section.
 - **Trip activity window** (migration 0041) — beers can only be logged while the trip is on. Holidays
   now have a `start_time` (plus the existing `end_time`); uploads are blocked before `start_date+start_time`
   and on/after `end_date+end_time` (or once the admin forces the reveal), enforced in the `beers_before_insert`
@@ -75,7 +78,8 @@ Migrations through **0036** are applied. Feature highlights (full list in `ROADM
   (an UPDATE) is still allowed. **Start/end times only gate uploads + reveal — they do NOT change the
   7am–7am beer-day stats.** Create form + AdminTripControls let you set both date+time.
 - **Drinking heatmap** (0035) — Menu → 🔥.
-- **Brand tagging + Beer insights** (0036, newest) — see below.
+- **Brand tagging + Beer insights** (0036) — see below. Brand catalogue is editable in `lib/brands.ts`
+  (Cruzcampo added 2026-06-08).
 - **DB-management photo browser** (2026-06-05, migration 0037) — in 🗄️ DB Management, tap a trip →
   tap a member → browse their beers → tap a beer to view its full/empty photos (pinch/double-tap zoom).
   Beer list comes from the password-gated `admin_member_beers` RPC. Photos load via a server route
